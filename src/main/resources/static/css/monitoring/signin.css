@@ -1,0 +1,12 @@
+html,body{height: 100%;  font-family: "Courier New";    font-size: 14px;}
+.headbar  {height: 45px;   background-color: #293846;}
+.headbar  ul{float: right;  height: 45px;  padding: 0px;}
+.headbar  ul>li{list-style-type: none;  height: 45px;}
+.headbar  a.langsel_parent_item,a.langsel_branch_item{display: block;  width: 120px;  height: 45px;  line-height: 45px;  text-align: center;  font-weight: bold;  text-decoration: none;  background-color: #2f4050;}
+.headbar  a.langsel_branch_item:hover{display: block;  width: 120px;  height: 45px;  line-height: 45px;  text-align: center;  font-weight: bold;  text-decoration: none;  background-color: #293846;}
+.headbar  a.langsel_branch_item.selected{display: block;  width: 120px;  height: 45px;  line-height: 45px;  text-align: center;  font-weight: bold;  text-decoration: none;  background-color: #dcdcdc;}
+.headbar  ul  ul{position: absolute;  display: none;  z-index: 1;}
+.headbar  ul:hover  ul{position: absolute;  display: block;  z-index: 1;}
+.content  {position: relative;  height: calc(100% - 45px);  background-color: #ffffff;}
+.formdiv  {position: absolute;  width: 450px;  height: 300px;  top: calc(50% - 175px);  left: calc(50% - 225px);  box-shadow: -5px 5px 10px #a9a9a9;  background-color: #ffffff;}
+.formdiv  .panel-body>div{display: table-cell;  width: 390px;  height: 225px;  vertical-align: middle;  text-align: center;}

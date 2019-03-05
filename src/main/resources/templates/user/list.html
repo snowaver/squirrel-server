@@ -1,0 +1,12 @@
+<!DOCTYPE  html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head >
+	<meta  charset="UTF-8"><title  th:text="#{user.list}"></title>
+	<link  rel="stylesheet"  href="/lib/bootstrap/bootstrap-3.3.7.css"  type="text/css"></link><link  rel="stylesheet"  href="/css/user/list.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/font-awesome/css/font-awesome.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/bootstrap/table/bootstrap-table.css"  type="text/css"></link>
+	<script  src="/lib/requirejs/require-2.1.11.js"></script> <script  src="/require-configuration.js"></script><script  type="text/javascript">require(["user/list"])</script>
+</head>
+<body >
+	<table  id="table"  class="table  table-hover"></table>
+	<input  id="secret_key"  type="hidden"  th:value="${sessionProfile.SECRET_KEY}"/>
+</body>
+</html>

@@ -1,0 +1,32 @@
+<!DOCTYPE  html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head >
+	<meta  charset="UTF-8"><title  th:text="#{monitoring.signin.title}"></title>
+	<link  rel="stylesheet"  href="/lib/bootstrap/bootstrap-3.3.7.css"  type="text/css"></link><link  rel="stylesheet"  href="/css/monitoring/signin.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/font-awesome/css/font-awesome.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/bootstrap/table/bootstrap-table.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/sweetalert-2/sweetalert2.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/bootstrap/validator/bootstrapValidator.css"  type="text/css"></link>
+	<script  src="https://cdn.jsdelivr.net/npm/sweetalert2@8"></script><script  src="/lib/requirejs/require-2.1.11.js"></script><script  src="/require-configuration.js"></script><script  type="text/javascript">require(["monitoring/signin"])</script>
+</head>
+<body >
+	<div   class="headbar">
+		<ul >
+			<li >
+				<a  class="langsel_parent_item"  href="javascript:void(0)"  th:text="#{text.chinese}"></a>
+				<ul >
+					<li><a  class="langsel_branch_item"  href="?locale=zh_CH"  th:text="#{text.chinese}"></a></li><li><a  class="langsel_branch_item"  href="?locale=en_US">ENGLISH</a></li>
+				</ul>
+			</li>
+		</ul>
+	</div>
+	<div   class="content">
+		<div  class="panel  panel-default  formdiv">
+			<div  class="panel-heading"  style="height: 45px;  line-height: 25px;  font-weight: bold;  padding-right: 30px;  padding-left: 30px;  background-color: #ffffff;"  th:text="#{monitoring.signin.title}"></div>
+			<div  class="panel-body"  style="padding-right: 30px;  padding-left: 30px;">
+				<div >
+					<input  id="username"  type="text"  class="form-control"  style="height: 45px;"  th:placeholder="#{text.username}">
+					<input  id="password"  type="password"  class="form-control"  style="height: 45px;  margin-top: 15px;"  th:placeholder="#{text.password}">
+					<button  id="signin_button"  class="btn  btn-primary"  style="width: 100%;  height: 45px;  margin-top: 15px;  color: #ffffff;  font-weight: bold;  background-color: #293846;"  th:text="#{text.signin}"></button>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

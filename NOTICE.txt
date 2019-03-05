@@ -1,0 +1,44 @@
+=============================================================================
+= NOTICE file corresponding to section 4d of the Apache License Version 2.0 =
+=============================================================================
+
+* Copyright 2019 snowaver. https://mashroom.cc/
+
+This product includes/uses software(s) developed by 'Pivotal Software, Inc.' (https://spring.io/projects/spring-boot/) and licensed under Apache Licence 2.0
+- Spring Boot Starter Web
+- Spring Boot Starter Undertow
+- Spring Boot Starter Thymeleaf
+- Spring Boot Starter Aop
+This product includes/uses software(s) developed by 'Oracle Corporation and/or its affiliates' (https://dev.mysql.com/downloads/connector/j/) and licensed under GPL
+- Connector/J
+This product includes/uses software(s) developed by 'The Apache Software Foundation' ( http://www.apache.org/) and licensed under Apache Licence 2.0
+- Commons Lang (https://commons.apache.org/proper/commons-lang/)
+- Apache Commons Codec (http://commons.apache.org/proper/commons-codec/)
+- Commons IO (http://commons.apache.org/proper/commons-io/)
+- Commons Collections (http://commons.apache.org/proper/commons-collections/)
+- Ignite Core (https://ignite.apache.org/index.html)
+- Ignite Spring (https://ignite.apache.org/index.html)
+- Apache Hadoop Client (http://hadoop.apache.org/docs/r2.7.2/hadoop-project-dist/hadoop-client/)
+This product includes/uses software(s) developed by 'H2 Group' ( http://www.h2database.com/html/main.html) licensed under MPL 2.0 and EPL 1.0
+- H2
+This product includes/uses software(s) developed by 'The Guava Authors' (https://github.com/google/guava/) and licensed under Apache Licence 2.0
+- Google Guava
+This product includes/uses software(s) developed by 'Sun Microsystems Inc.' (http://sigar.hyperic.com/) and licensed under Apache Licence 2.0
+- Sigar
+This product includes/uses software(s) developed by 'The Project Lombok Authors' (https://www.projectlombok.org/) and licensed under the MIT license
+- Project Lombok
+This product includes/uses software(s) developed by 'Codehaus.org' ( http://jackson.codehaus.org/) and licensed under Apache Licence 2.0
+- Jackson Databind
+This product includes/uses software(s) developed by 'The Netty project' (https://netty.io/) and licensed under Apache Licence 2.0
+- Netty Handler
+- Netty Transport Native Epoll
+This product includes/uses software(s) developed by 'Joda.org' (  https://www.joda.org/joda-time/) and licensed under Apache Licence 2.0
+- Joda Time
+This product includes/uses software(s) developed by 'QOS.ch' (https://www.slf4j.org/) and licensed under the MIT license
+- SLF4J
+This product includes/uses software(s) developed by 'Steve Waldman <swaldman@mchange.com>, Machinery For Change, Inc.' (https://www.mchange.com/projects/c3p0/) and licensed under EPL 1.0 and LGPL 2.1
+- C3P0
+This product includes/uses software(s) developed by 'Square, Inc.' (  https://square.github.io/okhttp/) and licensed under Apache Licence 2.0
+- OkHttp
+This product includes/uses software(s) developed by 'Jarod Liu' (https://github.com/jarod/qqwry-java) and licensed under the MIT license
+- qqwry-java

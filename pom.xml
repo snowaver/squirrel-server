@@ -1,0 +1,93 @@
+<project  xmlns="http://maven.apache.org/POM/4.0.0"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0  http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
+	<groupId>cc.mashroom.squirrel</groupId><artifactId>squirrel-server</artifactId>
+	
+	<modelVersion>4.0.0</modelVersion>
+	<version>v1.0.0</version>
+	<packaging>jar</packaging>
+	<name>squirrel-server</name>
+	<url>https://mashroom.cc</url>
+
+	<properties >
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+	</properties>
+	
+	<dependencies >
+	
+		<dependency >
+		    <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId><version>2.1.3.RELEASE</version>
+		    <exclusions><exclusion><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-tomcat</artifactId></exclusion></exclusions>
+		</dependency>
+		
+		<dependency >
+    		<groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-undertow</artifactId> <version>2.1.3.RELEASE</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-aop</artifactId><version>2.1.3.RELEASE</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-thymeleaf</artifactId><version>2.1.3.RELEASE</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>com.github.jarod</groupId><artifactId>qqwry-java</artifactId><version>0.7.2</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>io.netty</groupId><artifactId>netty-transport-native-epoll</artifactId><version>4.1.33.Final</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>com.mchange</groupId><artifactId>c3p0</artifactId><version>0.9.5.3</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>mysql</groupId><artifactId>mysql-connector-java</artifactId><version>6.0.6</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>org.apache.hadoop</groupId><artifactId>hadoop-client</artifactId><version>3.1.0</version>
+			<exclusions><exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-core</artifactId></exclusion><exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-annotations</artifactId></exclusion><exclusion><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></exclusion></exclusions>
+		</dependency>
+		
+		<dependency >
+			<groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><version>1.18.6</version><scope>provided</scope>
+		</dependency>
+		
+		<dependency >
+			<groupId>cc.mashroom.squirrel</groupId><artifactId>squirrel-paip</artifactId><version>v1.0.0</version>
+		</dependency>
+		
+		<dependency >
+			<groupId>cc.mashroom</groupId><artifactId>mashroom-plugin</artifactId><version>v1.0.0</version>
+		</dependency>
+		
+	</dependencies>
+	
+	<build >
+    	<pluginManagement >
+			<plugins >
+				<plugin >
+					<groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.6.1</version><configuration><source>1.8</source><target>1.8</target></configuration>
+				</plugin>
+				<plugin >
+					<groupId>org.springframework.boot</groupId><artifactId>spring-boot-maven-plugin</artifactId>
+				</plugin>
+				<plugin >
+			        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-dependency-plugin</artifactId><version>3.1.0</version>
+					<executions >
+						<execution >
+							<id>copy-dependencies</id><phase>package</phase><goals><goal>copy-dependencies</goal></goals>
+							<configuration >
+								<outputDirectory>target/lib</outputDirectory>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+	
+</project>

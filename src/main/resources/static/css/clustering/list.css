@@ -1,0 +1,8 @@
+html,body{height: 100%;  font-family: "Courier New";  font-size: 14px;}
+table{table-layout: fixed;}
+table  td{white-space: nowrap;}
+table  th>div.th-inner{height: 45px;}
+.fixed-table-header{border-bottom-style: solid;  border-bottom-color: #dcdcdc;  border-bottom-width: 1px;}
+.fixed-table-body  thead{border-bottom-style: solid;  border-bottom-color: #dcdcdc;  border-bottom-width: 1px;}
+.fixed-table-body::-webkit-scrollbar-thumb{ background-color: #dcdcdc;}
+.fixed-table-body::-webkit-scrollbar{border-style: solid;  border-color: #dcdcdc;  border-width: 1px;  background-color: #ffffff;}

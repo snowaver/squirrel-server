@@ -1,0 +1,34 @@
+<!DOCTYPE  html>
+<html  xmlns:th="http://www.thymeleaf.org">
+<head >
+	<meta  charset="UTF-8"><title  th:text="#{monitoring.main.title}"></title>
+	<link  rel="stylesheet"  href="/lib/bootstrap/bootstrap-3.3.7.css"  type="text/css"></link><link  rel="stylesheet"  href="/css/monitoring/main.css"  type="text/css"></link><link  rel="stylesheet"  href="/lib/font-awesome/css/font-awesome.css"  type="text/css"></link>
+	<script  src="/lib/requirejs/require-2.1.11.js"></script><script  src="/require-configuration.js"></script><script  type="text/javascript">require(["monitoring/main"])</script>
+</head>
+<body >
+	<input  id="secret_key"  type="hidden"  th:value="${sessionProfile.SECRET_KEY}"/>
+	<div   class="sidebar">
+		<div  class="profile"><img  height="60"  width="60"  src="/img/portrait.jpg"  class="img-circle"></div>
+		<div  class="menubar">
+			<ul >
+				<li >
+					<a  class="menubar_parent_item"  href="javascript:void(0)"><i  class="fa  fa-wpexplorer"   aria-hidden="true"  style="margin-left: 10px;  margin-right: 10px;"></i><span  th:text="#{clustering.management}"></span></a>
+					<ul><li><a  class="menubar_branch_item"  href="javascript:void(0)"  frame-url="/clustering/tolist"  th:text="#{clustering.node.list}"></a></li></ul>
+				</li>
+				<li >
+					<a  class="menubar_parent_item"  href="javascript:void(0)"><i  class="fa  fa-user-circle"  aria-hidden="true"  style="margin-left: 10px;  margin-right: 10px;"></i><span  th:text="#{user.management}"></span></a>
+					<ul><li><a  class="menubar_branch_item"  href="javascript:void(0)"  frame-url="/user/tolist"  th:text="#{user.list}"></a></li></ul>
+				</li>
+			</ul>
+		</div>
+	</div>
+	<div   class="content">
+		<div  class="headbar">
+		</div>
+		<div  class="tabhost">
+			<button  style="margin-left: 10px;"><i  class="fa  fa-backward"  aria-hidden="true"></i></button><nav><div></div></nav><button  style="margin-right: 10px;"><i  class="fa  fa-forward"  aria-hidden="true"></i></button>
+		</div>
+		<div  class="tabbody"><iframe></iframe></div>
+	</div>
+</body>
+</html>

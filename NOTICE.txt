@@ -9,9 +9,9 @@ This product includes/uses software(s) developed by 'Pivotal Software, Inc.' (ht
 - Spring Boot Starter Undertow
 - Spring Boot Starter Thymeleaf
 - Spring Boot Starter Aop
-This product includes/uses software(s) developed by 'Oracle Corporation and/or its affiliates' (https://dev.mysql.com/downloads/connector/j/) and licensed under GPL
+This product includes/uses software(s) developed by 'Oracle Corporation and/or its affiliates' ( https://dev.mysql.com/downloads/connector/j/) and licensed under GPL
 - Connector/J
-This product includes/uses software(s) developed by 'The Apache Software Foundation' ( http://www.apache.org/) and licensed under Apache Licence 2.0
+This product includes/uses software(s) developed by 'The Apache Software Foundation' (  http://www.apache.org/) and licensed under Apache Licence 2.0
 - Commons Lang (https://commons.apache.org/proper/commons-lang/)
 - Apache Commons Codec (http://commons.apache.org/proper/commons-codec/)
 - Commons IO (http://commons.apache.org/proper/commons-io/)
@@ -25,11 +25,11 @@ This product includes/uses software(s) developed by 'The Guava Authors' (https:/
 - Google Guava
 This product includes/uses software(s) developed by 'Sun Microsystems Inc.' (http://sigar.hyperic.com/) and licensed under Apache Licence 2.0
 - Sigar
-This product includes/uses software(s) developed by 'The Project Lombok Authors' (https://www.projectlombok.org/) and licensed under the MIT license
+This product includes/uses software(s) developed by 'The Project Lombok Authors' ( https://www.projectlombok.org/) and licensed under the MIT license
 - Project Lombok
 This product includes/uses software(s) developed by 'Codehaus.org' ( http://jackson.codehaus.org/) and licensed under Apache Licence 2.0
 - Jackson Databind
-This product includes/uses software(s) developed by 'The Netty project' (https://netty.io/) and licensed under Apache Licence 2.0
+This product includes/uses software(s) developed by 'The Netty project' (  https://netty.io/) and licensed under Apache Licence 2.0
 - Netty Handler
 - Netty Transport Native Epoll
 This product includes/uses software(s) developed by 'Joda.org' (  https://www.joda.org/joda-time/) and licensed under Apache Licence 2.0
@@ -42,3 +42,32 @@ This product includes/uses software(s) developed by 'Square, Inc.' (  https://sq
 - OkHttp
 This product includes/uses software(s) developed by 'Jarod Liu' (https://github.com/jarod/qqwry-java) and licensed under the MIT license
 - qqwry-java
+This product includes/uses software(s) developed by 'Klaus Hartl' (https://github.com/carhartl/jquery-cookie) and licensed under the MIT license
+- jQuery Cookie Plugin
+This product includes/uses software(s) developed by 'JS Foundation and other contributors' (  https://jquery.com/) and licensed under the MIT license
+- jQuery
+This product includes/uses software(s) developed by 'Nuno Miguel Correia Serra Fernandes' (https://nunogrilo.com/) and licensed under the MIT license
+- jQuery.i18n.properties
+This product includes/uses software(s) developed by 'Sebastian Tschan' (https://blueimp.net/) and licensed under the MIT license
+- jQuery MD5 Plugin
+This product includes/uses software(s) developed by 'jQuery Foundation and other contributors' (https://requirejs.org/) and licensed under the MIT or new BSD license
+- RequireJS
+This product includes/uses software(s) developed by 'Tristan Edwards & Limon Monte' (     https://sweetalert2.github.io/) and licensed under the MIT license
+- sweetalert2
+This product includes/uses software(s) developed by 'The Bootstrap Authors and Twitter, Inc.' ( https://getbootstrap.com) and licensed under the MIT license
+- Bootstrap
+This product includes/uses software(s) developed by 'Zhixin Wen <wenzhixin2010@gmail.com>' (https://bootstrap-table.com/) and licensed under the MIT license
+- Bootstrap Table
+This product includes/uses software(s) developed by 'Nguyen Huu Phuoc' (http://bootstrapvalidator.com/) and licensed under the commercial (http://bootstrapvalidator.com/license/) and non-commercial (http://creativecommons.org/licenses/by-nc-nd/3.0/) license
+- BootstrapValidator
+
+
+
+
+
+
+
+
+
+
+

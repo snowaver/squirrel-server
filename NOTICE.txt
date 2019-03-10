@@ -45,14 +45,14 @@ This product includes/uses software(s) developed by 'Jarod Liu' (https://github.
 This product includes/uses software(s) developed by 'Klaus Hartl' (https://github.com/carhartl/jquery-cookie) and licensed under the MIT license
 - jQuery Cookie Plugin
 This product includes/uses software(s) developed by 'JS Foundation and other contributors' (  https://jquery.com/) and licensed under the MIT license
+- RequireJS
+This product includes/uses software(s) developed by 'Tristan Edwards & Limon Monte' (     https://sweetalert2.github.io/) and licensed under the MIT license
 - jQuery
 This product includes/uses software(s) developed by 'Nuno Miguel Correia Serra Fernandes' (https://nunogrilo.com/) and licensed under the MIT license
 - jQuery.i18n.properties
 This product includes/uses software(s) developed by 'Sebastian Tschan' (https://blueimp.net/) and licensed under the MIT license
 - jQuery MD5 Plugin
 This product includes/uses software(s) developed by 'jQuery Foundation and other contributors' (https://requirejs.org/) and licensed under the MIT or new BSD license
-- RequireJS
-This product includes/uses software(s) developed by 'Tristan Edwards & Limon Monte' (     https://sweetalert2.github.io/) and licensed under the MIT license
 - sweetalert2
 This product includes/uses software(s) developed by 'The Bootstrap Authors and Twitter, Inc.' ( https://getbootstrap.com) and licensed under the MIT license
 - Bootstrap

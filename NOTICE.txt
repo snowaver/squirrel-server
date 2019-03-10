@@ -60,14 +60,3 @@ This product includes/uses software(s) developed by 'Zhixin Wen <wenzhixin2010@g
 - Bootstrap Table
 This product includes/uses software(s) developed by 'Nguyen Huu Phuoc' (http://bootstrapvalidator.com/) and licensed under the commercial (http://bootstrapvalidator.com/license/) and non-commercial (http://creativecommons.org/licenses/by-nc-nd/3.0/) license
 - BootstrapValidator
-
-
-
-
-
-
-
-
-
-
-

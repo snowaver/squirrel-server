@@ -34,7 +34,7 @@ public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitia
 {
 	protected  void  initChannel( SocketChannel  channel )  throws  Exception
 	{
-		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store")).createSSLEngine();
+		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store").replace("classpath:","/")).createSSLEngine();
 		
 		sslEngine.setEnabledCipherSuites( sslEngine.getSupportedCipherSuites() );
 		

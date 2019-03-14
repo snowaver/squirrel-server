@@ -50,7 +50,7 @@ public  class  NettyAcceptor
 	{
 		boolean  isLinux = isLinux();
 		
-		ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinux ? EpollServerSocketChannel.class : NioServerSocketChannel.class).option(ChannelOption.SO_TIMEOUT,120).option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer() );
+		ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinux ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer() );
 		
 		try
 		{

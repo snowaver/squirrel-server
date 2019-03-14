@@ -36,6 +36,8 @@ public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitia
 	{
 		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store")).createSSLEngine();
 		
+		sslEngine.setEnabledCipherSuites( sslEngine.getSupportedCipherSuites() );
+		
 		sslEngine.setUseClientMode( false );
 		/*
 		sslEngine.setNeedClientAuth( true );

@@ -15,8 +15,6 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-import  org.slf4j.LoggerFactory;
-
 import  io.netty.buffer.ByteBuf;
 import  io.netty.channel.ChannelHandlerContext;
 import  cc.mashroom.squirrel.paip.message.Packet;
@@ -27,8 +25,6 @@ import  cc.mashroom.util.ObjectUtils;
 
 public  class  PAIPEncoder  extends  cc.mashroom.squirrel.paip.codec.PAIPEncoder
 {
-	private  final  static  org.slf4j.Logger  logger = LoggerFactory.getLogger( PAIPEncoder.class );
-	
 	protected  void  encode( ChannelHandlerContext  context,Packet  packet,ByteBuf  byteBuf )  throws  Exception
 	{
 		if( packet instanceof CallAckPacket && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() != CallAckPacket.ACCEPT || packet instanceof CloseCallPacket )

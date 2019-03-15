@@ -19,6 +19,9 @@ import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
 import  lombok.AllArgsConstructor;
+
+import org.joda.time.DateTime;
+
 import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CandidatePacket;
@@ -52,6 +55,8 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	{
 		Long  clientId =      context.channel().attr( ConnectPacket.CLIENT_ID ).get();
 		
+		System.err.println(DateTime.now().toString("yyyy-MM-dd HH:mm:ss")+"  CHANNEL.INACTIVE:\tCLIENT.ID="+clientId );
+		
 		if( clientId != null )
 		{
 			ClientSession  session = ClientSessionManager.INSTANCE.remove( clientId );
@@ -68,7 +73,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	
 	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws  Exception
 	{
-		System.out.println( "//*RCV:\t\t"+packet.getClass().getName() );
+		System.err.println(     DateTime.now().toString("yyyy-MM-dd HH:mm:ss")+"  CHANNEL.READ:\t"+packet.toString() );
 		
 		if( packet instanceof ConnectPacket    )
 		{

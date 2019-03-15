@@ -60,7 +60,7 @@ public  class  ClientSessionManager  implements  Plugin
 	
 	public  ClientSession  get( long  clientId )
 	{
-		return  localClientSessionCache.computeIfAbsent( clientId,(key) -> {Map<String,Object>  sessionLocation = sessionLocationCache.getOne( "SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );  return  sessionLocation == null || sessionLocation.get("CLUSTER_NODE_ID") == null ? null : new  ClusteredClientSession( clientId,sessionLocation.getString("CLUSTER_NODE_ID") );} );
+		return  localClientSessionCache.computeIfAbsent( clientId,(key) -> {Map<String,Object>  sessionLocation = sessionLocationCache.getOne( "SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );  return  sessionLocation == null || sessionLocation.get("CLUSTER_NODE_ID") == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getString("CLUSTER_NODE_ID")) ? null : new  ClusteredClientSession( clientId,sessionLocation.getString("CLUSTER_NODE_ID") );} );
 	}
 	
 	public  void  stop()

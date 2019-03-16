@@ -22,20 +22,22 @@ import  java.io.OutputStream;
 import  javax.servlet.http.HttpServletRequest;
 import  javax.servlet.http.HttpServletResponse;
 
-import  org.slf4j.LoggerFactory;
-
 import  cc.mashroom.util.FileUtils;
 import  cc.mashroom.util.StringUtils;
+import  lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 
 public  abstract  class  AbstractController
 {
-	private  final  org.slf4j.Logger  logger = LoggerFactory.getLogger( AbstractController.class );
-	
-	protected  void  allowOriginAccessControl( HttpServletResponse  response )
+	/*
+	private  final  org.slf4j.Logger  logger= LoggerFactory.getLogger( AbstractController.class );
+	*/
+	protected  void  allowOriginAccessControl(      HttpServletResponse  response )
 	{
-		response.setHeader( "Access-Control-Allow-Origin","*" );
+		response.setHeader( "Access-Control-Allow-Origin" , "*" );
 		
-		response.setHeader( "Access-Control-Allow-Methods",  "GET,POST,PUT,DELETE,PATCH,OPTIONS" );
+		response.setHeader( "Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS" );
 	}
 	
 	protected  void  render( HttpServletResponse  response,File  file,String  fileName )  throws  IOException
@@ -48,7 +50,7 @@ public  abstract  class  AbstractController
 				
 		        response.addHeader( "Content-Disposition","attachment;fileName="+(StringUtils.isBlank(fileName) ? file.getName() : fileName) );
 				
-		        os.write( FileUtils.readFileToByteArray(file) );
+		        os.write( FileUtils.readFileToByteArray( file ) );
 				
 				os.flush();
 			}
@@ -65,40 +67,22 @@ public  abstract  class  AbstractController
         
         if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
         {
-        	if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
-            {  
-            	ip = request.getHeader( "Proxy-Client-IP" );
-            }
-            
-            if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
-            {  
-            	ip = request.getHeader( "WL-Proxy-Client-IP" );
-            }
-            
-            if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
-            {
-            	ip = request.getHeader( "HTTP_CLIENT_IP"  );
-            }
-            
-            if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
-            {
-            	ip = request.getHeader( "HTTP_X_FORWARDED_FOR" );
-            }
-            
-            if( StringUtils.isBlank(ip) || "unknown".equalsIgnoreCase(ip) )
-            {
-            	ip = request.getRemoteAddr();
-            }  
+        	for( String  header : new  String[]{"Proxy-Client-IP","WL-Proxy-Client-IP","HTTP_CLIENT_IP","HTTP_X_FORWARDED_FOR"} )
+        	{
+        		ip = request.getHeader( header );
+        		
+        		if( StringUtils.isNotBlank(ip) && !"unknown".equalsIgnoreCase(ip) )
+        		{
+        			break;
+        		}
+        	}
         }
         else
         if( ip.length() > 15 )
         {
-        	for( String  child : ip.split(",") )
+        	for( String  child : ip.split("," ) )
             {
-            	if( !"unknown".equalsIgnoreCase(ip) )
-            	{
-            		return  child;
-            	}
+            	if( !"unknown".equalsIgnoreCase(ip) ){ return  child; }
             }
         }
         

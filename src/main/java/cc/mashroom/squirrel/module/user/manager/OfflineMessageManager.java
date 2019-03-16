@@ -19,19 +19,18 @@ import  java.sql.Timestamp;
 
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
-import  org.slf4j.LoggerFactory;
 
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.user.model.OfflineMessage;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  lombok.NoArgsConstructor;
+import  lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @NoArgsConstructor
 
 public  class  OfflineMessageManager  implements  Plugin
 {
-	private  final  static  org.slf4j.Logger  logger = LoggerFactory.getLogger( OfflineMessageManager.class );
-	
 	public  final  static  OfflineMessageManager  INSTANCE = new  OfflineMessageManager();
 	
 	public  boolean  store( long  senderId,ChatPacket  packet )
@@ -42,10 +41,10 @@ public  class  OfflineMessageManager  implements  Plugin
 		}
 		catch(  Exception  e )
 		{
-			logger.error( e.getMessage(),e );
+			log.error( e.getMessage(),e );
 		}
 		
-		return  false;
+		return    false;
 	}
 	
 	public  void  initialize()

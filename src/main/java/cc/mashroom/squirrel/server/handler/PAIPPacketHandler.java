@@ -77,7 +77,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		
 		if( packet instanceof ConnectPacket    )
 		{
-			this.processor.connect(    context.channel(),ObjectUtils.cast(packet , ConnectPacket.class ) );
+			this.processor.connect(    context.channel(),ObjectUtils.cast(packet,   ConnectPacket.class) );
 		}
 		else
 		if( packet instanceof DisconnectPacket )

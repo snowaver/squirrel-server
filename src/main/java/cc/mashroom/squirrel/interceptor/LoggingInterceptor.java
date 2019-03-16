@@ -45,11 +45,11 @@ public  class  LoggingInterceptor  implements  HandlerInterceptor
 		
 		request.getParameterMap().entrySet().forEach( (entry) -> parameters.add( entry.getKey()+"="+(entry.getValue().length <= 0 ? "<MULTIPART>" : entry.getValue()[0]) ) );
 		
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),20," ")+"< "+StringUtils.rightPad(request.getMethod().toUpperCase(),7," ")+" > "+request.getRequestURI()+"?"+StringUtils.join(parameters.toArray(),"&") );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),13," ")+"  "+request.getMethod().toUpperCase()+"\t"+request.getRequestURI()+"?"+StringUtils.join(parameters.toArray(),"&") );
 	}
 
 	public  void  afterCompletion(  HttpServletRequest  request,HttpServletResponse  response,Object  object,Exception  exception )  throws  Exception
 	{
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),20," ")+response.getContentType()+"/"+response.getStatus() );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),13," ")+"  "+response.getContentType()+"/"+response.getStatus() );
 	}
 }

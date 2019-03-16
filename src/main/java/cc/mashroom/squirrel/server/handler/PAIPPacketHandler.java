@@ -55,7 +55,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	{
 		Long  clientId =      context.channel().attr( ConnectPacket.CLIENT_ID ).get();
 		
-		System.err.println(DateTime.now().toString("yyyy-MM-dd HH:mm:ss")+"  CHANNEL.INACTIVE:\tCLIENT.ID="+clientId );
+		System.out.println(    DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.INACTIVE:\tCLIENT.ID = " + clientId );
 		
 		if( clientId != null )
 		{
@@ -73,7 +73,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	
 	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws  Exception
 	{
-		System.err.println(     DateTime.now().toString("yyyy-MM-dd HH:mm:ss")+"  CHANNEL.READ:\t"+packet.toString() );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
 		
 		if( packet instanceof ConnectPacket    )
 		{

@@ -66,8 +66,8 @@ public  class  PAIPPacketProcessor
         }
         //  the  old  session  should  be  removed  to  avoid  delayed  session  inactive  event  from  closing  the  new  created  session  managed  by  session  manager.
         ClientSession  oldSession  = ClientSessionManager.INSTANCE.remove( clientId );
-        
-        if( oldSession != null )
+        //  close  the  old  session  if  the  secret  key  is  different  from  the  old  one.  (NOTE:  a  client  holds  a  unique  secret  key,  so  should  not  close  the  session  with  the  same  secret  key)
+        if( oldSession != null && clientSessionLocation != null && !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
         	try
         	{
@@ -100,7 +100,7 @@ public  class  PAIPPacketProcessor
 	{
 		Long  clientId = channel.attr(ConnectPacket.CLIENT_ID).get();
 
-		if( clientId != null )
+		if( clientId   != null )
 		{
 			ClientSession  clientSession=ClientSessionManager.INSTANCE.get(clientId );
 

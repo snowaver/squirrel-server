@@ -34,33 +34,22 @@ public  class  LoggingInterceptor  implements  HandlerInterceptor
 	
 	public  boolean  preHandle( HttpServletRequest  request,HttpServletResponse  response,Object  object )  throws  Exception
 	{
-		request.setAttribute(   "request.counter",counter.incrementAndGet() );
-		
-		printtimeLine( request );
+		request.setAttribute( "REQUEST_COUNTER",counter.incrementAndGet() );
 		
 		return  true;
 	}
 	
-	private  void  printtimeLine(   HttpServletRequest  request )
-	{
-		System.out.println( StringUtils.leftPad("=",39,"=")+" "+StringUtils.rightPad(String.valueOf(request.getAttribute("request.counter")),20," ")+DateTime.now().toString()+" "+StringUtils.leftPad("=",39,"=") );
-	}
-	
 	public  void  postHandle( HttpServletRequest  request,HttpServletResponse  response,Object  object,ModelAndView  modelAndView )  throws  Exception
 	{
-		System.out.println( "URI:\t\t"+request.getRequestURI() );
-		
-		System.out.println( "METHOD:\t\t"+request.getMethod().toUpperCase() );
-		
 		List<String>  parameters     = new  LinkedList<String>();
 		
-		request.getParameterMap().entrySet().forEach( (entry) -> parameters.add( entry.getKey()+"="+(entry.getValue().length <= 0 ? "" : entry.getValue()[0]) ) );
+		request.getParameterMap().entrySet().forEach( (entry) -> parameters.add( entry.getKey()+"="+(entry.getValue().length <= 0 ? "<MULTIPART>" : entry.getValue()[0]) ) );
 		
-		System.out.println( "PARAMETERS:\t"+StringUtils.join(parameters.toArray(),"&") );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),20," ")+"< "+StringUtils.rightPad(request.getMethod().toUpperCase(),7," ")+" > "+request.getRequestURI()+"?"+StringUtils.join(parameters.toArray(),"&") );
 	}
 
 	public  void  afterCompletion(  HttpServletRequest  request,HttpServletResponse  response,Object  object,Exception  exception )  throws  Exception
 	{
-		System.out.println( "RESPONSE:\t" +response.getContentType()+ "/" +response.getStatus() );  printtimeLine( request );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),20," ")+response.getContentType()+"/"+response.getStatus() );
 	}
 }

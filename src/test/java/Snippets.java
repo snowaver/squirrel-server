@@ -16,13 +16,17 @@
 import  java.io.File;
 import  java.io.IOException;
 import  java.io.InputStream;
+import  java.net.URI;
 import  java.nio.file.FileVisitResult;
 import  java.nio.file.FileVisitor;
 import  java.nio.file.Files;
-import  java.nio.file.Path;
 import  java.nio.file.attribute.BasicFileAttributes;
 
 import  org.apache.commons.io.IOUtils;
+import  org.apache.hadoop.conf.Configuration;
+import  org.apache.hadoop.fs.FSDataInputStream;
+import  org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 import  cc.mashroom.util.FileUtils;
 
@@ -30,9 +34,11 @@ public  class  Snippets
 {
 	public  static  void  main( String[]  args )  throws  IOException
 	{
-		new  File("d:/.gitkeep").createNewFile();
-//		addCopyrightHeader();
 		/*
+		new  File("d:/.gitkeep").createNewFile();
+		*/
+//		addCopyrightHeader();
+		
 		Configuration  configuration = new  Configuration();
 		
 		configuration.set( "fs.defaultFS" , "hdfs://hdns" );
@@ -44,49 +50,48 @@ public  class  Snippets
 				System.err.println( IOUtils.toString(fsis,"UTF-8") );
 			}
 		}
-		*/
 	}
 	
-	public  static  void  addCopyrightHeader()    throws  IOException
-	{
-		try( InputStream  inputs = Snippets.class.getResourceAsStream("/copyright.txt") )
-		{
-			String  copyrightHeader=IOUtils.toString(inputs,"UTF-8");
-			
-			Files.walkFileTree
-			(
-				new  File( "d:/workspace/squirrel-server" ).toPath(),
-				
-				new  FileVisitor<Path>()
-				{	
-					public  FileVisitResult  visitFile( Path  file,BasicFileAttributes  attrs )  throws  IOException
-					{
-						if(     file.toFile().getName().toLowerCase().endsWith(".java") )
-						{
-							String  javaFileContent = FileUtils.readFileToString( file.toFile(),"UTF-8" );
-							//  last  copyright  content  should  be  removed  before  adding  a  new  copyright  content,  then  replace  the  java  file  content.
-							FileUtils.writeStringToFile( file.toFile(),copyrightHeader+"\r\n"+(javaFileContent.startsWith("/*") ? javaFileContent.substring(javaFileContent.indexOf("*/")+2).trim() : javaFileContent.trim()),"UTF-8" );
-						}
-						
-						return  FileVisitResult.CONTINUE;
-					}
-	
-					public  FileVisitResult  visitFileFailed(     Path  file,IOException  exc )  throws  IOException
-					{
-						return  FileVisitResult.CONTINUE;
-					}
-	
-					public  FileVisitResult  postVisitDirectory(  Path  dir, IOException  exc )  throws  IOException
-					{
-						return  FileVisitResult.CONTINUE;
-					}
-					
-					public  FileVisitResult  preVisitDirectory(   Path  dir,BasicFileAttributes  attrs )  throws  IOException
-					{
-						return  FileVisitResult.CONTINUE;
-					}
-				}
-			);
-		}
-	}
+//	public  static  void  addCopyrightHeader()    throws  IOException
+//	{
+//		try( InputStream  inputs = Snippets.class.getResourceAsStream("/copyright.txt") )
+//		{
+//			String  copyrightHeader=IOUtils.toString(inputs,"UTF-8");
+//			
+//			Files.walkFileTree
+//			(
+//				new  File( "d:/workspace/squirrel-server" ).toPath(),
+//				
+//				new  FileVisitor<Path>()
+//				{	
+//					public  FileVisitResult  visitFile( Path  file,BasicFileAttributes  attrs )  throws  IOException
+//					{
+//						if(     file.toFile().getName().toLowerCase().endsWith(".java") )
+//						{
+//							String  javaFileContent = FileUtils.readFileToString( file.toFile(),"UTF-8" );
+//							//  last  copyright  content  should  be  removed  before  adding  a  new  copyright  content,  then  replace  the  java  file  content.
+//							FileUtils.writeStringToFile( file.toFile(),copyrightHeader+"\r\n"+(javaFileContent.startsWith("/*") ? javaFileContent.substring(javaFileContent.indexOf("*/")+2).trim() : javaFileContent.trim()),"UTF-8" );
+//						}
+//						
+//						return  FileVisitResult.CONTINUE;
+//					}
+//	
+//					public  FileVisitResult  visitFileFailed(     Path  file,IOException  exc )  throws  IOException
+//					{
+//						return  FileVisitResult.CONTINUE;
+//					}
+//	
+//					public  FileVisitResult  postVisitDirectory(  Path  dir, IOException  exc )  throws  IOException
+//					{
+//						return  FileVisitResult.CONTINUE;
+//					}
+//					
+//					public  FileVisitResult  preVisitDirectory(   Path  dir,BasicFileAttributes  attrs )  throws  IOException
+//					{
+//						return  FileVisitResult.CONTINUE;
+//					}
+//				}
+//			);
+//		}
+//	}
 }

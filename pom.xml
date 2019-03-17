@@ -15,6 +15,10 @@
 	<dependencies >
 	
 		<dependency >
+			<groupId>io.netty</groupId><artifactId>netty-transport-native-epoll</artifactId><version>4.1.33.Final</version><classifier>linux-x86_64</classifier>
+		</dependency>
+	
+		<dependency >
 		    <groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId><version>2.1.3.RELEASE</version>
 		    <exclusions><exclusion><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-tomcat</artifactId></exclusion></exclusions>
 		</dependency>
@@ -34,11 +38,7 @@
 		<dependency >
 			<groupId>com.github.jarod</groupId><artifactId>qqwry-java</artifactId><version>0.7.2</version>
 		</dependency>
-		
-		<dependency >
-			<groupId>io.netty</groupId><artifactId>netty-transport-native-epoll</artifactId><version>4.1.33.Final</version>
-		</dependency>
-		
+				
 		<dependency >
 			<groupId>com.mchange</groupId><artifactId>c3p0</artifactId><version>0.9.5.3</version>
 		</dependency>
@@ -57,16 +57,21 @@
 		</dependency>
 		
 		<dependency >
-			<groupId>cc.mashroom.squirrel</groupId><artifactId>squirrel-paip</artifactId><version>v1.0.0</version>
+			<groupId>cc.mashroom.squirrel</groupId><artifactId>squirrel-paip</artifactId><version>v1.0.2</version>
 		</dependency>
 		
 		<dependency >
-			<groupId>cc.mashroom</groupId><artifactId>mashroom-plugin</artifactId><version>v1.0.0</version>
+			<groupId>cc.mashroom</groupId><artifactId>mashroom-plugin</artifactId><version>v1.0.1</version>
 		</dependency>
 		
 	</dependencies>
 	
 	<build >
+		<extensions >
+			<extension >
+				<groupId>kr.motd.maven</groupId><artifactId>os-maven-plugin</artifactId><version>1.5.0.Final</version>
+			</extension>
+		</extensions>
     	<pluginManagement >
 			<plugins >
 				<plugin >

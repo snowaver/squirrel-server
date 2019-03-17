@@ -98,6 +98,6 @@ public  class  UserController  extends  AbstractController
 	@ResponseBody
 	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action,keyword,new  HashMap<String,Object>().addEntries((Map<String,Object>)  JsonUtils.fromJson(extras)) );
+		return  service.search( action,keyword,new  HashMap<String,Object>().addEntries((java.util.Map<String,Object>)  JsonUtils.fromJson(extras)) );
 	}
 }

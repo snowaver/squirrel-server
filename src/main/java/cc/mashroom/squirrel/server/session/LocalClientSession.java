@@ -46,11 +46,10 @@ public  class  LocalClientSession  implements  ClientSession
 	{
 		try
 		{
-			if( this.channel.hasAttr( CallPacket.CALL_ID ) )
+			if( channel.hasAttr(CallPacket.CALL_ID) && channel.attr(CallPacket.CALL_ID).get() != null && channel.hasAttr(CallPacket.CALL_CONTACT_ID) && channel.attr(CallPacket.CALL_CONTACT_ID).get() != null )
 			{
 				PacketRoute.INSTANCE.route( channel.attr(CallPacket.CALL_CONTACT_ID).get(),new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),channel.attr(CallPacket.CALL_ID).get()) );
 			}
-			
 			if( reason  >= 0 )
 			{
 				channel.writeAndFlush( new  DisconnectAckPacket(reason) );

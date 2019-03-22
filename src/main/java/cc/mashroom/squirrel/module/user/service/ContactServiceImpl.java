@@ -38,7 +38,7 @@ public  class  ContactServiceImpl  implements  ContactService
 {
 	private  Map<Integer,Integer>  subscribeeStatus = new  ConcurrentHashMap<Integer,Integer>().addEntry(1,0).addEntry(3,2).addEntry(5,4).addEntry( 7,6 );
 	
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  update( long  userId,long  contactId,String  remark,String  group )
 	{
@@ -47,7 +47,7 @@ public  class  ContactServiceImpl  implements  ContactService
 		return  ResponseEntity.status(Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,group,now,userId,contactId}) >= 1 ? 200 : 601).body( "" );
 	}
 	
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group )
 	{
@@ -55,12 +55,12 @@ public  class  ContactServiceImpl  implements  ContactService
 		
 		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,USERNAME,?,?,0,0,?,?  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?  AND  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,remark,group,now,now,subscribeeId,subscriberId,subscribeeId}) <= 0 )
 		{
-			throw  new  IllegalStateException(    "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
+			throw  new  IllegalStateException(       "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
 		}
 		
 		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,USERNAME,NICKNAME,1,0,?,?  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?  AND  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscribeeId,subscriberId,now,now,subscriberId,subscribeeId,subscriberId}) <= 0 )
 		{
-			throw  new  IllegalStateException(    "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
+			throw  new  IllegalStateException(       "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
 		}
 		
 		ClientSession  session    = ClientSessionManager.INSTANCE.get( subscribeeId );
@@ -73,13 +73,13 @@ public  class  ContactServiceImpl  implements  ContactService
 		return  ResponseEntity.status(200).body( "" );
 	}
 	
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  changeSubscribeStatus( int  status,long  subscriberId,long  subscribeeId,String  remark,String  group )
+	public  ResponseEntity<String>  changeSubscribeStatus( int  status, long  subscriberId, long  subscribeeId, String  remark,String  group )
 	{
 		if( status     != 7 )
 		{
-			throw  new  IllegalArgumentException( "SQUIRREL-SERVER:  ** CONTACT  SERVICE  IMPL **  only  7  ( accept )  is  acceptable." );
+			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CONTACT  SERVICE  IMPL **  only  7  ( accept )  is  acceptable." );
 		}
 		
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );

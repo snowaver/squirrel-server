@@ -38,7 +38,7 @@ import  cc.mashroom.util.Reference;
 @Service
 public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  add(  long  chatGroupId , List<Long>  contactIds )
 	{
@@ -56,7 +56,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		for( Long  contactId : contactIds )
 		{
-			params.add( new  Object[]{chatGroupId, contactId, nicknamesMapper.getString(contactId), now,now,chatGroupId,contactId} );
+			params.add( new  Object[]{chatGroupId , contactId , nicknamesMapper.getString(contactId) , now , now , chatGroupId , contactId} );
 		}
 		
 		ChatGroupUser.dao.insert( ids,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?)",params.toArray(new  Object[0][]) );
@@ -85,7 +85,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		return  ResponseEntity.ok( JsonUtils.toJson(response) );
 	}
 
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  update( long  id , String  newvcard )
 	{
@@ -93,13 +93,13 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newvcard , now , now}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("id",id ).addEntry("lastModifyTime",now)) );
+			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("id" , id).addEntry("lastModifyTime" , now)) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
 	}
 	
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  remove( long  id )
 	{

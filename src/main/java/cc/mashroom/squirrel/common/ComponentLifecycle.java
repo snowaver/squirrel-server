@@ -24,7 +24,7 @@ import  org.springframework.context.event.ContextStoppedEvent;
 import  cc.mashroom.config.Config;
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.plugin.PluginRegistry;
-import  cc.mashroom.plugin.db.DBPlugin;
+import  cc.mashroom.plugin.db.Db;
 import  cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
 import  cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
@@ -52,7 +52,7 @@ public  class       ComponentLifecycle  implements  ApplicationListener<Applicat
 			
 			CacheFactoryStrategy  cacheFactoryStrategy = Config.server.getBoolean("cluster.enabled",false) ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 			
-			PluginRegistry.INSTANCE.register(new  DBPlugin()).register((Plugin)  cacheFactoryStrategy).register(ClientSessionManager.INSTANCE).register(ChatGroupUserManager.INSTANCE).initialize();
+			PluginRegistry.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy).register(ClientSessionManager.INSTANCE).register(ChatGroupUserManager.INSTANCE).initialize();
 			
 			ServerInfo.INSTANCE.setLocalNodeId(  cacheFactoryStrategy.getLocalNodeId() );
 		}

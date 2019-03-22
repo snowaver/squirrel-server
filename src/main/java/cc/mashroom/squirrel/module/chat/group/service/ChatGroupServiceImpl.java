@@ -38,7 +38,7 @@ import  cc.mashroom.util.ObjectUtils;
 @Service
 public  class  ChatGroupServiceImpl     implements  ChatGroupService
 {
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  add( long  userId,String  name )
 	{
@@ -48,31 +48,31 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 		
 		if( ChatGroup.dao.insert(id,"INSERT  INTO  "+ChatGroup.dao.getDataSourceBind().table()+"  (NAME,CREATE_BY,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  CREATE_BY = ?  AND  NAME = ?)",new  Object[]{name,userId,now,now,userId,name}) >= 1 )
 		{
-			Reference<Object>  chatGroupUserID = new  Reference<Object>();
+			Reference<Object>  chatGroupUserId = new  Reference<Object>();
 			
-			ChatGroupUser.dao.insert( chatGroupUserID,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,(SELECT  NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?),?,?  FROM  DUAL",new  Object[]{id.get(),userId,userId,now,now} );
+			ChatGroupUser.dao.insert( chatGroupUserId,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,(SELECT  NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?),?,?  FROM  DUAL",new  Object[]{id.get(),userId,userId,now,now} );
 			
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("NAME",name))).addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserID.get()).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CHAT_GROUP_ID",id.get()).addEntry("CONTACT_ID",userId)))) );
+			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("NAME",name))).addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId.get()).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CHAT_GROUP_ID",id.get()).addEntry("CONTACT_ID",userId)))) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
 	}
 
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update( long  id,String  name )
+	public  ResponseEntity<String>  update(  long  id,String  name )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{name,now,now}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("id",id).addEntry("lastModifyTime",now)) );
+			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("id" , id).addEntry("lastModifyTime" , now)) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
 	}
 	
-	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  remove( long  id )
 	{

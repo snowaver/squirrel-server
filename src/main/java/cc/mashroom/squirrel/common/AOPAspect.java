@@ -25,24 +25,37 @@ import  org.springframework.stereotype.Component;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.db.common.Db;
 import  cc.mashroom.util.ObjectUtils;
+import  cc.mashroom.xcache.CacheFactory;
 
 @Aspect
 @Component
 public  class  AOPAspect
-{
+{	
+	@Around(  "transactionPointcut()" )
+	public  Object  transactionAround( ProceedingJoinPoint  proceedingJoinPoint )  throws  Throwable
+	{
+		MethodSignature  signature   = ObjectUtils.cast( proceedingJoinPoint.getSignature() , MethodSignature.class );
+		
+		Connection  connection = signature.getMethod().getAnnotation( Connection.class );
+		
+		if( "db".equalsIgnoreCase(connection.dataSource().type() ) )
+		{
+			return  Db.tx( connection.dataSource().name(),connection.transactionIsolationLevel(),(sqlConnection) -> proceedingJoinPoint.proceed() );
+		}
+		else
+		if( "cache".equalsIgnoreCase(    connection.dataSource().type() ) )
+		{
+			return  CacheFactory.tx( connection.transactionIsolationLevel(),(sqlConnection) -> proceedingJoinPoint.proceed() );
+		}
+		else
+		{
+			return  proceedingJoinPoint.proceed();
+		}
+	}
+	
 	@Pointcut( "@annotation(cc.mashroom.db.annotation.Connection)" )
     public  void  transactionPointcut()
 	{
 		
     }
-	
-	@Around(  "transactionPointcut()" )
-	public  Object  transactionAround( ProceedingJoinPoint  proceedingJoinPoint )  throws  Throwable
-	{
-		MethodSignature  signature = ObjectUtils.cast( proceedingJoinPoint.getSignature(),MethodSignature.class );
-		
-		Connection  connection = signature.getMethod().getAnnotation( Connection.class );
-		
-		return  Db.tx( connection.dataSource().name(),connection.transactionLevel(),(sqlConnection) -> proceedingJoinPoint.proceed() );
-	}
 }

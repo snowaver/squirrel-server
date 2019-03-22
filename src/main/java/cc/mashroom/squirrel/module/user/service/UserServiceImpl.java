@@ -45,7 +45,7 @@ import  cc.mashroom.util.collection.map.Map;
 @Service
 public  class  UserServiceImpl     implements  UserService
 {
-	@Connection( dataSource = @DataSource(type="db" , name="squirrel"),transactionLevel = java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource = @DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  add( User  user , MultipartFile  portrait )  throws  IOException
 	{
@@ -73,12 +73,12 @@ public  class  UserServiceImpl     implements  UserService
 			clientSession.close(0);
 		}
 		
-		CacheFactory.createCache("SESSION_LOCATION_CACHE").update( "DELETE  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{ userId } );
+		CacheFactory.createCache("SESSION_LOCATION_CACHE").update( "DELETE  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );
 		
 		return  ResponseEntity.status(   200 ).body( "" );
 	}
 	
-	@Connection( dataSource = @DataSource(type="db" , name="squirrel"),transactionLevel = java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	@Connection( dataSource = @DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<String>  signin(   String  username,String  password,Integer  roletype,String  ip,Double  longitude,Double  latitude,String  mac )
 	{
@@ -93,7 +93,7 @@ public  class  UserServiceImpl     implements  UserService
 		
 		LoginLogs.dao.insert( new  Reference<Object>(),"INSERT  INTO  "+LoginLogs.dao.getDataSourceBind().table()+"  (CREATE_TIME,USERNAME,STATE,IP,IP_LOCATION,GEOMETRY,MAC)  VALUES  (?,?,?,?,?,"+(longitude == null || latitude == null ? "?" : "ST_GEOMFROMTEXT(?)")+",?)",new  Object[]{new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),username,user == null ? 0 : 1,ip,IPLocator.locate(ip),longitude == null || latitude == null ? null : "POINT("+longitude+" "+latitude+")",mac} );
 		
-		return  user == null ? ResponseEntity.status(601).body("") : ResponseEntity.ok( JsonUtils.toJson(user.addEntry("SECRET_KEY",secretKey)) );
+		return  user == null ? ResponseEntity.status(601).body("") : ResponseEntity.ok(JsonUtils.toJson(user.addEntry("SECRET_KEY",secretKey)));
 	}
 		
 	@Connection( dataSource=@DataSource(type="db" , name="squirrel") )
@@ -121,6 +121,6 @@ public  class  UserServiceImpl     implements  UserService
 			}
 		}
 		
-		throw  new  IllegalStateException(   "SQUIRREL-SERVER:  ** USER  SERVICE  IMPL **  action  not  found" );
+		throw  new  IllegalStateException(  "SQUIRREL-SERVER:  ** USER  SERVICE  IMPL **  action  not  found." );
 	}
 }

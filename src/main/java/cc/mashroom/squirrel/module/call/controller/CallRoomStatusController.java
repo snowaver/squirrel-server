@@ -24,15 +24,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
 import  cc.mashroom.squirrel.common.AbstractController;
-import  cc.mashroom.squirrel.module.call.service.CallRoomMemberService;
+import  cc.mashroom.squirrel.module.call.service.CallRoomStatusService;
 import  cc.mashroom.util.collection.map.Map;
 
-@RequestMapping( "/call/room" )
+@RequestMapping( "/call/room/status" )
 @RestController
-public  class  CallRoomMemberController  extends  AbstractController
+public  class  CallRoomStatusController  extends  AbstractController
 {
 	@Autowired
-	private  CallRoomMemberService  service;
+	private  CallRoomStatusService  service;
 	
 	@RequestMapping( method={RequestMethod.POST} )
 	public  ResponseEntity<String>  add( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("roomId")  Long  roomId,@RequestParam("calleeId")  long  calleeId,@RequestParam("contentType")  int  contentType )

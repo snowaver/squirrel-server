@@ -25,7 +25,7 @@ import  org.springframework.stereotype.Service;
 import  cc.mashroom.xcache.CacheFactory;
 
 @Service
-public  class  CallRoomMemberServiceImpl  implements  CallRoomMemberService
+public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 {
 	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId,int  contentType )
 	{

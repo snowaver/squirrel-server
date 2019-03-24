@@ -17,7 +17,7 @@ package cc.mashroom.squirrel.module.call.service;
 
 import  org.springframework.http.ResponseEntity;
 
-public  interface  CallRoomMemberService
+public  interface  CallRoomStatusService
 {
 	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId,int  contentType );
 	

@@ -15,17 +15,9 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-import  org.joda.time.DateTime;
-import  org.joda.time.DateTimeZone;
-
 import  io.netty.channel.Channel;
 import  io.netty.handler.timeout.IdleStateHandler;
 import  lombok.SneakyThrows;
-import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
-import  cc.mashroom.squirrel.paip.message.call.CallPacket;
-import  cc.mashroom.squirrel.paip.message.call.CandidatePacket;
-import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
-import  cc.mashroom.squirrel.paip.message.call.SDPPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatInvitedPacket;
@@ -140,48 +132,6 @@ public  class  PAIPPacketProcessor
 	public  void  qosReceipt( QosReceiptPacket  packet )
 	{
 		PacketRoute.INSTANCE.route( packet.getContactId() , packet );
-	}
-	
-	public  void  call( Channel  channel,long  clientId,CallPacket  packet )
-	{
-		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
-		{
-			/*
-			channel.writeAndFlush(    new  CallAckPacket(packet.getId(),clientId,0,CallAckPacket.CONTACT_OFFLINE) );
-			*/
-		}
-	}
-	
-	public  void  callAck(     Channel  channel,long  clientId,CallAckPacket  packet )
-	{
-		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
-		{
-			channel.writeAndFlush(new  CloseCallPacket(clientId,packet.getCallId()) );
-		}
-	}
-	
-	public  void  sdp(   Channel  channel,long  clientId,SDPPacket  packet )
-	{
-		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
-		{
-			channel.writeAndFlush(new  CloseCallPacket(clientId,packet.getCallId()) );
-		}
-	}
-	
-	public  void  closeCall( Channel  channel,long  clientId,CloseCallPacket  packet )
-	{
-		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
-		{
-			channel.writeAndFlush(     new  QosReceiptPacket(clientId,DateTime.now(DateTimeZone.UTC).getMillis()) );
-		}
-	}
-	
-	public  void  candidate( Channel  channel,long  clientId,CandidatePacket  packet )
-	{
-		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
-		{
-			channel.writeAndFlush(new  CloseCallPacket(clientId,packet.getCallId()) );
-		}
 	}
 	
 	public  void  groupChatInvited( Channel  channel, GroupChatInvitedPacket  packet )

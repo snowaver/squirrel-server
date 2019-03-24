@@ -35,8 +35,8 @@ public  class  CallRoomMemberController  extends  AbstractController
 	private  CallRoomMemberService  service;
 	
 	@RequestMapping( method={RequestMethod.POST} )
-	public  ResponseEntity<String>  add( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("roomId")  Long  roomId,@RequestParam("calleeId")  long  calleeId )
+	public  ResponseEntity<String>  add( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("roomId")  Long  roomId,@RequestParam("calleeId")  long  calleeId,@RequestParam("contentType")  int  contentType )
 	{
-		return  service.add( roomId,sessionProfile.getLong("USER_ID"),calleeId );
+		return  service.add( roomId,sessionProfile.getLong("USER_ID"),calleeId,contentType );
 	}
 }

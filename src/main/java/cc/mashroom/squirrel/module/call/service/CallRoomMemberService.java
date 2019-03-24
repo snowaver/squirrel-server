@@ -19,7 +19,7 @@ import  org.springframework.http.ResponseEntity;
 
 public  interface  CallRoomMemberService
 {
-	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId );
+	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId,int  contentType );
 	
 	public  ResponseEntity<String>  remove( long  id );
 }

@@ -15,6 +15,7 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
+
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
@@ -22,6 +23,8 @@ import  lombok.AllArgsConstructor;
 
 import  org.joda.time.DateTime;
 
+import  cc.mashroom.squirrel.module.call.manager.CallManager;
+import  cc.mashroom.squirrel.paip.message.call.AbstractCallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CandidatePacket;
@@ -100,29 +103,9 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			processor.qosReceipt( ObjectUtils.cast(packet , QosReceiptPacket.class) );
 		}
 		else
-		if( packet instanceof CallPacket )
+		if( packet instanceof CallPacket || packet instanceof CallAckPacket || packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )
 		{
-			this.processor.call( context.channel(),ObjectUtils.cast(packet,CallPacket.class).getContactId(),ObjectUtils.cast(packet,CallPacket.class) );
-		}
-		else
-		if( packet instanceof CallAckPacket    )
-		{
-			processor.callAck( context.channel(),ObjectUtils.cast(packet, CallAckPacket.class).getContactId(),ObjectUtils.cast(packet, CallAckPacket.class) );
-		}
-		else
-		if( packet instanceof SDPPacket  )
-		{
-			this.processor.sdp( context.channel() ,ObjectUtils.cast(packet,SDPPacket.class).getContactId(), ObjectUtils.cast(packet ,SDPPacket.class) );
-		}
-		else
-		if( packet instanceof CandidatePacket  )
-		{
-			this.processor.candidate( context.channel(),ObjectUtils.cast(packet,CandidatePacket.class).getContactId(),ObjectUtils.cast(packet,CandidatePacket.class) );
-		}
-		else
-		if( packet instanceof CloseCallPacket  )
-		{
-			this.processor.closeCall( context.channel(),ObjectUtils.cast(packet,CloseCallPacket.class).getContactId(),ObjectUtils.cast(packet,CloseCallPacket.class) );
+			CallManager.INSTANCE.process( ObjectUtils.cast(packet,AbstractCallPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,AbstractCallPacket.class).getContactId(),ObjectUtils.cast(packet,AbstractCallPacket.class) );
 		}
 		else
 		if( packet instanceof GroupChatInvitedPacket )

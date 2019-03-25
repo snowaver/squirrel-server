@@ -39,7 +39,7 @@ public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 		
 		if( CacheFactory.createCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  VALUES  (?,?,?,?,?,?,?,?)",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1}) )
 		{
-			CallManager.INSTANCE.scheduleTerminate( id,roomId,Integer.parseInt(System.getProperty("call.timeout.seconds","20")),TimeUnit.SECONDS );
+			CallManager.INSTANCE.scheduleTerminate( id,newRoomId,Integer.parseInt(System.getProperty("call.timeout.seconds","10")),TimeUnit.SECONDS );
 			
 			return  ResponseEntity.status( 200 ).body(  String.valueOf( newRoomId ) );
 		}

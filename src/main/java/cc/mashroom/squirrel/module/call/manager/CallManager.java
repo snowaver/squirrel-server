@@ -81,12 +81,12 @@ public  class      CallManager  implements  Plugin
 		else
 		if( packet instanceof    CloseCallPacket )
 		{
-			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getString("ID"),roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?", new  Object[]{ callRoomStatus.getString( "ID" ), roomId }) )
 			{
 				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL) );
 			}
 			else
-			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getString("ID"),roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?", new  Object[]{ callRoomStatus.getString( "ID" ), roomId }) )
 			{
 				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CLOSE_ACTIVELY) );
 			}
@@ -111,7 +111,7 @@ public  class      CallManager  implements  Plugin
 	private  void  terminate(                String  id,long  roomId )
 	{
 		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{id,roomId} );
-	
+		
 		if( callRoomStatus != null )
 		{
 			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLEE_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );

@@ -15,6 +15,10 @@
  */
 package cc.mashroom.squirrel.module.call.manager;
 
+import  java.util.concurrent.ScheduledThreadPoolExecutor;
+import  java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
@@ -38,22 +42,24 @@ import  lombok.NoArgsConstructor;
 
 public  class      CallManager  implements  Plugin
 {
-	public  void  process( long  roomId,Channel  channel,long  contactId,Packet  packet )
+	protected  final  static  ScheduledThreadPoolExecutor  TIMEOUT_CHECKER = new  ScheduledThreadPoolExecutor( new  Integer(System.getProperty("call.timeoutChecker.poolSize","2")) );
+	
+	public  void  process( long  callId,Channel  channel,long  contactId,Packet  packet )
 	{
-		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{roomId} );
+		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callId} );
 		
 		if( callRoomStatus == null || !(callRoomStatus.getLong( "CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) )
 		{
-			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus == null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
+			channel.write( new  CloseCallPacket(contactId,callId,callRoomStatus == null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
 			
 			return;
 		}
 		
 		if( packet instanceof    CallPacket      )
 		{
-			if( callRoomStatus.getInteger("STATE") == 0 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{1 , roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 0 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{1 , callId}) )
 			{
-				channel.attr( CallPacket.CALL_ROOM_ID ).set( roomId );
+				channel.attr( CallPacket.CALL_ROOM_ID ).set( callId );
 				
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
@@ -61,16 +67,16 @@ public  class      CallManager  implements  Plugin
 		else
 		if( packet instanceof    CallAckPacket   )
 		{
-			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_ACCEPT && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{2,roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_ACCEPT && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{2,callId}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 			else
 			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()    == CallAckPacket.ACK_REJECT )
 			{
-				callRoomStatusCache.update( "UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.REJECT.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),roomId} );
+				callRoomStatusCache.update( "UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.REJECT.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),callId} );
 			
-				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(), roomId, CloseCallReason.REJECT) );
+				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(), callId, CloseCallReason.REJECT) );
 			}
 		}
 		else
@@ -98,17 +104,34 @@ public  class      CallManager  implements  Plugin
 		}
 	}
 	
+	public  void  terminateScheduled( String  callId, long  timeout, TimeUnit  timeunit )
+	{
+		this.TIMEOUT_CHECKER.schedule(   () -> { terminate(callId); },timeout,timeunit );
+	}
+	
+	protected  void  terminate(   String  callId )
+	{
+		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callId} );
+	
+		if( callRoomStatus!= null )
+		{
+			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLEE_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );
+			
+			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLEE_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );
+		}
+	}
+	
 	public  final  static  CallManager  INSTANCE = new  CallManager();
 	
-	private  XCache<?,?>  callRoomStatusCache;
+	protected  XCache<? , ?>  callRoomStatusCache;
+	
+	public  void  stop()
+	{
+		TIMEOUT_CHECKER.shutdown();
+	}
 	
 	public  void  initialize()   throws  Exception
 	{
 		this.callRoomStatusCache  = CacheFactory.createCache( "CALL_ROOM_MEMBER_CACHE" );
-	}
-	
-	public  void  stop()
-	{
-		
 	}
 }

@@ -49,7 +49,7 @@ public  class      CallManager  implements  Plugin
 		
 		if( callRoomStatus == null )
 		{
-			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus == null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
+			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus==null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
 			
 			return;
 		}
@@ -71,11 +71,11 @@ public  class      CallManager  implements  Plugin
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 			else
-			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()    == CallAckPacket.ACK_REJECT )
+			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()  == CallAckPacket.ACK_REJECT )
 			{
 				callRoomStatusCache.update( "UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.REJECT.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),callRoomStatus.get("ID"),roomId} );
 			
-				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(), roomId, CloseCallReason.REJECT) );
+				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.REJECT) );
 			}
 		}
 		else
@@ -114,6 +114,8 @@ public  class      CallManager  implements  Plugin
 		
 		if( callRoomStatus != null )
 		{
+			callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{id,roomId} );
+			
 			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLEE_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );
 			
 			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLEE_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );

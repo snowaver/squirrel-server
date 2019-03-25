@@ -27,6 +27,7 @@ import  cc.mashroom.plugin.PluginRegistry;
 import  cc.mashroom.plugin.db.Db;
 import  cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
 import  cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
+import cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
 import  cc.mashroom.squirrel.server.ServerInfo;
@@ -52,7 +53,7 @@ public  class       ComponentLifecycle  implements  ApplicationListener<Applicat
 			
 			CacheFactoryStrategy  cacheFactoryStrategy = Config.server.getBoolean("cluster.enabled",false) ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 			
-			PluginRegistry.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy).register(ClientSessionManager.INSTANCE).register(ChatGroupUserManager.INSTANCE).initialize();
+			PluginRegistry.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy).register(ClientSessionManager.INSTANCE).register(ChatGroupUserManager.INSTANCE).register(CallManager.INSTANCE).initialize();
 			
 			ServerInfo.INSTANCE.setLocalNodeId(  cacheFactoryStrategy.getLocalNodeId() );
 		}

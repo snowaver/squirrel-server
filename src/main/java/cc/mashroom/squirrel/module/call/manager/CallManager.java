@@ -49,25 +49,12 @@ public  class      CallManager  implements  Plugin
 			return;
 		}
 		
-		if( packet instanceof    CloseCallPacket )
-		{
-			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
-			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL) );
-			}
-			else
-			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
-			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CLOSE_ACTIVELY) );
-			}
-			//  history  logs  can  be  add  here.
-			channel.writeAndFlush( new  QosReceiptPacket<>(contactId , packet.getId()) );
-		}
-		else
 		if( packet instanceof    CallPacket      )
 		{
 			if( callRoomStatus.getInteger("STATE") == 0 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{1 , roomId}) )
 			{
+				channel.attr( CallPacket.CALL_ROOM_ID ).set( roomId );
+				
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 		}
@@ -85,6 +72,21 @@ public  class      CallManager  implements  Plugin
 			
 				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(), roomId, CloseCallReason.REJECT) );
 			}
+		}
+		else
+		if( packet instanceof    CloseCallPacket )
+		{
+			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
+			{
+				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL) );
+			}
+			else
+			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
+			{
+				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CLOSE_ACTIVELY) );
+			}
+			//  history  logs  can  be  add  here.
+			channel.writeAndFlush( new  QosReceiptPacket<>(contactId , packet.getId()) );
 		}
 		else
 		if( packet instanceof SDPPacket || packet instanceof CandidatePacket /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )

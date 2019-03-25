@@ -92,7 +92,7 @@ public  class  ContactServiceImpl  implements  ContactService
 		
 		if( session != null )
 		{
-			session.deliver( new  SubscribeAckPacket(subscribeeId,SubscribeAckPacket.ACCEPT,new  User().addEntries(User.dao.getOne("SELECT  USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{subscribeeId})).addEntry("GROUP",group)) );
+			session.deliver( new  SubscribeAckPacket(subscribeeId,SubscribeAckPacket.ACK_ACCEPT,new  User().addEntries(User.dao.getOne("SELECT  USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{subscribeeId})).addEntry("GROUP",group)) );
 		}
 		
 		return  ResponseEntity.status(200).body( "" );

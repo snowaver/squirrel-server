@@ -21,21 +21,25 @@ import  io.netty.channel.Channel;
 import  lombok.AllArgsConstructor;
 import  lombok.Getter;
 import  lombok.NoArgsConstructor;
+import  lombok.extern.slf4j.Slf4j;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
-import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
+import  cc.mashroom.squirrel.paip.message.call.CloseCallReason;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
+import  cc.mashroom.util.collection.map.Map;
+import  cc.mashroom.xcache.CacheFactory;
 
+@Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
 public  class  LocalClientSession  implements  ClientSession
 {
 	@Getter
-	private  long    clientId;
+	private  long   clientId;
 	@Getter
-	private  Channel  channel;
+	private  Channel channel;
 	
 	public  void  deliver(   Packet  packet )
 	{
@@ -46,16 +50,28 @@ public  class  LocalClientSession  implements  ClientSession
 	{
 		try
 		{
-			if( channel.hasAttr(CallPacket.CALL_ID) && channel.attr(CallPacket.CALL_ID).get() != null && channel.hasAttr(CallPacket.CALL_CONTACT_ID) && channel.attr(CallPacket.CALL_CONTACT_ID).get() != null )
+			if( channel.hasAttr(CallPacket.CALL_ROOM_ID) && channel.attr(CallPacket.CALL_ROOM_ID).get() != null )
 			{
-				PacketRoute.INSTANCE.route( channel.attr(CallPacket.CALL_CONTACT_ID).get(),new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),channel.attr(CallPacket.CALL_ID).get()) );
+				Map<String,Object>  callRoomStatus = CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{channel.attr(CallPacket.CALL_ROOM_ID).get()} );
+				
+				if( callRoomStatus  != null )
+				{
+					CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID")} );
+					
+					PacketRoute.INSTANCE.route( clientId == callRoomStatus.getLong("CALLER_ID") ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(clientId,callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
+				}
 			}
-			if( reason  >= 0 )
+			if( reason >= 0 )
 			{
-				channel.writeAndFlush( new  DisconnectAckPacket(reason) );
+				this.channel.writeAndFlush( new  DisconnectAckPacket( reason ) );
 			}
+			this.channel.close();
+		}
+		catch(Exception  ex )
+		{
+			log.error( ex.getMessage(), ex );
 			
-			channel.close(  );
+			ex.printStackTrace();
 		}
 		finally
 		{

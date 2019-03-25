@@ -17,10 +17,6 @@ package cc.mashroom.squirrel.server.handler;
 
 import  java.util.List;
 
-import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
-import  cc.mashroom.squirrel.paip.message.call.CallPacket;
-import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
-import  cc.mashroom.util.ObjectUtils;
 import  io.netty.buffer.ByteBuf;
 import  io.netty.channel.ChannelHandlerContext;
 
@@ -29,22 +25,5 @@ public  class  PAIPDecoder  extends  cc.mashroom.squirrel.paip.codec.PAIPDecoder
 	protected  void  decode( ChannelHandlerContext  context,ByteBuf  byteBuf,List<Object>  objectList )  throws  Exception
 	{
 		super.decode( context,byteBuf,objectList );
-		
-		for( Object  packet : objectList )
-		{
-			if( packet instanceof CallAckPacket && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() != CallAckPacket.ACCEPT || packet instanceof CloseCallPacket )
-			{
-				context.channel().attr(CallPacket.CALL_ID).set( null );
-				
-				context.channel().attr(CallPacket.CALL_CONTACT_ID).set(  null );
-			}
-			else
-			if( packet instanceof CallPacket      )
-			{
-				context.channel().attr(CallPacket.CALL_CONTACT_ID).compareAndSet( null,ObjectUtils.cast(packet,CallPacket.class).getContactId() );
-				
-				context.channel().attr(CallPacket.CALL_ID).compareAndSet( null,ObjectUtils.cast(packet,CallPacket.class).getCallId() );
-			}
-		}
 	}
 }

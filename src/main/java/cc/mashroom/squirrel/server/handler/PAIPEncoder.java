@@ -18,7 +18,6 @@ package cc.mashroom.squirrel.server.handler;
 import  io.netty.buffer.ByteBuf;
 import  io.netty.channel.ChannelHandlerContext;
 import  cc.mashroom.squirrel.paip.message.Packet;
-import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
 import  cc.mashroom.util.ObjectUtils;
@@ -27,18 +26,14 @@ public  class  PAIPEncoder  extends  cc.mashroom.squirrel.paip.codec.PAIPEncoder
 {
 	protected  void  encode( ChannelHandlerContext  context,Packet  packet,ByteBuf  byteBuf )  throws  Exception
 	{
-		if( packet instanceof CallAckPacket && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() != CallAckPacket.ACCEPT || packet instanceof CloseCallPacket )
+		if( packet instanceof CloseCallPacket )
 		{
-			context.channel().attr(CallPacket.CALL_ID).set( null );
-			
-			context.channel().attr(CallPacket.CALL_CONTACT_ID).set(      null );
+			context.channel().attr(CallPacket.CALL_ROOM_ID).set( null );
 		}
 		else
 		if( packet instanceof CallPacket      )
 		{
-			context.channel().attr(CallPacket.CALL_CONTACT_ID).compareAndSet( null,ObjectUtils.cast(packet,CallPacket.class).getContactId() );
-			
-			context.channel().attr(CallPacket.CALL_ID).compareAndSet( null,ObjectUtils.cast(packet,CallPacket.class).getCallId() );
+			context.channel().attr(CallPacket.CALL_ROOM_ID).set( ObjectUtils.cast(packet,CallPacket.class).getRoomId() );
 		}
 		
 		super.encode( context,packet,byteBuf );

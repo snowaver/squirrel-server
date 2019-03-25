@@ -20,6 +20,7 @@ import  io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import  io.netty.handler.ssl.SslHandler;
 import  io.netty.handler.timeout.IdleStateHandler;
 import  cc.mashroom.squirrel.server.handler.ChannelDuplexIdleTimeoutHandler;
+import  cc.mashroom.squirrel.server.handler.PAIPDecoder;
 import  cc.mashroom.squirrel.server.handler.PAIPEncoder;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketHandler;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketProcessor;
@@ -28,15 +29,12 @@ import  cc.mashroom.util.SecureUtils;
 import  javax.net.ssl.SSLEngine;
 
 import  cc.mashroom.config.Config;
-import  cc.mashroom.squirrel.paip.codec.PAIPDecoder;
 
 public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitializer<SocketChannel>
 {
 	protected  void  initChannel( SocketChannel  channel )  throws  Exception
 	{
 		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store").replace("classpath:","/")).createSSLEngine();
-		
-		sslEngine.setEnabledCipherSuites( sslEngine.getSupportedCipherSuites() );
 		
 		sslEngine.setUseClientMode( false );
 		/*

@@ -36,42 +36,37 @@ import  lombok.NoArgsConstructor;
 
 @NoArgsConstructor( access = AccessLevel.PRIVATE )
 
-public  class  CallManager  implements  Plugin
+public  class      CallManager  implements  Plugin
 {
 	public  void  process( long  roomId,Channel  channel,long  contactId,Packet  packet )
 	{
 		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{roomId} );
 		
-		if( callRoomStatus == null )
+		if( callRoomStatus == null || !(callRoomStatus.getLong( "CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) )
 		{
-			channel.writeAndFlush( new  CloseCallPacket(contactId,roomId,CloseCallReason.ROOM_NOT_FOUND) );
+			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus == null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
 			
-			return;
-		}
-		
-		if( !(callRoomStatus.getLong( "CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) )
-		{
 			return;
 		}
 		
 		if( packet instanceof    CloseCallPacket )
 		{
-			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.CANCEL.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(), roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL) );
 			}
 			else
-			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.CLOSE_ACTIVELY.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?",new  Object[]{callRoomStatus.getString("ID")}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CLOSE_ACTIVELY) );
 			}
-			
+			//  history  logs  can  be  add  here.
 			channel.writeAndFlush( new  QosReceiptPacket<>(contactId , packet.getId()) );
 		}
 		else
-		if( packet instanceof    CallPacket  )
+		if( packet instanceof    CallPacket      )
 		{
-			if( callRoomStatus.getInteger("STATE") == 0 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{1,roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 0 && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{1 , roomId}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
@@ -79,22 +74,22 @@ public  class  CallManager  implements  Plugin
 		else
 		if( packet instanceof    CallAckPacket   )
 		{
-			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACCEPT && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{2,roomId}) )
+			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_ACCEPT && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{2,roomId}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 			else
-			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.REJECT )
+			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()    == CallAckPacket.ACK_REJECT )
 			{
 				callRoomStatusCache.update( "UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.REJECT.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),roomId} );
 			
-				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.REJECT) );
+				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(), roomId, CloseCallReason.REJECT) );
 			}
 		}
 		else
-		if( packet instanceof SDPPacket || packet instanceof CandidatePacket )
+		if( packet instanceof SDPPacket || packet instanceof CandidatePacket /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
 		{
-			if( callRoomStatus.getInteger("STATE") == 2 && (callRoomStatus.getLong("CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) )
+			if( callRoomStatus.getInteger("STATE") == 2 /* && (callRoomStatus.getLong("CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) */ )
 			{
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}

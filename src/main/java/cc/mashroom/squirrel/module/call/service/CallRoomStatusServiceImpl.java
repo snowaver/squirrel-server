@@ -16,12 +16,14 @@
 package cc.mashroom.squirrel.module.call.service;
 
 import  java.sql.Timestamp;
+import java.util.concurrent.TimeUnit;
 
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
 import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
+import cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.xcache.CacheFactory;
 
 @Service
@@ -31,20 +33,17 @@ public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		String  id = (Math.min(callerId,calleeId)+"/"+Math.max(callerId,calleeId)).toUpperCase();
+		String  id = Math.min( callerId,calleeId )+":"+ Math.max( callerId,calleeId );
 		
 		long  newRoomId   = CacheFactory.getNextSequence( "CALL_ROOM_ID" );
 		
 		if( CacheFactory.createCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  VALUES  (?,?,?,?,?,?,?)",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1}) )
 		{
+			CallManager.INSTANCE.scheduleTerminate( id,roomId,Integer.parseInt(System.getProperty("call.timeout.seconds","20")),TimeUnit.SECONDS );
+			
 			return  ResponseEntity.status( 200 ).body(  String.valueOf( newRoomId ) );
 		}
 		
-		return  ResponseEntity.status(601).body( "" );
-	}
-
-	public  ResponseEntity<String>  remove( long  id )
-	{
 		return  ResponseEntity.status(601).body( "" );
 	}
 }

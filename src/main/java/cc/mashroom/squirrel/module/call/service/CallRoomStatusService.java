@@ -20,6 +20,4 @@ import  org.springframework.http.ResponseEntity;
 public  interface  CallRoomStatusService
 {
 	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId,int  contentType );
-	
-	public  ResponseEntity<String>  remove( long  id );
 }

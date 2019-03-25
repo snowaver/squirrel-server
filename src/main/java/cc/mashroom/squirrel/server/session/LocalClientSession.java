@@ -52,11 +52,11 @@ public  class  LocalClientSession  implements  ClientSession
 		{
 			if( channel.hasAttr(CallPacket.CALL_ROOM_ID) && channel.attr(CallPacket.CALL_ROOM_ID).get() != null )
 			{
-				Map<String,Object>  callRoomStatus = CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{channel.attr(CallPacket.CALL_ROOM_ID).get()} );
+				Map<String,Object>  callRoomStatus = CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?  AND  (CALLER_ID = ?  OR  CALLEE_ID = ?)",new  Object[]{channel.attr(CallPacket.CALL_ROOM_ID).get(),clientId,clientId} );
 				
 				if( callRoomStatus  != null )
 				{
-					CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID")} );
+					CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID"),callRoomStatus.get("ID")} );
 					
 					PacketRoute.INSTANCE.route( clientId == callRoomStatus.getLong("CALLER_ID") ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(clientId,callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
 				}

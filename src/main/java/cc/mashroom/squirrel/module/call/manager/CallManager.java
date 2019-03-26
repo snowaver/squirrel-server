@@ -73,7 +73,7 @@ public  class      CallManager  implements  Plugin
 			else
 			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()  == CallAckPacket.ACK_REJECT )
 			{
-				callRoomStatusCache.update( "UPDATE  CALL_ROOM_STATUS  SET  STATE = ?,CLOSE_REASON = ?,CLOSED_BY = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{3,CloseCallReason.REJECT.getValue(),channel.attr(ConnectPacket.CLIENT_ID).get(),callRoomStatus.get("ID"),roomId} );
+				callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID"),roomId} );
 			
 				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.REJECT) );
 			}

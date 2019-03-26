@@ -112,7 +112,7 @@ public  class      CallManager  implements  Plugin
 	{
 		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{id,roomId} );
 		
-		if( callRoomStatus != null )
+		if( callRoomStatus != null&& callRoomStatus.getInteger(    "STATE") != 2/* call  is  not  accepted  or  rejected,  close  it. */ )
 		{
 			callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{id,roomId} );
 			

@@ -16,14 +16,14 @@
 package cc.mashroom.squirrel.module.call.service;
 
 import  java.sql.Timestamp;
-import java.util.concurrent.TimeUnit;
+import  java.util.concurrent.TimeUnit;
 
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
 import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
-import cc.mashroom.squirrel.module.call.manager.CallManager;
+import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.xcache.CacheFactory;
 
 @Service
@@ -37,9 +37,9 @@ public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 		
 		long  newRoomId   = CacheFactory.getNextSequence( "CALL_ROOM_ID" );
 		
-		if( CacheFactory.createCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  VALUES  (?,?,?,?,?,?,?,?)",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1}) )
+		if( CacheFactory.createCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  SELECT  ?,?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  CALL_ROOM_STATUS  WHERE  CALLER_ID  IN  (?,?)  OR  CALLEE_ID  IN  (?,?))",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1,callerId,calleeId,callerId,calleeId}) )
 		{
-			CallManager.INSTANCE.scheduleTerminate( id,newRoomId,Integer.parseInt(System.getProperty("call.timeout.seconds","10")),TimeUnit.SECONDS );
+			CallManager.INSTANCE.scheduleTerminate( id,newRoomId,Integer.parseInt(System.getProperty("call.timeout.seconds","20")),TimeUnit.SECONDS );
 			
 			return  ResponseEntity.status( 200 ).body(  String.valueOf( newRoomId ) );
 		}

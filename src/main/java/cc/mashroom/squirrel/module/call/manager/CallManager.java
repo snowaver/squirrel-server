@@ -27,7 +27,6 @@ import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallReason;
 import  cc.mashroom.squirrel.paip.message.call.SDPPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.collection.map.Map;
@@ -83,15 +82,13 @@ public  class      CallManager  implements  Plugin
 		{
 			if( callRoomStatus.getInteger("STATE") == 1 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?", new  Object[]{ callRoomStatus.getString( "ID" ), roomId }) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL) );
+				PacketRoute.INSTANCE.route( contactId , ObjectUtils.cast(packet, CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL ) );
 			}
 			else
 			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?", new  Object[]{ callRoomStatus.getString( "ID" ), roomId }) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CLOSE_ACTIVELY) );
+				PacketRoute.INSTANCE.route( contactId , ObjectUtils.cast(packet, CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.BY_USER) );
 			}
-			//  history  logs  can  be  add  here.
-			channel.writeAndFlush( new  QosReceiptPacket<>(contactId , packet.getId()) );
 		}
 		else
 		if( packet instanceof SDPPacket || packet instanceof CandidatePacket  /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
@@ -116,9 +113,9 @@ public  class      CallManager  implements  Plugin
 		{
 			callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{id,roomId} );
 			
-			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLEE_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );
+			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(callRoomStatus.getLong("CALLEE_ID"),callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.TIMEOUT) );
 			
-			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLEE_ID") , new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID"), callRoomStatus.getLong("CALL_ROOM_ID"), CloseCallReason.TIMEOUT) );
+			PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLEE_ID"),new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID"),callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.TIMEOUT) );
 		}
 	}
 	

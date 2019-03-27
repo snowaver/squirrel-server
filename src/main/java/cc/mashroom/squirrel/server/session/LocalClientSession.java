@@ -58,7 +58,9 @@ public  class  LocalClientSession  implements  ClientSession
 				{
 					CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID"),callRoomStatus.get("ID")} );
 					
-					PacketRoute.INSTANCE.route( clientId == callRoomStatus.getLong("CALLER_ID") ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(clientId,callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
+					this.channel.writeAndFlush( new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID") == clientId ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
+					
+					PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") == clientId ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(clientId,callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
 				}
 			}
 			if( reason >= 0 )

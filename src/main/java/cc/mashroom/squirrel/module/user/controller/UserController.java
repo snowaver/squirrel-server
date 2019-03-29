@@ -79,7 +79,7 @@ public  class  UserController  extends  AbstractController
 		return  service.logout(sessionProfile.getLong("USER_ID") );
 	}
 	
-	@RequestMapping( value  = "/tolist" )
+	@RequestMapping( value="/tolist" )
 	public  ModelAndView  tolist( Model  model,HttpServletRequest  request )
 	{
 		model.addAttribute( "sessionProfile",request.getAttribute("SESSION_PROFILE") );
@@ -89,15 +89,15 @@ public  class  UserController  extends  AbstractController
 	
 	@RequestMapping( method={RequestMethod.GET } )
 	@ResponseBody
-	public  ResponseEntity<String>  get(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile )
+	public  ResponseEntity<String>  get( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("userId")  long  userId )
 	{
-		return  service.get( sessionProfile.getLong( "USER_ID" ) );
+		return  service.get( userId );
 	}
 	
 	@RequestMapping( value="/search", method={RequestMethod.GET } )
 	@ResponseBody
 	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action,keyword,new  HashMap<String,Object>().addEntries((java.util.Map<String,Object>)  JsonUtils.fromJson(extras)) );
+		return  service.search( action, keyword , new  HashMap<String,Object>().addEntries((java.util.Map<String,Object>)  JsonUtils.fromJson(extras)) );
 	}
 }

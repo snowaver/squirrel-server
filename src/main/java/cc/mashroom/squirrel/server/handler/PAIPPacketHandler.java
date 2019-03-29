@@ -58,7 +58,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	{
 		Long  clientId =      context.channel().attr( ConnectPacket.CLIENT_ID ).get();
 		
-		System.out.println(  DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS") + "  CHANNEL.INACTIVE:\tCLIENT.ID = " + clientId );
+		System.out.println(DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.LEFT:\tCLIENT.ID="+clientId );
 		
 		if( clientId != null )
 		{
@@ -124,7 +124,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		}
 		else
 		{
-			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  process  the  packet" );
+			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  process  the  packet." );
 		}
 	}
 }

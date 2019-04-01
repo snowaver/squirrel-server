@@ -44,6 +44,15 @@ public  class      CallManager  implements  Plugin
 	
 	public  void  process( long  roomId,Channel  channel,long  contactId,Packet  packet )
 	{
+		//  sdp  and  candidate  packet  exchanging  is  very  frequent  and  they  are  controlled  by  the  client,  so  route  it  without  call  state  verifying.
+		if( packet instanceof SDPPacket || packet instanceof CandidatePacket  /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
+		{
+			/* if( callRoomStatus.getInteger("STATE") == 2 && (callRoomStatus.getLong("CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) ) */
+			{
+				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
+			}
+		}
+		
 		Map<String,Object>  callRoomStatus = callRoomStatusCache.getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{Math.min(contactId,channel.attr(ConnectPacket.CLIENT_ID).get())+":"+Math.max(contactId,channel.attr(ConnectPacket.CLIENT_ID).get()),roomId} );
 		
 		if( callRoomStatus == null )
@@ -72,7 +81,7 @@ public  class      CallManager  implements  Plugin
 			else
 			if( callRoomStatus.getInteger("STATE") == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()  == CallAckPacket.ACK_REJECT )
 			{
-				callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID"),roomId} );
+				callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{ callRoomStatus.get("ID"),roomId } );
 			
 				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.REJECT) );
 			}
@@ -88,14 +97,6 @@ public  class      CallManager  implements  Plugin
 			if( callRoomStatus.getInteger("STATE") == 2 && callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?", new  Object[]{ callRoomStatus.getString( "ID" ), roomId }) )
 			{
 				PacketRoute.INSTANCE.route( contactId , ObjectUtils.cast(packet, CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.BY_USER) );
-			}
-		}
-		else
-		if( packet instanceof SDPPacket || packet instanceof CandidatePacket  /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
-		{
-			if( callRoomStatus.getInteger("STATE") == 2 /* && (callRoomStatus.getLong("CALLER_ID") == contactId && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) */ )
-			{
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 		}
 	}

@@ -131,6 +131,6 @@ public  class      CallManager  implements  Plugin
 	
 	public  void  initialize()   throws  Exception
 	{
-		this.callRoomStatusCache  = CacheFactory.createCache( "CALL_ROOM_MEMBER_CACHE" );
+		this.callRoomStatusCache  = CacheFactory.createCache( "CALL_ROOM_STATUS_CACHE" );
 	}
 }

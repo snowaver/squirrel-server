@@ -19,6 +19,7 @@ package cc.mashroom.squirrel.server.handler;
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
+import  lombok.Setter;
 import  lombok.SneakyThrows;
 
 import  java.util.ArrayList;
@@ -54,6 +55,8 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	@SneakyThrows
 	public  PAIPPacketHandler(    PAIPPacketProcessor  packetProcessor )  //throws  InstantiationException,IllegalAccessException,ClassNotFoundException
 	{
+		this.setProcessor(    packetProcessor );
+		
 		for( String  processorClassName:System.getProperty("squirrel.server.externalProcessorClasses","").split("," ) )
 		{
 			if( StringUtils.isNotBlank(processorClassName) )
@@ -64,7 +67,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	}
 	
 	protected  List<PAIPPacketExternalProcessor>  externalProcessors   = new  ArrayList<PAIPPacketExternalProcessor>();
-	
+	@Setter
 	protected  PAIPPacketProcessor    processor;
 	
 	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  throwable )  throws  Exception

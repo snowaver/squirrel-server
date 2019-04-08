@@ -22,6 +22,11 @@ import  io.netty.channel.ChannelHandlerContext;
 
 public  class  PAIPDecoder  extends  cc.mashroom.squirrel.paip.codec.PAIPDecoder
 {
+	public  PAIPDecoder()  throws  InstantiationException,IllegalAccessException,ClassNotFoundException
+	{
+		super();
+	}
+
 	protected  void  decode( ChannelHandlerContext  context,ByteBuf  byteBuf,List<Object>  objectList )  throws  Exception
 	{
 		super.decode( context,byteBuf,objectList );

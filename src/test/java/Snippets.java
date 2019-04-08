@@ -21,12 +21,14 @@ import  java.nio.file.FileVisitResult;
 import  java.nio.file.FileVisitor;
 import  java.nio.file.Files;
 import  java.nio.file.attribute.BasicFileAttributes;
+import  java.util.Collections;
+import  java.util.List;
 
 import  org.apache.commons.io.IOUtils;
 import  org.apache.hadoop.conf.Configuration;
 import  org.apache.hadoop.fs.FSDataInputStream;
 import  org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
+import  org.apache.hadoop.fs.Path;
 
 import  cc.mashroom.util.FileUtils;
 
@@ -38,7 +40,7 @@ public  class  Snippets
 		new  File("d:/.gitkeep").createNewFile();
 		*/
 //		addCopyrightHeader();
-		
+		/*
 		Configuration  configuration = new  Configuration();
 		
 		configuration.set( "fs.defaultFS" , "hdfs://hdns" );
@@ -50,6 +52,13 @@ public  class  Snippets
 				System.err.println( IOUtils.toString(fsis,"UTF-8") );
 			}
 		}
+		*/
+		
+		List<String>  values = FileUtils.readLines( new  File("d:/Workspace/Android/squirrel-peanut/app/src/main/res/values-en/strings.xml"),"UTF-8" );
+		
+		Collections.sort( values );
+		
+		values.forEach((value) -> System.err.println(value.trim()) );
 	}
 	
 //	public  static  void  addCopyrightHeader()    throws  IOException

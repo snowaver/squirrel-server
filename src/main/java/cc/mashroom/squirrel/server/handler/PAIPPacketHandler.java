@@ -19,9 +19,14 @@ package cc.mashroom.squirrel.server.handler;
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
-import  lombok.AllArgsConstructor;
+import  lombok.SneakyThrows;
+
+import  java.util.ArrayList;
+import  java.util.List;
 
 import  org.joda.time.DateTime;
+
+import  com.fasterxml.jackson.core.type.TypeReference;
 
 import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.paip.message.call.AbstractCallPacket;
@@ -40,13 +45,26 @@ import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
 import  cc.mashroom.util.ObjectUtils;
+import  cc.mashroom.util.StringUtils;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
-@AllArgsConstructor
-
 public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 {
+	@SneakyThrows
+	public  PAIPPacketHandler(    PAIPPacketProcessor  packetProcessor )  //throws  InstantiationException,IllegalAccessException,ClassNotFoundException
+	{
+		for( String  processorClassName:System.getProperty("squirrel.server.externalProcessorClasses","").split("," ) )
+		{
+			if( StringUtils.isNotBlank(processorClassName) )
+			{
+				this.externalProcessors.add( ObjectUtils.cast(Class.forName(processorClassName),new  TypeReference<Class<? extends PAIPPacketExternalProcessor>>(){}).newInstance() );
+			}
+		}
+	}
+	
+	protected  List<PAIPPacketExternalProcessor>  externalProcessors   = new  ArrayList<PAIPPacketExternalProcessor>();
+	
 	protected  PAIPPacketProcessor    processor;
 	
 	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  throwable )  throws  Exception
@@ -124,6 +142,14 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		}
 		else
 		{
+			for( PAIPPacketExternalProcessor  externalProcessor : externalProcessors )
+			{
+				if( externalProcessor.process(ObjectUtils.cast(packet)))
+				{
+					return;
+				}
+			}
+			
 			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  process  the  packet." );
 		}
 	}

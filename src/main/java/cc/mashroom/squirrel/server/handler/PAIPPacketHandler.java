@@ -41,7 +41,6 @@ import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.paip.message.connect.DisconnectPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
@@ -104,11 +103,13 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			this.processor.connect(    context.channel(),ObjectUtils.cast(packet,   ConnectPacket.class) );
 		}
 		else
+		/*
 		if( packet instanceof DisconnectPacket )
 		{
 			this.processor.disconnect( context.channel(),ObjectUtils.cast(packet,DisconnectPacket.class) );
 		}
 		else
+		*/
 		if( packet instanceof PingPacket )
 		{
 			context.channel().writeAndFlush(     new  PingAckPacket() );

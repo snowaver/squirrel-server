@@ -17,7 +17,6 @@ package cc.mashroom.squirrel.server.handler;
 
 import  io.netty.channel.Channel;
 import  io.netty.handler.timeout.IdleStateHandler;
-import  lombok.SneakyThrows;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
@@ -25,7 +24,6 @@ import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
-import  cc.mashroom.squirrel.paip.message.connect.DisconnectPacket;
 import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
@@ -85,22 +83,6 @@ public  class  PAIPPacketProcessor
         channel.pipeline().addFirst( "handler.idle.state",new  IdleStateHandler( 0,0,Math.round( packet.getKeepalive()*1.5f ) ) );
         
         channel.writeAndFlush(     new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
-	}
-	
-	@SneakyThrows
-	public  void  disconnect(  Channel  channel , DisconnectPacket  packet )
-	{
-		Long  clientId = channel.attr(ConnectPacket.CLIENT_ID).get();
-
-		if( clientId   != null )
-		{
-			ClientSession  clientSession=ClientSessionManager.INSTANCE.get(clientId );
-
-			if( clientSession != null )
-			{
-				clientSession.close(    DisconnectAckPacket.ACTIVE );
-			}
-		}
 	}
 	
 	public  void  chat( Channel  channel,long  clientId,ChatPacket  packet )

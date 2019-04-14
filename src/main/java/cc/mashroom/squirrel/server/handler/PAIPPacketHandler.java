@@ -38,7 +38,7 @@ import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
 import  cc.mashroom.squirrel.paip.message.call.SDPPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
-import  cc.mashroom.squirrel.paip.message.chat.GroupChatInvitedPacket;
+import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectPacket;
@@ -129,9 +129,9 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			CallManager.INSTANCE.process( ObjectUtils.cast(packet,AbstractCallPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,AbstractCallPacket.class).getContactId(),ObjectUtils.cast(packet,AbstractCallPacket.class) );
 		}
 		else
-		if( packet instanceof GroupChatInvitedPacket )
+		if( packet instanceof GroupChatEventPacket    )
 		{
-			this.processor.groupChatInvited( context.channel(),ObjectUtils.cast(packet,GroupChatInvitedPacket.class) );
+			this.processor.groupChatInvited( context.channel(),ObjectUtils.cast(packet,GroupChatEventPacket.class) );
 		}
 		else
 		if( packet instanceof GroupChatPacket  )

@@ -20,7 +20,7 @@ import  io.netty.handler.timeout.IdleStateHandler;
 import  lombok.SneakyThrows;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
-import  cc.mashroom.squirrel.paip.message.chat.GroupChatInvitedPacket;
+import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
@@ -134,7 +134,7 @@ public  class  PAIPPacketProcessor
 		PacketRoute.INSTANCE.route( packet.getContactId() , packet );
 	}
 	
-	public  void  groupChatInvited( Channel  channel, GroupChatInvitedPacket  packet )
+	public  void  groupChatInvited( Channel  channel   ,GroupChatEventPacket  packet )
 	{
 		PacketRoute.INSTANCE.route(      packet.getContactId(),packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 	}

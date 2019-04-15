@@ -19,11 +19,13 @@ import  java.util.List;
 
 import  org.springframework.http.ResponseEntity;
 
+import  cc.mashroom.util.collection.map.Map;
+
 public  interface  ChatGroupUserService
 {
-	public  ResponseEntity<String>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
+	public  ResponseEntity<List<Map<String,Object>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
 	
-	public  ResponseEntity<String>  remove( long  removerId,long  id );
+	public  ResponseEntity<String>  remove( long  removerId,long  chatGroupId );
 	
-	public  ResponseEntity<String>  update( long  updatorId,long  id,String  newvcard );
+	public  ResponseEntity<String>  update( long  updatorId,long  chatGroupId,String  newvcard );
 }

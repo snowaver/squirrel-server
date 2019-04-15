@@ -40,7 +40,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
+	public  ResponseEntity<List<Map<String,Object>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
@@ -54,7 +54,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		User.dao.search("SELECT  ID,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(inviteeIds.size()-1)*2,",?")+")",inviteeIds.toArray(new  Long[inviteeIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getLong("ID"),user.getString("NICKNAME")) );
 		
-		for( Long  contactId : inviteeIds )
+		for(  Long  contactId : inviteeIds )
 		{
 			params.add( new  Object[]{chatGroupId , contactId , nicknamesMapper.getString(contactId) , now , now , chatGroupId , contactId} );
 		}
@@ -63,7 +63,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		CacheFactory.createCache( "CHATGROUP_USER_IDS_CACHE" ).remove(  chatGroupId );
 		
-		for( Reference<Object>  id  : ids )
+		for(  Reference<Object >  id : ids )
 		{
 			if( id.get() != null && Long.parseLong( id.get().toString() ) >= 1 )
 			{
@@ -74,18 +74,18 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 			}
 		}
 		
-		return  ResponseEntity.ok( JsonUtils.toJson(response) );
+		return  ResponseEntity.ok(response);
 	}
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update(long  updaterId,long  id,String  newvcard )
+	public  ResponseEntity<String>  update( long  updaterId,long  chatGroupId,String  newvcard )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newvcard , now , now}) >= 1 )
+		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newvcard,now,now}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("ID", id).addEntry("LAST_MODIFY_TIME", now)) );
+			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("LAST_MODIFY_TIME",now)) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
@@ -93,8 +93,8 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  remove(    long  removerId,long  id )
+	public  ResponseEntity<String>  remove(        long  removerId,long  chatGroupid )
 	{
-		return  ResponseEntity.status(ChatGroupUser.dao.update("DELETE  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{id}) >= 1 ? 200 : 601).body( "" );
+		return  ResponseEntity.status(ChatGroupUser.dao.update("DELETE  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupid}) >= 1 ? 200 : 601).body( "" );
 	}
 }

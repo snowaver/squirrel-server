@@ -15,6 +15,7 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
+import  java.util.LinkedList;
 import  java.util.List;
 
 import  org.springframework.beans.factory.annotation.Autowired;
@@ -25,14 +26,16 @@ import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
-import  com.fasterxml.jackson.core.type.TypeReference;
 import  com.google.common.collect.Lists;
 
 import  cc.mashroom.squirrel.common.AbstractController;
+import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupUserService;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
+import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.CollectionUtils;
 import  cc.mashroom.util.JsonUtils;
+import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/chat/group/user" )
@@ -45,12 +48,12 @@ public  class  ChatGroupUserController  extends  AbstractController
 	@RequestMapping( value="",method={RequestMethod.POST} )
 	public  ResponseEntity<String>  add( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("inviteeIds")  String  inviteeIdsSeperatedWithComma )
 	{
-		List<Long>  inviteeIds = Lists.newArrayList( CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(",")) );
+		ResponseEntity<List<Map<String,Object>>>  responseEntity = service.add( sessionProfile.getLong("USER_ID"),chatGroupId,Lists.newArrayList(CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(","))) );
 		
-		ResponseEntity<String>  response = service.add( sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
-	
-		new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED,JsonUtils.fromJson(response.getBody(),new  TypeReference<Map<String,Object>>(){}) );
+		GroupChatEventPacket  groupChatEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED,new  HashMap<String,Object>().addEntry("CHAT_GROUPS",new  LinkedList<Map<String,Object>>()).addEntry("CHAT_GROUP_USERS",responseEntity.getBody()) );
 		
-		return  response;
+		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).forEach( (userId) -> {if(userId != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(userId,groupChatEventPacket);} );
+		
+		return  ResponseEntity.ok( JsonUtils.toJson(responseEntity.getBody()) );
 	}
 }

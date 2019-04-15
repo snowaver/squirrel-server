@@ -17,7 +17,9 @@ package cc.mashroom.squirrel.module.user.service;
 
 import  org.springframework.http.ResponseEntity;
 
+import  cc.mashroom.util.collection.map.Map;
+
 public  interface  OfflineService
 {
-	public  ResponseEntity<String>  search( int  action,long  userId,java.util.Map<String,java.util.Map<String,Object>>  extras );
+	public  ResponseEntity<String>  search( int  action,long  userId,Map<String,Map<String,Object>>  extras );
 }

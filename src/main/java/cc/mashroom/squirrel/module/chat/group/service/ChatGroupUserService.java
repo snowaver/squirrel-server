@@ -21,9 +21,9 @@ import  org.springframework.http.ResponseEntity;
 
 public  interface  ChatGroupUserService
 {
-	public  ResponseEntity<String>  add( long  chatGroupId,List<Long>  contactIds );
+	public  ResponseEntity<String>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
 	
-	public  ResponseEntity<String>  remove( long  id );
+	public  ResponseEntity<String>  remove( long  removerId,long  id );
 	
-	public  ResponseEntity<String>  update( long  id,String  newvcard );
+	public  ResponseEntity<String>  update( long  updatorId,long  id,String  newvcard );
 }

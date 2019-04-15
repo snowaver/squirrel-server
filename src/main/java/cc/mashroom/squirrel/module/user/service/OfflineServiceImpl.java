@@ -38,7 +38,7 @@ public  class  OfflineServiceImpl  implements  OfflineService
 {
 	@Connection( dataSource = @DataSource(type="db",name="squirrel") )
 	
-	public  ResponseEntity<String>  search( int  action,long  userId,java.util.Map<String,java.util.Map<String,Object>>  extras )
+	public  ResponseEntity<String>  search( int  action,long  userId,Map<String,Map<String,Object>>  extras )
 	{
 		Map<String,Object>  response  = new  HashMap<String,Object>();
 		

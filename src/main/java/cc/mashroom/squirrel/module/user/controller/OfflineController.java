@@ -23,6 +23,8 @@ import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
+import  com.fasterxml.jackson.core.type.TypeReference;
+
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.user.service.OfflineService;
 import  cc.mashroom.util.HttpUtils;
@@ -39,6 +41,6 @@ public  class  OfflineController  extends  AbstractController
 	@RequestMapping( value="/search" , method={RequestMethod.GET} )
 	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile )
 	{
-		return  service.search( action,sessionProfile.getLong("USER_ID"),(java.util.Map<String,java.util.Map<String,Object>>)  JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8")) );
+		return  service.search( action,sessionProfile.getLong("USER_ID"),JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
 	}
 }

@@ -23,11 +23,13 @@ import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
+import  com.fasterxml.jackson.core.type.TypeReference;
+
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupService;
 import  cc.mashroom.util.HttpUtils;
 import  cc.mashroom.util.JsonUtils;
-import cc.mashroom.util.collection.map.Map;
+import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/chat/group" )
 @RestController
@@ -57,6 +59,6 @@ public  class  ChatGroupController     extends  AbstractController
 	@RequestMapping( value="/search",method={RequestMethod.GET } )
 	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action,keyword,(java.util.Map<String,java.util.Map<String,Object>>)  JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8")) );
+		return  service.search( action,keyword,JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
 	}
 }

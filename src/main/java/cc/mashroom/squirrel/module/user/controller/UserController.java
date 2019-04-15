@@ -34,6 +34,8 @@ import  org.springframework.web.bind.annotation.ResponseBody;
 import  org.springframework.web.multipart.MultipartFile;
 import  org.springframework.web.servlet.ModelAndView;
 
+import  com.fasterxml.jackson.core.type.TypeReference;
+
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.config.Config;
 import  cc.mashroom.squirrel.module.user.model.User;
@@ -69,7 +71,7 @@ public  class  UserController  extends  AbstractController
 	@ResponseBody
 	public  ResponseEntity<String>  add( @RequestParam("user")  String  user , @RequestParam(name="portrait" , required=false)  MultipartFile  portrait )  throws  IOException
 	{
-		return  service.add( ObjectUtils.cast(new  User().addEntries((java.util.Map<String,Object>)  JsonUtils.fromJson(user)),User.class),portrait );
+		return  service.add( ObjectUtils.cast(new  User().addEntries(JsonUtils.fromJson(user,new  TypeReference<Map<String,Object>>(){})),User.class),portrait );
 	}
 	
 	@RequestMapping( value="/logout", method={RequestMethod.POST} )
@@ -98,6 +100,6 @@ public  class  UserController  extends  AbstractController
 	@ResponseBody
 	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action, keyword , new  HashMap<String,Object>().addEntries((java.util.Map<String,Object>)  JsonUtils.fromJson(extras)) );
+		return  service.search( action,keyword,new  HashMap<String,Object>().addEntries(JsonUtils.fromJson(extras,new  TypeReference<Map<String,Object>>(){})) );
 	}
 }

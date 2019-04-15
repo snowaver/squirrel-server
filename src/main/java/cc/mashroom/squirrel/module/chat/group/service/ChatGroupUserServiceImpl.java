@@ -40,7 +40,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  add(  long  chatGroupId , List<Long>  contactIds )
+	public  ResponseEntity<String>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
@@ -52,9 +52,9 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		List<Map<String,Object>>  response    = new  LinkedList<Map<String,Object>>();
 		
-		User.dao.search("SELECT  ID,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(contactIds.size()-1)*2,",?")+")",contactIds.toArray(new  Long[contactIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getLong("ID"),user.getString("NICKNAME")) );
+		User.dao.search("SELECT  ID,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(inviteeIds.size()-1)*2,",?")+")",inviteeIds.toArray(new  Long[inviteeIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getLong("ID"),user.getString("NICKNAME")) );
 		
-		for( Long  contactId : contactIds )
+		for( Long  contactId : inviteeIds )
 		{
 			params.add( new  Object[]{chatGroupId , contactId , nicknamesMapper.getString(contactId) , now , now , chatGroupId , contactId} );
 		}
@@ -62,15 +62,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		ChatGroupUser.dao.insert( ids,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?)",params.toArray(new  Object[0][]) );
 		
 		CacheFactory.createCache( "CHATGROUP_USER_IDS_CACHE" ).remove(  chatGroupId );
-		//  updateing  cache  is  not  suggested  while  considering  data  consistence  between  cache  and  database.
-		/*
-		Set<Long>  chatGroupUserIds = chatGroupUserIdsCache.get(  chatGroupId );
 		
-		if( chatGroupUserIdsCache.put( chatGroupId,new  HashSet<Long>(Sets.union(chatGroupUserIds == null ? new  HashSet<Long>() : new  HashSet<Long>(chatGroupUserIds),new  HashSet<Long>(contactIds))) ) )
-		{
-			throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  chatgroup  user  ids  cache  update  error." );
-		}
-		*/
 		for( Reference<Object>  id  : ids )
 		{
 			if( id.get() != null && Long.parseLong( id.get().toString() ) >= 1 )
@@ -78,7 +70,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 				/*
 				oldIds.add( ObjectUtils.cast(id.get(),BigInteger.class).longValue() );
 				*/
-				response.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("VCARD",nicknamesMapper.getString(contactIds.get(ids.indexOf(id)))).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CONTACT_ID",contactIds.get(ids.indexOf(id))).addEntry("CHAT_GROUP_ID",chatGroupId) );
+				response.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("VCARD",nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id)))).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CONTACT_ID",inviteeIds.get(ids.indexOf(id))).addEntry("CHAT_GROUP_ID",chatGroupId) );
 			}
 		}
 		
@@ -87,13 +79,13 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update( long  id , String  newvcard )
+	public  ResponseEntity<String>  update(long  updaterId,long  id,String  newvcard )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newvcard , now , now}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("id" , id).addEntry("lastModifyTime" , now)) );
+			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("ID", id).addEntry("LAST_MODIFY_TIME", now)) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
@@ -101,7 +93,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  remove( long  id )
+	public  ResponseEntity<String>  remove(    long  removerId,long  id )
 	{
 		return  ResponseEntity.status(ChatGroupUser.dao.update("DELETE  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{id}) >= 1 ? 200 : 601).body( "" );
 	}

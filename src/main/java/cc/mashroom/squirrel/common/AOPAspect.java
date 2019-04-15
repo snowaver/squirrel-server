@@ -34,7 +34,7 @@ public  class  AOPAspect
 	@Around(  "transactionPointcut()" )
 	public  Object  transactionAround( ProceedingJoinPoint  proceedingJoinPoint )  throws  Throwable
 	{
-		MethodSignature  signature   = ObjectUtils.cast( proceedingJoinPoint.getSignature() , MethodSignature.class );
+		MethodSignature  signature = ObjectUtils.cast( proceedingJoinPoint.getSignature(),MethodSignature.class );
 		
 		Connection  connection = signature.getMethod().getAnnotation( Connection.class );
 		

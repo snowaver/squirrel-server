@@ -17,6 +17,8 @@ package cc.mashroom.squirrel.module.chat.group.service;
 
 import  org.springframework.http.ResponseEntity;
 
+import  cc.mashroom.util.collection.map.Map;
+
 public  interface  ChatGroupService
 {
 	public  ResponseEntity<String>  remove( long  id );
@@ -25,5 +27,5 @@ public  interface  ChatGroupService
 		
 	public  ResponseEntity<String>  update(  long  id,String  name );
 	
-	public  ResponseEntity<String>  search( int  action,String  keyword,java.util.Map<String,java.util.Map<String,Object>>  extras );
+	public  ResponseEntity<String>  search( int  action,String  keyword,Map<String,Map<String,Object>>  extras );
 }

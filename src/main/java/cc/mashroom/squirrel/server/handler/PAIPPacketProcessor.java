@@ -37,7 +37,7 @@ public  class  PAIPPacketProcessor
 {
 	public  void  connect(        Channel  channel , ConnectPacket  packet )
 	{
-        if( packet.getProtocolVersion() != 4 )
+        if( packet.getProtocolVersion() != 1 )
         {
             channel.writeAndFlush( new  ConnectAckPacket(ConnectAckPacket.UNNACEPTABLE_PROTOCOL_VERSION,false)).channel().close();
             
@@ -75,12 +75,7 @@ public  class  PAIPPacketProcessor
         
         ClientSessionManager.INSTANCE.put(  clientId , new  LocalClientSession( clientId , channel ) );
 
-        if( channel.pipeline().names().contains(    "handler.idle.state" ) )
-        {
-        	channel.pipeline().remove( "handler.idle.state" );
-        }
-        
-        channel.pipeline().addFirst( "handler.idle.state",new  IdleStateHandler( 0,0,Math.round( packet.getKeepalive()*1.5f ) ) );
+        channel.pipeline().addFirst( "handler.idle.state",new  IdleStateHandler(0, 0, Math.round(packet.getKeepalive() * 1.5f)) );
         
         channel.writeAndFlush(     new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
 	}

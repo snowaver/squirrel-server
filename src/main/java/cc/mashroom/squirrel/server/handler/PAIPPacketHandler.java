@@ -69,9 +69,9 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	@Setter
 	protected  PAIPPacketProcessor    processor;
 	
-	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  throwable )  throws  Exception
+	public  void  exceptionCaught( ChannelHandlerContext  context ,         Throwable  caughtError )  throws  Exception
 	{
-		throwable.printStackTrace();
+		caughtError.printStackTrace();
 	}
 	
 	public  void  channelInactive( ChannelHandlerContext  context )  throws  Exception
@@ -84,12 +84,12 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		{
 			ClientSession  session = ClientSessionManager.INSTANCE.remove( clientId );
 			
-			if(    session != null )
+			if(      session != null )
 			{
 				/*
 				System.err.println( String.format("the  connection  channel  is  inactive  now  so  close  the  session  (client  id:  %d)",clientId) );
 				*/
-				session.close( -1 );
+				session.close(   -1 );
 			}
 		}
 	}
@@ -97,6 +97,13 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws  Exception
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
+		
+		if( !( packet instanceof ConnectPacket ) || !  context.channel().hasAttr(ConnectPacket.CLIENT_ID) )
+		{
+			context.channel().close();//  requires  a  connect  packet  first  but  a  non-connect  packet.
+			
+			throw  new  IllegalStateException("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  channel  is  not  authenticated,  close  the  channel." );
+		}
 		
 		if( packet instanceof ConnectPacket    )
 		{
@@ -148,10 +155,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		{
 			for( PAIPPacketExternalProcessor  externalProcessor : externalProcessors )
 			{
-				if( externalProcessor.process(ObjectUtils.cast(packet)))
-				{
-					return;
-				}
+				if(externalProcessor.process(ObjectUtils.cast(packet)) )       return;
 			}
 			
 			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  process  the  packet." );

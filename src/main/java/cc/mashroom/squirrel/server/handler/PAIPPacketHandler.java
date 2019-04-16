@@ -158,7 +158,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 				if(externalProcessor.process(ObjectUtils.cast(packet)) )       return;
 			}
 			
-			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  process  the  packet." );
+			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );
 		}
 	}
 }

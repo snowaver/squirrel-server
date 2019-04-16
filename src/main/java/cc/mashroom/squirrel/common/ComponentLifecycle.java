@@ -60,7 +60,7 @@ public  class       ComponentLifecycle  implements  ApplicationListener<Applicat
 		else
 		if( event   instanceof ContextStoppedEvent )
 		{
-			socketAcceptor.stop();
+			if( socketAcceptor != null ) socketAcceptor.stop();
 			
 			PluginRegistry.INSTANCE.stop();
 		}

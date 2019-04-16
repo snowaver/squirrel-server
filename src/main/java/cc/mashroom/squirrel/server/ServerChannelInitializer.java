@@ -40,6 +40,6 @@ public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitia
 		/*
 		sslEngine.setNeedClientAuth( true );
 		*/
-		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.state",new  IdleStateHandler(0,0,120)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketHandler(new  PAIPPacketProcessor()) );
+		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.state",new  IdleStateHandler(0,0,600)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketHandler(new  PAIPPacketProcessor()) );
 	}
 }

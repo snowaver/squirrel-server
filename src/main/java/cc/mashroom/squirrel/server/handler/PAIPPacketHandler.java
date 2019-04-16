@@ -41,6 +41,7 @@ import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
+import cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
@@ -98,8 +99,10 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
 		
-		if( !( packet instanceof ConnectPacket ) || !  context.channel().hasAttr(ConnectPacket.CLIENT_ID) )
+		if( !( packet instanceof ConnectPacket ) && !context.channel().hasAttr( ConnectPacket.CLIENT_ID ) )
 		{
+			context.channel().write(      new  DisconnectAckPacket(DisconnectAckPacket.ACTIVE) );
+			
 			context.channel().close();//  requires  a  connect  packet  first  but  a  non-connect  packet.
 			
 			throw  new  IllegalStateException("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  channel  is  not  authenticated,  close  the  channel." );

@@ -35,7 +35,7 @@ import  cc.mashroom.squirrel.server.session.LocalClientSession;
 
 public  class  PAIPPacketProcessor
 {
-	public  void  connect(        Channel  channel , ConnectPacket  packet )
+	public  void  connect(        Channel  channel, ConnectPacket  packet )
 	{
         if( packet.getProtocolVersion() != 1 )
         {
@@ -50,7 +50,7 @@ public  class  PAIPPacketProcessor
         
         if( clientSessionLocation==null || !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
-        	channel.writeAndFlush(      new  ConnectAckPacket( ConnectAckPacket.BAD_USERNAME_OR_PASSWORD, false ) );
+        	channel.writeAndFlush( new  ConnectAckPacket(ConnectAckPacket.BAD_USERNAME_OR_PASSWORD     ,false)).channel().close();
         	
         	return;
         }
@@ -61,7 +61,7 @@ public  class  PAIPPacketProcessor
         {
         	try
         	{
-				oldSession.close(  DisconnectAckPacket.REMOTE_LOGIN_ERROR );
+				oldSession.close( DisconnectAckPacket.REMOTE_LOGIN_ERROR );
 			}
         	catch(Exception  e )
         	{
@@ -69,7 +69,7 @@ public  class  PAIPPacketProcessor
 			}
         }
         
-        channel.attr(ConnectPacket.KEEPALIVE).set( packet.getKeepalive()  );
+        channel.attr(ConnectPacket.KEEPALIVE).set( packet.getKeepalive() );
         
         channel.attr(ConnectPacket.CLIENT_ID).set( clientId );
         
@@ -80,7 +80,7 @@ public  class  PAIPPacketProcessor
         channel.writeAndFlush(     new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
 	}
 	
-	public  void  chat( Channel  channel,long  clientId,ChatPacket  packet )
+	public  void  chat(Channel  channel,long  clientId,ChatPacket  packet )
 	{
 		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
 		{

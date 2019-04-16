@@ -40,6 +40,7 @@ import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.config.Config;
 import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.squirrel.module.user.service.UserService;
+import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
@@ -53,18 +54,20 @@ public  class  UserController  extends  AbstractController
 	@Autowired
 	private  UserService  service;
 	
-	@RequestMapping( value= "/{userId}/portrait" )
+	@RequestMapping( value="/{userId}/portrait", method={RequestMethod.GET} )
 	@ResponseBody
 	public  void  portrait( @PathVariable("userId")  long  userId,HttpServletResponse  response )  throws  IOException
 	{
 		render( response,new  File(Config.use("server.properties").getProperty("squirrel.data.dir"),StringUtils.join(new  Object[]{"user",userId,"portrait.def"},"/")),null );
 	}
-	
+	/**
+	 *  status:  500:  unknown  error,  empty  response  body;  601:  bad  username  or  password,  empty  response  body;  602:  protocol  version  not  matched,  empty  response  body;  200:  success,  ID,  USERNAME,  NAME,  NICKNAME  AND  ROLETYPE  in  response  body.
+	 */
 	@RequestMapping( value="/signin", method={RequestMethod.POST} )
 	@ResponseBody
-	public  ResponseEntity<String>  signin( @RequestParam("username")  String  username,@RequestParam("password")  String  password,@RequestParam(name="roletype",required=false,defaultValue="0")  Integer  roletype,@RequestParam(name="longitude",required=false)  Double  longitude,@RequestParam(name="latitude",required=false)  Double  latitude,@RequestParam(name="mac",required=false)  String  mac,HttpServletRequest  request )
+	public  ResponseEntity<String>  signin( @RequestParam("username")  String  username,@RequestParam("password")  String  password,@RequestParam("protocolVersion")  int  protocolVersion,@RequestParam(name="roletype",required=false,defaultValue="0")  Integer  roletype,@RequestParam(name="longitude",required=false)  Double  longitude,@RequestParam(name="latitude",required=false)  Double  latitude,@RequestParam(name="mac",required=false)  String  mac,HttpServletRequest  request )
 	{
-		return  service.signin( username,password,roletype,getRemoteAddress(request),longitude,latitude,mac );
+		return  protocolVersion != ConnectPacket.CURRENT_PROTOCOL_VERSION ? ResponseEntity.status(602).body("") : service.signin( username,password,roletype,getRemoteAddress(request),longitude,latitude,mac );
 	}
 
 	@RequestMapping( method={RequestMethod.POST} )
@@ -82,7 +85,7 @@ public  class  UserController  extends  AbstractController
 	}
 	
 	@RequestMapping( value="/tolist" )
-	public  ModelAndView  tolist( Model  model,HttpServletRequest  request )
+	public  ModelAndView  tolist( Model  model, HttpServletRequest  request )
 	{
 		model.addAttribute( "sessionProfile",request.getAttribute("SESSION_PROFILE") );
 		

@@ -23,6 +23,7 @@ import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
 import  cc.mashroom.db.annotation.DataSource;
+import  cc.mashroom.db.util.ConnectionUtils;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.squirrel.module.user.model.Contact;
 import  cc.mashroom.squirrel.module.user.model.User;
@@ -45,6 +46,13 @@ public  class  ContactServiceImpl  implements  ContactService
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		return  ResponseEntity.status(Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,group,now,userId,contactId}) >= 1 ? 200 : 601).body( "" );
+	}
+	
+	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
+	
+	public  ResponseEntity<String>  unsubscribe( long  unsubscriberId , long  unsubscribeeId )
+	{
+		return  ResponseEntity.status(ConnectionUtils.batchUpdatedCount(Contact.dao.update("DELETE  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[][]{new  Object[]{unsubscriberId,unsubscribeeId},new  Object[]{unsubscribeeId,unsubscriberId}})) >= 1 ? 200 : 601).body( "" );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )

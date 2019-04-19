@@ -24,4 +24,6 @@ public  interface  ContactService
 	public  ResponseEntity<String>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group );
 	
 	public  ResponseEntity<String>  changeSubscribeStatus( int  status,long  subscriberId,long  subscribeeId,String  remark,String  group );
+	
+	public  ResponseEntity<String>  unsubscribe( long  unsubscriberId,long  unsubscribeeId );
 }

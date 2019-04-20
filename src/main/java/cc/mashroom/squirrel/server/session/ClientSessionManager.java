@@ -65,6 +65,6 @@ public  class  ClientSessionManager  implements  Plugin
 	
 	public  void  stop()
 	{
-		localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.NETWORK_ERROR); }catch( IOException  e ){} } );
+		localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.REASON_NETWORK_ERROR); }catch( IOException  e ){} } );
 	}
 }

@@ -75,7 +75,7 @@ public  class  PAIPPacketProcessor
         
         ClientSessionManager.INSTANCE.put(  clientId , new  LocalClientSession( clientId , channel ) );
 
-        channel.pipeline().replace( "handler.idle.state","handler.idle.state",new  IdleStateHandler(0,0,Math.round(packet.getKeepalive()*1.5f)) );
+        channel.pipeline().addFirst( "handler.idle.state",       new  IdleStateHandler(0,0,(int)  (packet.getKeepalive()*1.5f)) );
         
         channel.writeAndFlush(     new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
 	}

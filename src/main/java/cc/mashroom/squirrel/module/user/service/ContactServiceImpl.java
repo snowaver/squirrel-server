@@ -52,7 +52,9 @@ public  class  ContactServiceImpl  implements  ContactService
 	
 	public  ResponseEntity<String>  unsubscribe( long  unsubscriberId , long  unsubscribeeId )
 	{
-		return  ResponseEntity.status(ConnectionUtils.batchUpdatedCount(Contact.dao.update("DELETE  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[][]{new  Object[]{unsubscriberId,unsubscribeeId},new  Object[]{unsubscribeeId,unsubscriberId}})) >= 1 ? 200 : 601).body( "" );
+		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
+		
+		return  ResponseEntity.status(ConnectionUtils.batchUpdatedCount(Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = 1,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[][]{new  Object[]{now,unsubscriberId,unsubscribeeId},new  Object[]{now,unsubscribeeId,unsubscriberId}})) >= 1 ? 200 : 601).body( "" );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )

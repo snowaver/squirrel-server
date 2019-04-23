@@ -19,19 +19,24 @@ import  io.netty.channel.ChannelDuplexHandler;
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.handler.timeout.IdleState;
 import  io.netty.handler.timeout.IdleStateEvent;
+
+import  org.joda.time.DateTime;
+
 import  cc.mashroom.util.ObjectUtils;
 
 public  class  ChannelDuplexIdleTimeoutHandler  extends  ChannelDuplexHandler
 {
 	public  void  userEventTriggered( ChannelHandlerContext  context,Object  event )  throws  Exception
 	{
-		if( event  instanceof IdleStateEvent && ObjectUtils.cast(event,IdleStateEvent.class).state() == IdleState.ALL_IDLE )
+		if( event instanceof IdleStateEvent && ObjectUtils.cast(event,IdleStateEvent.class).state() == IdleState.READER_IDLE )
 		{
+			System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.IDLE:\tclose  the  channel  for  reader  idle." );
+			
             context.fireChannelInactive().close();
         }
 		else
 		{
-            super.userEventTriggered( context,event );
+            super.userEventTriggered( context , event );
         }
 	}
 }

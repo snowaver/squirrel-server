@@ -36,20 +36,22 @@ public  class  LoggingInterceptor  implements  HandlerInterceptor
 	{
 		request.setAttribute( "REQUEST_COUNTER",counter.incrementAndGet() );
 		
-		return  true;
-	}
-	
-	public  void  postHandle( HttpServletRequest  request,HttpServletResponse  response,Object  object,ModelAndView  modelAndView )  throws  Exception
-	{
 		List<String>  parameters     = new  LinkedList<String>();
 		
 		request.getParameterMap().entrySet().forEach( (entry) -> parameters.add( entry.getKey()+"="+(entry.getValue().length <= 0 ? "<MULTIPART>" : entry.getValue()[0]) ) );
 		
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),13," ")+"  "+request.getMethod().toUpperCase()+"\t"+request.getRequestURI()+(parameters.isEmpty() ? "" : "?")+StringUtils.join(parameters.toArray(),"&") );
+		
+		return  true;
+	}
+	
+	public  void  postHandle( HttpServletRequest  request,HttpServletResponse  response,Object  object,ModelAndView  modelAndView )  throws  Exception
+	{
+		
 	}
 
 	public  void  afterCompletion(  HttpServletRequest  request,HttpServletResponse  response,Object  object,Exception  exception )  throws  Exception
 	{
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(request.getAttribute("REQUEST_COUNTER")),13," ")+"  "+response.getContentType()+"/"+response.getStatus() );
+
 	}
 }

@@ -45,7 +45,7 @@ public  class  ChatGroupUserController  extends  AbstractController
 	@Autowired
 	private  ChatGroupUserService  service;
 	
-	@RequestMapping( value="",method={RequestMethod.POST} )
+	@RequestMapping( value="",method={RequestMethod.POST  } )
 	public  ResponseEntity<String>  add( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("inviteeIds")  String  inviteeIdsSeperatedWithComma )
 	{
 		ResponseEntity<List<Map<String,Object>>>  responseEntity = service.add( sessionProfile.getLong("USER_ID"),chatGroupId,Lists.newArrayList(CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(","))) );
@@ -54,6 +54,12 @@ public  class  ChatGroupUserController  extends  AbstractController
 		
 		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).forEach( (userId) -> {if(userId != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(userId,groupChatEventPacket);} );
 		
-		return  ResponseEntity.ok( JsonUtils.toJson(responseEntity.getBody()) );
+		return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",new  LinkedList<Map<String,Object>>()).addEntry("CHAT_GROUP_USERS", responseEntity.getBody())) );
+	}
+	
+	@RequestMapping( value="",method={RequestMethod.DELETE} )
+	public  ResponseEntity<String>  remove( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId , @RequestParam("chatGroupUserId")  long  chatGroupUserId )
+	{
+		return  service.remove( chatGroupId,chatGroupUserId);
 	}
 }

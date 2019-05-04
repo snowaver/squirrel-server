@@ -97,7 +97,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  remove( long  chatGroupId, long  chatGroupUserId )
+	public  ResponseEntity<String>  secede( long  secedeUserId,long  chatGroupId,long  chatGroupUserId )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
@@ -105,13 +105,13 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		
 		response.addEntry( "CHAT_GROUPS",new  ArrayList<Map<String,Object>>() );
 		
-		ChatGroupUser.dao.update( "UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{now,chatGroupUserId} );
+		ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secedeUserId});
 	
-		response.addEntry( "CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME", now)) );
+		response.addEntry( "CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",secedeUserId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now)) );
 		
 		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  (SELECT  COUNT(*)  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE) <= 0",new  Object[]{now,chatGroupId,chatGroupId}) >= 1 )
 		{
-			response.addEntry( "CHAT_GROUPS",new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now) );
+			response.addEntry( "CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now)) );
 		}
 		
 		return  ResponseEntity.status( 200 ).body(     JsonUtils.toJson( response ) );

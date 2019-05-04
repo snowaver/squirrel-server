@@ -58,8 +58,8 @@ public  class  ChatGroupUserController  extends  AbstractController
 	}
 	
 	@RequestMapping( value="",method={RequestMethod.DELETE} )
-	public  ResponseEntity<String>  remove( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId , @RequestParam("chatGroupUserId")  long  chatGroupUserId )
+	public  ResponseEntity<String>  secede( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId , @RequestParam("chatGroupUserId")  long  chatGroupUserId )
 	{
-		return  service.remove( chatGroupId,chatGroupUserId);
+		return  service.secede( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId );
 	}
 }

@@ -25,7 +25,7 @@ public  interface  ChatGroupUserService
 {
 	public  ResponseEntity<List<Map<String,Object>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
 	
-	public  ResponseEntity<String>  remove( long  chatGroupId, long  chatGroupUserId );
-	
 	public  ResponseEntity<String>  update( long  updatorId,long  chatGroupId,String  newvcard );
+	
+	public  ResponseEntity<String>  secede( long  secedeUserId,long  chatGroupId,long  chatGroupUserId );
 }

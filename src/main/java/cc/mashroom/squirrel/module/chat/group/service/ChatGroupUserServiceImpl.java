@@ -36,7 +36,6 @@ import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.Reference;
 
 @Service
@@ -44,7 +43,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  add(       long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  add(    long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
@@ -79,27 +78,31 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update(long  updaterId,long  chatGroupId,String  newVcard )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  update(long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newVcard,now,now}) >= 1 )
+		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{newVcard,now,chatGroupUserId,chatGroupId,updatorId}) <= 0 )
 		{
-			return  ResponseEntity.ok(      JsonUtils.toJson( new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("LAST_MODIFY_TIME",now) ) );
+			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  user  was  not  found." );
 		}
 		
-		return  ResponseEntity.status(601).body( "" );
+		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",updatorId).addEntry("VCARD",newVcard).addEntry("LAST_MODIFY_TIME",now)));
+		
+		response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
+		
+		return  ResponseEntity.status(200).body( response.addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secedeUserId,long  chatGroupId, long  chatGroupUserId )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secederId,long  chatGroupId, long  chatGroupUserId )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_REMAINING_USERS",new  ArrayList<Map<String,Object>>() );
 		
-		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secedeUserId}) <= 0 )
+		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secederId}) <= 0 )
 		{
 			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  user  was  not  found." );
 		}
@@ -110,9 +113,9 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		}
 		else
 		{
-			response.addEntry( "CHAT_GROUP_REMAINING_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
+			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
 		}
 		
-		return  ResponseEntity.status(200).body( response.addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",secedeUserId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now))) );
+		return  ResponseEntity.status(200).body( response.addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",secederId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now))) );
 	}
 }

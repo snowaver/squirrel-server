@@ -23,9 +23,9 @@ import  cc.mashroom.util.collection.map.Map;
 
 public  interface  ChatGroupUserService
 {
-	public  ResponseEntity<List<Map<String,Object>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
+	public  ResponseEntity<Map<String,List<? extends Map>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds );
 	
 	public  ResponseEntity<String>  update( long  updatorId,long  chatGroupId,String  newvcard );
 	
-	public  ResponseEntity<String>  secede( long  secedeUserId,long  chatGroupId,long  chatGroupUserId );
+	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secedeUserId,long  chatGroupId,long  chatGroupUserId );
 }

@@ -44,52 +44,48 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<List<Map<String,Object>>>  add( long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  add(       long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		Map<Long,String>  nicknamesMapper  = new  HashMap<Long,String>();
 		
-		List<Reference<Object>>  ids     = new  LinkedList<Reference<Object>>();
-		
-		List<Object[]>  params = new  LinkedList<Object[]>();
-		
-		List<Map<String,Object>>  response    = new  LinkedList<Map<String,Object>>();
+		List<Reference<Object>>  ids=new  ArrayList<Reference<Object>>();
+				
+		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>();
 		
 		User.dao.search("SELECT  ID,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(inviteeIds.size()-1)*2,",?")+")",inviteeIds.toArray(new  Long[inviteeIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getLong("ID"),user.getString("NICKNAME")) );
 		
-		for(  Long  contactId : inviteeIds )
-		{
-			params.add( new  Object[]{chatGroupId , contactId , nicknamesMapper.getString(contactId) , now , now , chatGroupId , contactId} );
-		}
+		List<Object[]>  addChatGroupUserBatchParameters = new  LinkedList<Object[]>();
 		
-		ChatGroupUser.dao.insert( ids,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?)",params.toArray(new  Object[0][]) );
+		inviteeIds.forEach( (contactId) -> addChatGroupUserBatchParameters.add( new  Object[]{chatGroupId,contactId,nicknamesMapper.getString(contactId),now,now,chatGroupId,contactId} ) );
+		
+		ChatGroupUser.dao.insert( ids,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CHAT_GROUP_ID,CONTACT_ID,VCARD,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?)",addChatGroupUserBatchParameters.toArray(new  Object[0][]) );
 		
 		CacheFactory.createCache( "CHATGROUP_USER_IDS_CACHE").remove(   chatGroupId );
 		
-		for(  Reference<Object >  id : ids )
+		List<Map<String,Object>>  addedChatGroupUsers  = new  LinkedList<Map<String,Object>>();
+		
+		for( Reference< Object >  id : ids )
 		{
-			if( id.get() != null && Long.parseLong( id.get().toString() ) >= 1 )
+			if( id != null && id.get() != null && Long.parseLong( id.get().toString())   >= 1 )
 			{
-				/*
-				oldIds.add( ObjectUtils.cast(id.get(),BigInteger.class).longValue() );
-				*/
-				response.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("VCARD",nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id)))).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CONTACT_ID",inviteeIds.get(ids.indexOf(id))).addEntry("CHAT_GROUP_ID",chatGroupId) );
+				addedChatGroupUsers.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("VCARD",nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id)))).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("CONTACT_ID",inviteeIds.get(ids.indexOf(id))).addEntry("CHAT_GROUP_ID",chatGroupId) );
 			}
 		}
 		
-		return  ResponseEntity.ok(response);
+		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()) );
 	}
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update( long  updaterId,long  chatGroupId,String  newvcard )
+	public  ResponseEntity<String>  update(long  updaterId,long  chatGroupId,String  newVcard )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newvcard,now,now}) >= 1 )
+		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{newVcard,now,now}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("LAST_MODIFY_TIME",now)) );
+			return  ResponseEntity.ok(      JsonUtils.toJson( new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("LAST_MODIFY_TIME",now) ) );
 		}
 		
 		return  ResponseEntity.status(601).body( "" );
@@ -97,23 +93,26 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  secede( long  secedeUserId,long  chatGroupId,long  chatGroupUserId )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secedeUserId,long  chatGroupId, long  chatGroupUserId )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		Map<String,Object>  response     = new  HashMap<String,Object>();
+		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_REMAINING_USERS",new  ArrayList<Map<String,Object>>() );
 		
-		response.addEntry( "CHAT_GROUPS",new  ArrayList<Map<String,Object>>() );
-		
-		ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secedeUserId});
-	
-		response.addEntry( "CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",secedeUserId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now)) );
+		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secedeUserId}) <= 0 )
+		{
+			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  user  was  not  found." );
+		}
 		
 		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  (SELECT  COUNT(*)  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE) <= 0",new  Object[]{now,chatGroupId,chatGroupId}) >= 1 )
 		{
-			response.addEntry( "CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now)) );
+			response.addEntry( "CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID", chatGroupId).addEntry("IS_DELETED", true).addEntry("LAST_MODIFY_TIME", now)) );
+		}
+		else
+		{
+			response.addEntry( "CHAT_GROUP_REMAINING_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
 		}
 		
-		return  ResponseEntity.status( 200 ).body(     JsonUtils.toJson( response ) );
+		return  ResponseEntity.status(200).body( response.addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",secedeUserId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now))) );
 	}
 }

@@ -73,7 +73,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 			}
 		}
 		
-		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",ChatGroup.dao.search("SELECT  *  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
+		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",ChatGroup.dao.search("SELECT  ID,IS_DELETED,NAME,LAST_MODIFY_TIME  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
 	}
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )

@@ -15,6 +15,7 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
+import java.util.LinkedList;
 import  java.util.List;
 
 import  org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +35,7 @@ import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.CollectionUtils;
 import  cc.mashroom.util.JsonUtils;
+import cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/chat/group/user" )
@@ -52,7 +54,7 @@ public  class  ChatGroupUserController  extends  AbstractController
 		
 		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).forEach( (userId) -> {if(userId != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(userId,groupChatMemberAddedEventPacket);} );
 		
-		return  ResponseEntity.ok( JsonUtils.toJson(responseEntity.getBody()) );
+		return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<>().addEntry("CHAT_GROUP_USERS",responseEntity.getBody().get("CHAT_GROUP_USERS")).addEntry("CHAT_GROUPS",new  LinkedList<>())) );
 	}
 	
 	@RequestMapping( value="",method={RequestMethod.PUT   } )

@@ -73,7 +73,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 			}
 		}
 		
-		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()) );
+		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",ChatGroup.dao.search("SELECT  *  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
 	}
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
@@ -100,7 +100,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_REMAINING_USERS",new  ArrayList<Map<String,Object>>() );
+		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_ALL_USERS",new  ArrayList<Map<String,Object>>() );
 		
 		if( ChatGroupUser.dao.update("UPDATE  "+ChatGroupUser.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,chatGroupUserId,chatGroupId,secederId}) <= 0 )
 		{

@@ -17,6 +17,7 @@ package cc.mashroom.squirrel.module.chat.group.service;
 
 import  java.sql.Timestamp;
 import  java.util.ArrayList;
+import java.util.List;
 
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
@@ -63,16 +64,20 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update(  long  id,String  name )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  update( long  updaterId,long  chatGroupId,String  name )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{name, now,now}) >= 1 )
+		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>();
+		
+		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?,LAST_MODIFY_BY = ?  WHERE  ID = ?",new  Object[]{name,now,updaterId,chatGroupId}) >= 1 )
 		{
-			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",new  HashMap<String,Object>().addEntry("ID",id).addEntry("NAME",name).addEntry("LAST_MODIFY_TIME",now)).addEntry("CHAT_GROUP_USERS",new  ArrayList<>())) );
+			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
+			
+			return  ResponseEntity.ok( new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("NAME",name).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",updaterId))).addEntry("CHAT_GROUP_USERS",new  ArrayList<>()) );
 		}
 		
-		return  ResponseEntity.status(601).body( "" );
+		return  ResponseEntity.status(601).body( response.addEntry(     "CHAT_GROUP_ALL_USERS", new  ArrayList<>()) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )

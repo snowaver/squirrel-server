@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
-import java.util.LinkedList;
+import  java.util.LinkedList;
 import  java.util.List;
 
 import  org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.CollectionUtils;
 import  cc.mashroom.util.JsonUtils;
-import cc.mashroom.util.collection.map.HashMap;
+import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/chat/group/user" )

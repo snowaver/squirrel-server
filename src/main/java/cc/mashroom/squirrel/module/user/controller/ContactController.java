@@ -25,8 +25,10 @@ import  org.springframework.web.bind.annotation.RestController;
 
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.user.service.ContactService;
+import  cc.mashroom.squirrel.paip.message.subscribes.SubscribePacket;
 import  cc.mashroom.squirrel.paip.message.subscribes.UnsubscribePacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
+import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/contact" )
@@ -39,15 +41,23 @@ public  class  ContactController  extends  AbstractController
 	@RequestMapping( value="/status",method={RequestMethod.POST  } )
 	public  ResponseEntity<String>  subscribe( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("subscribeeId")  long  subscribeeId,@RequestParam("remark")  String  remark,@RequestParam("group")  String  group )
 	{
-		return  service.subscribe( sessionProfile.getLong("USER_ID"),subscribeeId,remark,group );
+		ResponseEntity<Map<String,Object>>  responseEntity = service.subscribe( sessionProfile.getLong("USER_ID"),subscribeeId,remark,group );
+		
+		PacketRoute.INSTANCE.route( subscribeeId,new  SubscribePacket(sessionProfile.getLong("USER_ID"),(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBER_PROFILE")) );
+		
+		return  ResponseEntity.status(200).body(  JsonUtils.toJson( responseEntity.getBody() ) );
 	}
 	/**
-	 *  changing  subscribe  status  is  only  for  accepting,  since  decline  is  not  available  according  to  the  design.
+	 *  changing  subscribe  status  is  only  for  accepting,  since  decline  is  not  available  according  to  the  control  flow  design.
 	 */
 	@RequestMapping( value="/status",method={RequestMethod.PUT   } )
 	public  ResponseEntity<String>  changeSubscribeStatus( @RequestParam("status")  int  status,@RequestParam("subscriberId")  long  subscriberId,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("remark")  String  remark,@RequestParam("group")  String  group )
 	{
-		return  service.changeSubscribeStatus( status,subscriberId,sessionProfile.getLong("USER_ID"),remark,group );
+		ResponseEntity<Map<String,Object>>  responseEntity = service.changeSubscribeStatus( status,subscriberId,sessionProfile.getLong("USER_ID"),remark,group );
+		
+		PacketRoute.INSTANCE.route( subscriberId,new  SubscribePacket(sessionProfile.getLong("USER_ID"),(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBEE_PROFILE")) );
+		
+		return  ResponseEntity.status(200).body(  JsonUtils.toJson( responseEntity.getBody() ) );
 	}
 	/**
 	 *  status:  200:  unsubscribed,  send  unsubscribe  packet  to  unsubscribee;  601:  failed.

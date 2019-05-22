@@ -27,11 +27,8 @@ import  cc.mashroom.db.util.ConnectionUtils;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.squirrel.module.user.model.Contact;
 import  cc.mashroom.squirrel.module.user.model.User;
-import  cc.mashroom.squirrel.server.session.ClientSession;
-import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-import  cc.mashroom.squirrel.paip.message.subscribes.SubscribeAckPacket;
-import  cc.mashroom.squirrel.paip.message.subscribes.SubscribePacket;
 import  cc.mashroom.util.collection.map.ConcurrentHashMap;
+import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 
 @Service
@@ -59,33 +56,32 @@ public  class  ContactServiceImpl  implements  ContactService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group )
+	public  ResponseEntity<Map<String,Object>>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,USERNAME,?,?,0,0,?,?  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?  AND  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,remark,group,now,now,subscribeeId,subscriberId,subscribeeId}) <= 0 )
+		Map<Long,User>  subscribingProfileMapper = new  HashMap<Long,User>();
+		
+		User.dao.search("SELECT  ID,USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  (?,?)",new  Object[]{subscriberId,subscribeeId}).forEach( (user) -> subscribingProfileMapper.put(user.getLong("ID"),user) );
+		
+		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,0,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,subscribingProfileMapper.get(subscribeeId).getString("USERNAME"),remark,group,now,now,subscribeeId,subscriberId,subscribeeId}) <= 0 )
 		{
-			throw  new  IllegalStateException(       "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
+			throw  new  IllegalStateException(  "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  the  contact  relationship  exist  error." );
 		}
 		
-		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,USERNAME,NICKNAME,1,0,?,?  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?  AND  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscribeeId,subscriberId,now,now,subscriberId,subscribeeId,subscriberId}) <= 0 )
+		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,1,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscribeeId,subscriberId,subscribingProfileMapper.get(subscriberId).getString("USERNAME"),subscribingProfileMapper.get(subscriberId).getString("NICKNAME"),null,now,now,subscribeeId,subscriberId}) <= 0 )
 		{
-			throw  new  IllegalStateException(       "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  contact  relationship  exist  error." );
+			throw  new  IllegalStateException(  "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  the  contact  relationship  exist  error." );
 		}
 		
-		ClientSession  session    = ClientSessionManager.INSTANCE.get( subscribeeId );
+		Map<String,Object>  subscriberProfile = new  HashMap<String,Object>().addEntry("ID",subscriberId).addEntry("USERNAME",subscribingProfileMapper.get(subscriberId).getString("USERNAME")).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("SUBSCRIBE_STATUS",1).addEntry("REMARK",subscribingProfileMapper.get(subscriberId).getString("NICKNAME")).addEntry("GROUP_NAME",null).addEntry( "IS_DELETED",false );
 		
-		if( session != null )
-		{
-			session.deliver( new  SubscribePacket(subscriberId,new  User().addEntries(User.dao.getOne("SELECT  USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{subscriberId})).addEntry("GROUP",group)) );
-		}
-		
-		return  ResponseEntity.status(200).body( "" );
+		return  ResponseEntity.status(200).body(new  HashMap<String,Object>().addEntry("SUBSCRIBER_PROFILE",subscriberProfile).addEntry("ID",subscribeeId).addEntry("USERNAME",subscribingProfileMapper.get(subscribeeId).getString("USERNAME")).addEntry("CREATE_TIME",now).addEntry("LAST_MODIFY_TIME",now).addEntry("SUBSCRIBE_STATUS",0).addEntry("REMARK",remark).addEntry("GROUP_NAME",group).addEntry("IS_DELETED",false) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  changeSubscribeStatus( int  status, long  subscriberId, long  subscribeeId, String  remark,String  group )
+	public  ResponseEntity<Map<String,Object>>  changeSubscribeStatus( int  status, long  subscriberId, long  subscribeeId, String  remark,String  group )
 	{
 		if( status     != 7 )
 		{
@@ -96,15 +92,10 @@ public  class  ContactServiceImpl  implements  ContactService
 		
 		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{subscribeeStatus.get(status), now, subscriberId, subscribeeId} );
 		
+		Map<String,Object>  subscribeeProfile = new  HashMap<String,Object>().addEntry("ID",subscribeeId).addEntry("SUBSCRIBE_STATUS",subscribeeStatus.get(status)).addEntry( "LAST_MODIFY_TIME",now );
+		
 		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?,GROUP_NAME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,status,now,group,subscribeeId,subscriberId} );
 		
-		ClientSession  session    = ClientSessionManager.INSTANCE.get( subscriberId );
-		
-		if( session != null )
-		{
-			session.deliver( new  SubscribeAckPacket(subscribeeId,SubscribeAckPacket.ACK_ACCEPT,new  User().addEntries(User.dao.getOne("SELECT  USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{subscribeeId})).addEntry("GROUP",group)) );
-		}
-		
-		return  ResponseEntity.status(200).body( "" );
+		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("SUBSCRIBEE_PROFILE",subscribeeProfile).addEntry("ID",subscriberId).addEntry("REMARK",remark).addEntry("SUBSCRIBE_STATUS",status).addEntry("LAST_MODIFY_TIME",now).addEntry("GROUP_NAME",group ) );
 	}
 }

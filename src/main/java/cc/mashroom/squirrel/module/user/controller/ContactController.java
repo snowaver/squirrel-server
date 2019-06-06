@@ -45,19 +45,19 @@ public  class  ContactController  extends  AbstractController
 		
 		PacketRoute.INSTANCE.route( subscribeeId,new  SubscribePacket(sessionProfile.getLong("USER_ID"),(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBER_PROFILE")) );
 		
-		return  ResponseEntity.status(200).body(  JsonUtils.toJson( responseEntity.getBody() ) );
+		return  ResponseEntity.status(200).body( JsonUtils.toJson( responseEntity.getBody()  ) );
 	}
 	/**
 	 *  changing  subscribe  status  is  only  for  accepting,  since  decline  is  not  available  according  to  the  control  flow  design.
 	 */
 	@RequestMapping( value="/status",method={RequestMethod.PUT   } )
-	public  ResponseEntity<String>  changeSubscribeStatus( @RequestParam("status")  int  status,@RequestParam("subscriberId")  long  subscriberId,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("remark")  String  remark,@RequestParam("group")  String  group )
+	public  ResponseEntity<String>  changeSubscribeStatus(@RequestParam("status")  int  status,@RequestParam("subscriberId")  long  subscriberId,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("remark")  String  remark,@RequestParam("group")  String  group )
 	{
 		ResponseEntity<Map<String,Object>>  responseEntity = service.changeSubscribeStatus( status,subscriberId,sessionProfile.getLong("USER_ID"),remark,group );
 		
 		PacketRoute.INSTANCE.route( subscriberId,new  SubscribePacket(sessionProfile.getLong("USER_ID"),(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBEE_PROFILE")) );
 		
-		return  ResponseEntity.status(200).body(  JsonUtils.toJson( responseEntity.getBody() ) );
+		return  ResponseEntity.status(200).body( JsonUtils.toJson( responseEntity.getBody()  ) );
 	}
 	/**
 	 *  status:  200:  unsubscribed,  send  unsubscribe  packet  to  unsubscribee;  601:  failed.

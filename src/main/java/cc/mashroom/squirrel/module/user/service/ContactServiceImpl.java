@@ -64,7 +64,7 @@ public  class  ContactServiceImpl  implements  ContactService
 		
 		User.dao.search("SELECT  ID,USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  (?,?)",new  Object[]{subscriberId,subscribeeId}).forEach( (user) -> subscribingProfileMapper.put(user.getLong("ID"),user) );
 		
-		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,0,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,subscribingProfileMapper.get(subscribeeId).getString("USERNAME"),remark,group,now,now,subscribeeId,subscriberId,subscribeeId}) <= 0 )
+		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,0,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,subscribingProfileMapper.get(subscribeeId).getString("USERNAME"),remark,group,now,now,subscriberId,subscribeeId}) <= 0 )
 		{
 			throw  new  IllegalStateException(  "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  the  contact  relationship  exist  error." );
 		}
@@ -85,7 +85,7 @@ public  class  ContactServiceImpl  implements  ContactService
 	{
 		if( status     != 7 )
 		{
-			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CONTACT  SERVICE  IMPL **  only  7  ( accept )  is  acceptable." );
+			throw  new  IllegalArgumentException(    "SQUIRREL-SERVER:  ** CONTACT  SERVICE  IMPL **  only  7  ( ACCEPT )  is  acceptable." );
 		}
 		
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );

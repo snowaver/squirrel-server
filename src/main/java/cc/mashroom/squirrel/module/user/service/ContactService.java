@@ -21,11 +21,11 @@ import cc.mashroom.util.collection.map.Map;
 
 public  interface  ContactService
 {
-	public  ResponseEntity<String>  update( long  userId,long  contactId,String  remark,String  group );
+	public  ResponseEntity<Map<String,Object>>  update( long  userId,long  contactId,String  remark,String  group );
 	
 	public  ResponseEntity<Map<String,Object>>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group );
 	
 	public  ResponseEntity<Map<String,Object>>  changeSubscribeStatus( int  status,long  subscriberId,long  subscribeeId,String  remark,String  group );
 	
-	public  ResponseEntity<String>  unsubscribe( long  unsubscriberId,long  unsubscribeeId );
+	public  ResponseEntity<Map<String,Object>>  unsubscribe( long  unsubscriberId,long  unsubscribeeId );
 }

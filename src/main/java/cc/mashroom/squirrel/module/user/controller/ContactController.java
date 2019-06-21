@@ -27,7 +27,6 @@ import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.user.service.ContactService;
 import  cc.mashroom.squirrel.paip.message.subscribes.SubscribeAckPacket;
 import  cc.mashroom.squirrel.paip.message.subscribes.SubscribePacket;
-import  cc.mashroom.squirrel.paip.message.subscribes.UnsubscribePacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
@@ -66,19 +65,12 @@ public  class  ContactController  extends  AbstractController
 	@RequestMapping( value="/status",method={RequestMethod.DELETE} )
 	public  ResponseEntity<String>  unsubscribe( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("unsubscribeeId")  long  unsubscribeeId )
 	{
-		ResponseEntity<String>  response  = service.unsubscribe( sessionProfile.getLong("USER_ID"),unsubscribeeId );
-		
-		if( response.getStatusCodeValue()== 200 )
-		{
-			PacketRoute.INSTANCE.route(  unsubscribeeId,new  UnsubscribePacket(sessionProfile.getLong("USER_ID")) );
-		}
-		
-		return  response;
+		return  ResponseEntity.status(200).body( JsonUtils.toJson(service.unsubscribe(sessionProfile.getLong("USER_ID") ,  unsubscribeeId).getBody()) );
 	}
 	
 	@RequestMapping( method={RequestMethod.PUT} )
 	public  ResponseEntity<String>  update( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("contactId")  long  contactId,@RequestParam("remark")  String  remark,@RequestParam("group")  String  group )
 	{
-		return  service.update( sessionProfile.getLong("USER_ID") , contactId , remark , group );
+		return  ResponseEntity.status(200).body( JsonUtils.toJson(service.update(sessionProfile.getLong("USER_ID"),contactId,remark,group).getBody()) );
 	}
 }

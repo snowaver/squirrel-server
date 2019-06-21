@@ -23,7 +23,6 @@ import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
 import  cc.mashroom.db.annotation.DataSource;
-import  cc.mashroom.db.util.ConnectionUtils;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.squirrel.module.user.model.Contact;
 import  cc.mashroom.squirrel.module.user.model.User;
@@ -38,20 +37,24 @@ public  class  ContactServiceImpl  implements  ContactService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  update( long  userId,long  contactId,String  remark,String  group )
+	public  ResponseEntity<Map<String,Object>>  update( long  userId,long  contactId,String  remark,String  group )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		return  ResponseEntity.status(Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,group,now,userId,contactId}) >= 1 ? 200 : 601).body( "" );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,group,now,userId,contactId} );
+		
+		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("ID", contactId).addEntry("GROUP_NAME",group   ).addEntry("LAST_MODIFY_TIME",now) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<String>  unsubscribe( long  unsubscriberId , long  unsubscribeeId )
+	public  ResponseEntity<Map<String,Object>>  unsubscribe( long  unsubscriberId,long  unsubscribeeId )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		return  ResponseEntity.status(ConnectionUtils.batchUpdatedCount(Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = 1,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[][]{new  Object[]{now,unsubscriberId,unsubscribeeId},new  Object[]{now,unsubscribeeId,unsubscriberId}})) >= 1 ? 200 : 601).body( "" );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,unsubscriberId,unsubscribeeId} );
+		
+		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("ID",unsubscribeeId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
@@ -60,16 +63,20 @@ public  class  ContactServiceImpl  implements  ContactService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
+		Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",   new  Object[]{now,subscriberId,subscribeeId} );
+		
+		Contact.dao.update("UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",   new  Object[]{now,subscribeeId,subscriberId} );
+		
 		Map<Long,User>  subscribingProfileMapper = new  HashMap<Long,User>();
 		
 		User.dao.search("SELECT  ID,USERNAME,NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID  IN  (?,?)",new  Object[]{subscriberId,subscribeeId}).forEach( (user) -> subscribingProfileMapper.put(user.getLong("ID"),user) );
 		
-		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,0,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscriberId,subscribeeId,subscribingProfileMapper.get(subscribeeId).getString("USERNAME"),remark,group,now,now,subscriberId,subscribeeId}) <= 0 )
+		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,0,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE)",new  Object[]{subscriberId,subscribeeId,subscribingProfileMapper.get(subscribeeId).getString("USERNAME"),remark,group,now,now,subscriberId,subscribeeId}) <= 0 )
 		{
 			throw  new  IllegalStateException(  "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  the  contact  relationship  exist  error." );
 		}
 		
-		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,1,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?)",new  Object[]{subscribeeId,subscriberId,subscribingProfileMapper.get(subscriberId).getString("USERNAME"),subscribingProfileMapper.get(subscriberId).getString("NICKNAME"),null,now,now,subscribeeId,subscriberId}) <= 0 )
+		if( Contact.dao.update("INSERT  INTO  "+Contact.dao.getDataSourceBind().table()+"  (USER_ID,CONTACT_ID,CONTACT_USERNAME,REMARK,GROUP_NAME,SUBSCRIBE_STATUS,IS_DELETED,CREATE_TIME,LAST_MODIFY_TIME)  SELECT  ?,?,?,?,?,1,0,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+Contact.dao.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE)",new  Object[]{subscribeeId,subscriberId,subscribingProfileMapper.get(subscriberId).getString("USERNAME"),subscribingProfileMapper.get(subscriberId).getString("NICKNAME"),null,now,now,subscribeeId,subscriberId}) <= 0 )
 		{
 			throw  new  IllegalStateException(  "SQUIRREL-CLIENT:  ** CONTACT  SERVICE  IMPL **  the  contact  relationship  exist  error." );
 		}

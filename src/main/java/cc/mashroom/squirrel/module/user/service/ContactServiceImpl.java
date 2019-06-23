@@ -41,9 +41,9 @@ public  class  ContactServiceImpl  implements  ContactService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,group,now,userId,contactId} );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{remark,group,now,userId,contactId} );
 		
-		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("ID", contactId).addEntry("GROUP_NAME",group   ).addEntry("LAST_MODIFY_TIME",now) );
+		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("ID", contactId).addEntry("REMARK",remark).addEntry("GROUP_NAME",group).addEntry("LAST_MODIFY_TIME",now) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
@@ -52,7 +52,7 @@ public  class  ContactServiceImpl  implements  ContactService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{now,unsubscriberId,unsubscribeeId} );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{now,unsubscriberId,unsubscribeeId} );
 		
 		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("ID",unsubscribeeId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now) );
 	}
@@ -97,11 +97,11 @@ public  class  ContactServiceImpl  implements  ContactService
 		
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{subscribeeStatus.get(status), now, subscriberId, subscribeeId} );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{subscribeeStatus.get(status), now, subscriberId, subscribeeId} );
 		
 		Map<String,Object>  subscribeeProfile = new  HashMap<String,Object>().addEntry("ID",subscribeeId).addEntry("SUBSCRIBE_STATUS",subscribeeStatus.get(status)).addEntry( "LAST_MODIFY_TIME",now );
 		
-		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?,GROUP_NAME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?",new  Object[]{remark,status,now,group,subscribeeId,subscriberId} );
+		Contact.dao.update( "UPDATE  "+Contact.dao.getDataSourceBind().table()+"  SET  REMARK = ?,SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?,GROUP_NAME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{remark,status,now,group,subscribeeId,subscriberId} );
 		
 		return  ResponseEntity.status(200).body( new  HashMap<String,Object>().addEntry("SUBSCRIBEE_PROFILE",subscribeeProfile).addEntry("ID",subscriberId).addEntry("REMARK",remark).addEntry("SUBSCRIBE_STATUS",status).addEntry("LAST_MODIFY_TIME",now).addEntry("GROUP_NAME",group ) );
 	}

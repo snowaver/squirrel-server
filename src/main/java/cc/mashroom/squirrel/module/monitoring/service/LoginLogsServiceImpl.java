@@ -20,16 +20,17 @@ import  org.springframework.stereotype.Service;
 
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
-import  cc.mashroom.squirrel.module.logs.model.LoginLogs;
+import  cc.mashroom.squirrel.module.logs.repository.LoginLogsRepository;
 import  cc.mashroom.util.JsonUtils;
+import  cc.mashroom.util.collection.map.Map;
 
 @Service
 public  class  LoginLogsServiceImpl  implements  LoginLogsService
 {
-	@Connection(dataSource=@DataSource(type="db",name="squirrel") )
+	@Connection(  dataSource=@DataSource(type="db",name="squirrel") )
 	
 	public  ResponseEntity<String>  search( int  page,int  pageSize )
 	{
-		return  ResponseEntity.ok( JsonUtils.toJson(LoginLogs.dao.search("SELECT  CREATE_TIME,USERNAME,STATE,IP,IP_LOCATION,ASTEXT(GEOMETRY)  AS  GEOMETRY,MAC  FROM  "+LoginLogs.dao.getDataSourceBind().table()+"  ORDER  BY  CREATE_TIME  DESC  LIMIT  "+pageSize*(page-1)+","+pageSize)) );
+		return  ResponseEntity.ok( JsonUtils.toJson(LoginLogsRepository.DAO.lookup(Map.class,"SELECT  CREATE_TIME,USERNAME,STATE,IP,IP_LOCATION,ASTEXT(GEOMETRY)  AS  GEOMETRY,MAC  FROM  "+LoginLogsRepository.DAO.getDataSourceBind().table()+"  ORDER  BY  CREATE_TIME  DESC  LIMIT  "+pageSize*(page-1)+","+pageSize)) );
 	}
 }

@@ -46,7 +46,7 @@ public  class  PAIPPacketProcessor
 
         long  clientId= Long.valueOf( packet.getAccessKey() );
         
-        Map<String,Object>  clientSessionLocation = CacheFactory.createCache("SESSION_LOCATION_CACHE").getOne( "SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );
+        Map<String,Object>  clientSessionLocation = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );
         
         if( clientSessionLocation==null || !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
@@ -93,6 +93,11 @@ public  class  PAIPPacketProcessor
 		}
 	}
 	
+	public  void  qosReceipt( QosReceiptPacket  packet )
+	{
+		PacketRoute.INSTANCE.route(       packet.getContactId() , packet );
+	}
+	
 	public  void  chatRetract( Channel  channel , long  clientId , ChatRetractPacket  packet )
 	{
 		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
@@ -101,18 +106,13 @@ public  class  PAIPPacketProcessor
 		}
 	}
 	
-	public  void  groupChat(Channel  channel,GroupChatPacket packet )
-	{
-		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
-	}
-	
-	public  void  qosReceipt( QosReceiptPacket  packet )
-	{
-		PacketRoute.INSTANCE.route( packet.getContactId() , packet );
-	}
-	
 	public  void  groupChatInvited( Channel  channel   ,GroupChatEventPacket  packet )
 	{
 		PacketRoute.INSTANCE.route(      packet.getContactId(),packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
+	}
+	
+	public  void  groupChat(   Channel  channel , GroupChatPacket  packet )
+	{
+		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
 	}
 }

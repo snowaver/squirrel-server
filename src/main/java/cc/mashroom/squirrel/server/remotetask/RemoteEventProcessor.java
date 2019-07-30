@@ -23,14 +23,13 @@ import  java.io.IOException;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.util.collection.map.Map;
-import  cc.mashroom.xcache.rpcs.Processor;
 import  cc.mashroom.util.ObjectUtils;
 
-public  class  RemoteEventProcessor  implements  Processor
+public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventProcessor
 {
-	public  Object  process( int  eventType,Map<String,Object>  parameters )
+	public  <T>  T  process( int  eventType,Map<String,Object>  parameters )
 	{
-		switch(   eventType )
+		switch( eventType )
 		{
 			case  0:
 			{
@@ -44,15 +43,15 @@ public  class  RemoteEventProcessor  implements  Processor
 					}
 					catch( IOException  e )
 					{
-						return  false;
+						return  (T)  Boolean.FALSE;
 					}
 				}
 				
-				return  true;
+				return  (T)  Boolean.FALSE;
 			}
 			case   1:
 			{
-				return  PacketRoute.INSTANCE.route( parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class) );
+				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
 			}
 		}
 		

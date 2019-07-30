@@ -27,16 +27,16 @@ import  cc.mashroom.plugin.PluginRegistry;
 import  cc.mashroom.plugin.db.Db;
 import  cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
 import  cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
-import cc.mashroom.squirrel.module.call.manager.CallManager;
+import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
 import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.remotetask.RemoteEventProcessor;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.xcache.CacheFactoryStrategy;
-import  cc.mashroom.xcache.rpcs.RemoteEventHandler;
+import  cc.mashroom.xcache.RemoteEventProcessorDelegate;
 
-public  class       ComponentLifecycle  implements  ApplicationListener<ApplicationEvent>
+public  class     ComponentLifecycle  implements  ApplicationListener<ApplicationEvent>
 {
 	private  NettyAcceptor  socketAcceptor;
 	
@@ -44,18 +44,18 @@ public  class       ComponentLifecycle  implements  ApplicationListener<Applicat
 	{
 		if( event instanceof ApplicationReadyEvent )
 		{
-			socketAcceptor = new  NettyAcceptor().initialize( Config.server.getProperty("host","0.0.0.0"),Config.server.getInt("port",8012) );
+			this.socketAcceptor = new  NettyAcceptor().initialize( Config.server.getProperty("host","0.0.0.0"),Config.server.getInt("port",8012) );
 		}
 		else
 		if( event         instanceof ApplicationPreparedEvent )
 		{
-			RemoteEventHandler.getInstance().setProcessor( new  RemoteEventProcessor() );
+			RemoteEventProcessorDelegate.INSTANCE.setProcessor(    new  RemoteEventProcessor() );
 			
 			CacheFactoryStrategy  cacheFactoryStrategy = Config.server.getBoolean("cluster.enabled",false) ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 			
 			PluginRegistry.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy).register(ClientSessionManager.INSTANCE).register(ChatGroupUserManager.INSTANCE).register(CallManager.INSTANCE).initialize();
 			
-			ServerInfo.INSTANCE.setLocalNodeId(  cacheFactoryStrategy.getLocalNodeId() );
+			ServerInfo.INSTANCE.setLocalNodeId(cacheFactoryStrategy.getLocalNodeId() );
 		}
 		else
 		if( event   instanceof ContextStoppedEvent )

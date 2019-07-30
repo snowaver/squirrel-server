@@ -20,25 +20,26 @@ import  org.springframework.stereotype.Service;
 
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
-import  cc.mashroom.squirrel.module.system.model.BalancingProxy;
+import  cc.mashroom.squirrel.module.system.repository.BalancingProxyRepository;
 import  cc.mashroom.util.JsonUtils;
+import  cc.mashroom.util.collection.map.Map;
 
 @Service
 public  class  BalancingProxyServiceImpl  implements  BalancingProxyService
 {
 	@Connection( dataSource=@DataSource(name="squirrel",type="db") )
 	
-	public  ResponseEntity<String>  search( int  action,String  keyword )
+	public  ResponseEntity<String>  search(   int  action,String  keyword )
 	{
 		switch( action )
 		{
 			case  0:
 			{
-				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxy.dao.search("SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxy.dao.getDataSourceBind().table())) );
+				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table())) );
 			}
 			case  1:
 			{
-				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxy.dao.search("SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxy.dao.getDataSourceBind().table()+"  WHERE  APPLICATION_ID = ?  ORDER  BY  HOST  ASC",new  Object[]{Integer.parseInt(keyword)})) );
+				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table()+"  WHERE  APPLICATION_ID = ?  ORDER  BY  HOST  ASC",new  Object[]{Integer.parseInt(keyword)})) );
 			}
 		}
 		

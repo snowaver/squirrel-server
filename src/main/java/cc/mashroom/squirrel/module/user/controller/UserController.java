@@ -42,7 +42,6 @@ import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.squirrel.module.user.service.UserService;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import  cc.mashroom.util.JsonUtils;
-import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
@@ -72,9 +71,9 @@ public  class  UserController  extends  AbstractController
 
 	@RequestMapping( method={RequestMethod.POST} )
 	@ResponseBody
-	public  ResponseEntity<String>  add( @RequestParam("user")  String  user , @RequestParam(name="portrait" , required=false)  MultipartFile  portrait )  throws  IOException
+	public  ResponseEntity<String>  add( @RequestParam("user")  User  user , @RequestParam(name="portrait" , required=false)  MultipartFile  portrait )  throws  IOException
 	{
-		return  service.add( ObjectUtils.cast(new  User().addEntries(JsonUtils.fromJson(user,new  TypeReference<Map<String,Object>>(){})),User.class),portrait );
+		return  service.add( user,portrait );
 	}
 	
 	@RequestMapping( value="/logout", method={RequestMethod.POST} )

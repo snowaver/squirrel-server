@@ -15,9 +15,7 @@
  */
 package cc.mashroom.squirrel.common;
 
-import  cc.mashroom.db.XModel;
-
-public  abstract  class  AbstractModel<T extends AbstractModel<?>>  extends  XModel<T>
+public  abstract  class  AbstractModel
 {
 	
 }

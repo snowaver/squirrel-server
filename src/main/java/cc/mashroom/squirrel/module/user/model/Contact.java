@@ -15,12 +15,7 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.squirrel.common.AbstractModel;
-import  cc.mashroom.db.annotation.DataSourceBind;
-
-@DataSourceBind( name="squirrel",table="contact",primaryKeys="ID" )
-
-public    class  Contact  extends  AbstractModel<Contact>
+public  class  Contact
 {
-	public  final  static  Contact  dao = new  Contact();
+	
 }

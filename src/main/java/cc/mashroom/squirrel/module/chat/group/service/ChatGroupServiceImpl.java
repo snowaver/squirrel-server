@@ -17,7 +17,7 @@ package cc.mashroom.squirrel.module.chat.group.service;
 
 import  java.sql.Timestamp;
 import  java.util.ArrayList;
-import java.util.List;
+import  java.util.List;
 
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
@@ -29,9 +29,9 @@ import  com.google.common.collect.Lists;
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.util.Reference;
-import  cc.mashroom.squirrel.module.chat.group.model.ChatGroup;
-import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
-import  cc.mashroom.squirrel.module.user.model.User;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
+import  cc.mashroom.squirrel.module.user.repository.UserRepository;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.util.JsonUtils;
@@ -48,13 +48,13 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 		
 		Reference<Object> id=new  Reference<Object>();
 		
-		if( ChatGroup.dao.insert(id,"INSERT  INTO  "+ChatGroup.dao.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  CREATE_BY = ?  AND  NAME = ?  AND  IS_DELETED = FALSE)",new  Object[]{now,userId,now,userId,name,userId,name}) >= 1 )
+		if( ChatGroupRepository.DAO.insert(id,"INSERT  INTO  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME)  SELECT  ?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  CREATE_BY = ?  AND  NAME = ?  AND  IS_DELETED = FALSE)",new  Object[]{now,userId,now,userId,name,userId,name}) >= 1 )
 		{
 			Reference<Object>  chatGroupUserId   = new  Reference<Object>();
 			
-			String  nickname = User.dao.getOne("SELECT  NICKNAME  FROM  "+User.dao.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{userId}).getString( "NICKNAME" );
+			String  nickname = UserRepository.DAO.lookupOne(Map.class,"SELECT  NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{userId}).getString( "NICKNAME" );
 			
-			ChatGroupUser.dao.insert( chatGroupUserId,"INSERT  INTO  "+ChatGroupUser.dao.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL",new  Object[]{now,userId,now,userId,id.get(),userId,nickname} );
+			ChatGroupUserRepository.DAO.insert( chatGroupUserId,"INSERT  INTO  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL",new  Object[]{now,userId,now,userId,id.get(),userId,nickname} );
 			
 			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("IS_DELETED",false).addEntry("CREATE_TIME",now).addEntry("CREATE_BY",userId).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",userId).addEntry("NAME",name))).addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId.get()).addEntry("IS_DELETED",false).addEntry("CREATE_TIME",now).addEntry("CREATE_BY",userId).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",userId).addEntry("CHAT_GROUP_ID",id.get()).addEntry("CONTACT_ID",userId).addEntry("VCARD",nickname)))) );
 		}
@@ -64,15 +64,15 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  update( long  updaterId,long  chatGroupId,String  name )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  update(  long  updaterId,long  chatGroupId,String  name )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>();
 		
-		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?,LAST_MODIFY_BY = ?  WHERE  ID = ?",new  Object[]{name,now,updaterId,chatGroupId}) >= 1 )
+		if( ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?,LAST_MODIFY_BY = ?  WHERE  ID = ?",new  Object[]{name,now,updaterId,chatGroupId}) >= 1 )
 		{
-			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
+			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
 			
 			return  ResponseEntity.ok( new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupId).addEntry("NAME",name).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",updaterId))).addEntry("CHAT_GROUP_USERS",new  ArrayList<>()) );
 		}
@@ -86,7 +86,7 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
-		if( ChatGroup.dao.update("UPDATE  "+ChatGroup.dao.getDataSourceBind().table()+"  SET  IS_DELETED = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{true,id}) >= 1 )
+		if( ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{true,id}) >= 1 )
 		{
 			return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("CHAT_GROUPS",new  HashMap<String,Object>().addEntry("ID",id).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now)).addEntry("CHAT_GROUP_USERS",new  ArrayList<>())) );
 		}
@@ -98,8 +98,8 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 	
 	public  ResponseEntity<String>  search( int  action, String  keyword,Map<String,Map<String,Object>>  extras )
 	{
-		Map<String,Object>  response = new  HashMap<String,Object>().addEntry( "CHAT_GROUP_USERS",ChatGroupUser.dao.search("SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{Long.valueOf(keyword),new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUP_USERS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
+		Map<String,Object>  response = new  HashMap<String,Object>().addEntry( "CHAT_GROUP_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{Long.valueOf(keyword),new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUP_USERS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
 		
-		return  ResponseEntity.status(200).body( JsonUtils.toJson(response.addEntry("CHAT_GROUPS",ChatGroup.dao.search("SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroup.dao.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?",new  Object[]{Long.valueOf(keyword),new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUPS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}))) );
+		return  ResponseEntity.status(200).body( JsonUtils.toJson(response.addEntry("CHAT_GROUPS",ChatGroupRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?",new  Object[]{Long.valueOf(keyword),new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUPS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}))) );
 	}
 }

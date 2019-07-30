@@ -15,12 +15,24 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.squirrel.common.AbstractModel;
-import  cc.mashroom.db.annotation.DataSourceBind;
+import  cc.mashroom.db.annotation.Column;
+import  lombok.Data;
+import  lombok.experimental.Accessors;
 
-@DataSourceBind( name="squirrel",table="user",primaryKeys="ID" )
-
-public    class  User  extends  AbstractModel<User>
+@Data
+@Accessors( chain=true )
+public  class  User
 {
-	public  final  static  User  dao = new  User();
+	@Column( name="ID" )
+	private  Long  id;
+	@Column( name="USERNAME" )
+	private  String  username;
+	@Column( name="PASSWORD" )
+	private  String  password;
+	@Column( name="NAME" )
+	private  String  name;
+	@Column( name="NICKNAME" )
+	private  String  nickname;
+	@Column( name="ROLETYPE" )
+	private  Integer roleType;
 }

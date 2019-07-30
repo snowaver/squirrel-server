@@ -15,12 +15,7 @@
  */
 package cc.mashroom.squirrel.module.logs.model;
 
-import  cc.mashroom.squirrel.common.AbstractModel;
-import  cc.mashroom.db.annotation.DataSourceBind;
-
-@DataSourceBind( name="squirrel",table="login_logs",primaryKeys="ID" )
-
-public    class  LoginLogs  extends  AbstractModel<LoginLogs>
+public  class  LoginLogs
 {
-	public  final  static  LoginLogs  dao = new  LoginLogs();
+	
 }

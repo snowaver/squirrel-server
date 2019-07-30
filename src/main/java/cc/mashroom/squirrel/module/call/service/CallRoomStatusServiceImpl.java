@@ -37,7 +37,7 @@ public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 		
 		long  newRoomId   = CacheFactory.getNextSequence( "CALL_ROOM_ID" );
 		
-		if( CacheFactory.createCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  SELECT  ?,?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  CALL_ROOM_STATUS  WHERE  CALLER_ID  IN  (?,?)  OR  CALLEE_ID  IN  (?,?))",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1,callerId,calleeId,callerId,calleeId}) )
+		if( CacheFactory.getOrCreateMemTableCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  SELECT  ?,?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  CALL_ROOM_STATUS  WHERE  CALLER_ID  IN  (?,?)  OR  CALLEE_ID  IN  (?,?))",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1,callerId,calleeId,callerId,calleeId}) )
 		{
 			CallManager.INSTANCE.scheduleTerminate( id,newRoomId,Integer.parseInt(System.getProperty("call.timeout.seconds","20")),TimeUnit.SECONDS );
 			

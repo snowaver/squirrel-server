@@ -15,12 +15,7 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.db.XModel;
-import  cc.mashroom.db.annotation.DataSourceBind;
-
-@DataSourceBind( name="squirrel",table="offline_message" )
-
-public  class  OfflineMessage  extends  XModel<OfflineMessage>
+public  class  OfflineMessage
 {
-	public  final  static  OfflineMessage  dao = new  OfflineMessage();
+	
 }

@@ -15,12 +15,7 @@
  */
 package cc.mashroom.squirrel.module.system.model;
 
-import  cc.mashroom.squirrel.common.AbstractModel;
-import  cc.mashroom.db.annotation.DataSourceBind;
-
-@DataSourceBind( name="squirrel",table="balancing_proxy",primaryKeys="ID" )
-
-public  class  BalancingProxy  extends  AbstractModel<BalancingProxy>
+public  class  BalancingProxy
 {
-	public  final  static  BalancingProxy  dao = new  BalancingProxy();
+	
 }

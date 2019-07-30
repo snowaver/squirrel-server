@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.chat.group.model;
+package cc.mashroom.squirrel.module.call.model;
 
 import  java.sql.Timestamp;
 
@@ -23,24 +23,24 @@ import  lombok.experimental.Accessors;
 
 @Data
 @Accessors( chain=true )
-public  class  ChatGroupUser
+public  class  CallRoomStatus
 {
 	@Column( name="ID" )
-	private  Long  id;
-	@Column( name="IS_DELETED" )
-	private  Boolean  isDeleted;
-	@Column( name="CREATE_TIME")
-	private  Timestamp   createTime;
-	@Column( name="CREATE_BY"  )
-	private  String    createBy;
-	@Column( name="LAST_MODIFY_TIME"  )
-	private  Timestamp  lastModifyTime;
-	@Column( name="LAST_MODIFY_BY" )
-	private  String    lastModifyBy;
-	@Column( name="CHAT_GROUP_ID"  )
-	private  Long   chatGroupId;
-	@Column( name="CONTACT_ID" )
-	private  Long contactId;
-	@Column( name="VCARD"  )
-	private  String   vcard;
+	private  String  id;
+	@Column( name="CREATE_TIME"  )
+	private  Timestamp createTime;
+	@Column( name="CALLER_ID" )
+	private  Long   callerId;
+	@Column( name="CALLEE_ID" )
+	private  Long   calleeId;
+	@Column( name="STATE"   )
+	private  Integer   state;
+	@Column( name="CALL_ROOM_ID" )
+	private  Long callRoomId;
+	@Column( name="CONTENT_TYPE" )
+	private  Integer  contentType;
+	@Column( name="CLOSE_REASON" )
+	private  Integer  closeReason;
+	@Column( name="CLOSED_BY" )
+	private  Long   closedBy;
 }

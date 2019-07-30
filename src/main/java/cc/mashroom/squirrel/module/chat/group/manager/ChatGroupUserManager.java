@@ -17,50 +17,45 @@ package cc.mashroom.squirrel.module.chat.group.manager;
 
 import  java.util.HashSet;
 import  java.util.Set;
+import  java.util.stream.Collectors;
 
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.XCache;
+import  cc.mashroom.xcache.XKeyValueCache;
 
 public  class      ChatGroupUserManager  implements  Plugin
 {
-	public  final  static  ChatGroupUserManager  INSTANCE = new  ChatGroupUserManager();
+	public  final  static  ChatGroupUserManager  INSTANCE =new  ChatGroupUserManager();
 	
 	public  void  stop()
 	{
 		
 	}
 	
-	public  void  initialize()  throws  Exception
+	public  void  initialize( Object  ...  params )  throws  Exception
 	{
-		chatGroupUserIdsCache = CacheFactory.createCache(  "CHATGROUP_USER_IDS_CACHE" );
+		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
 	}
 	
-	private  XCache<Long,Set<Long>>  chatGroupUserIdsCache;
+	private  XKeyValueCache<Long,Set<Long>>     chatGroupUserIdsCache;
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )
 	{
-		Set<Long>  chatGroupUserIds = chatGroupUserIdsCache.get( chatGroupId );
+		Set<Long>  chatGroupUserIds    = this.chatGroupUserIdsCache.get( chatGroupId );
 		
 		if( chatGroupUserIds == null )
 		{
 			synchronized(     String.valueOf( chatGroupId ).intern() )
 			{
-				chatGroupUserIds = chatGroupUserIdsCache.get(    chatGroupId );
+				chatGroupUserIds       = this.chatGroupUserIdsCache.get( chatGroupId );
 				
 				if( chatGroupUserIds    == null )
 				{
-					chatGroupUserIds= new  HashSet<Long>();
+					chatGroupUserIds= ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect( Collectors.toSet() );
 					
-					for( ChatGroupUser  chatGroupUser : ChatGroupUser.dao.search("SELECT  CONTACT_ID  FROM  "+ChatGroupUser.dao.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}) )
-					{
-						chatGroupUserIds.add(   chatGroupUser.getLong( "CONTACT_ID" ) );
-					}
-					/*
-					CacheFactory.createCache("CHATGROUP_CACHE").update( "INSERT  INTO  CHATGROUP  (CHATGROUP_ID,USER_IDS)  VALUES  (?,?)",new  Object[]{chatGroupId,chatGroupUserIds.toArray(new  Long[chatGroupUserIds.size()])} );  return  chatGroupUserIds;
-					*/
-					chatGroupUserIdsCache.put( chatGroupId, chatGroupUserIds );
+					this.chatGroupUserIdsCache.put(     chatGroupId,chatGroupUserIds );
 				}
 			}
 		}

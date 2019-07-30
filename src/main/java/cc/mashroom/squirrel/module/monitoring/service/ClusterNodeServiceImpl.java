@@ -33,7 +33,7 @@ public  class  ClusterNodeServiceImpl  implements  ClusterNodeService
 	{
 		Map<String,Object>  onlineCounts = new  HashMap<String, Object>();
 		
-		CacheFactory.createCache("SESSION_LOCATION_CACHE").search("SELECT  CLUSTER_NODE_ID,COUNT(USER_ID)  AS  ONLINE_COUNT  FROM  SESSION_LOCATION  WHERE  ONLINE = ?  GROUP  BY  CLUSTER_NODE_ID",new  Object[]{true}).forEach( (onlineCount) -> onlineCounts.put(onlineCount.getString("CLUSTER_NODE_ID"),onlineCount.get("ONLINE_COUNT")) );
+		CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookup(Map.class,"SELECT  CLUSTER_NODE_ID,COUNT(USER_ID)  AS  ONLINE_COUNT  FROM  SESSION_LOCATION  WHERE  ONLINE = ?  GROUP  BY  CLUSTER_NODE_ID",new  Object[]{true}).forEach( (onlineCount) -> onlineCounts.put(onlineCount.getString("CLUSTER_NODE_ID"),onlineCount.get("ONLINE_COUNT")) );
 		
 		List<XClusterNode>  clusterNodes = CacheFactory.getClusterNodes();
 		

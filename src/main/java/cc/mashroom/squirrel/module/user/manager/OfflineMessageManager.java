@@ -21,7 +21,7 @@ import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
 
 import  cc.mashroom.plugin.Plugin;
-import  cc.mashroom.squirrel.module.user.model.OfflineMessage;
+import  cc.mashroom.squirrel.module.user.repository.OfflineMessageRepository;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  lombok.NoArgsConstructor;
 import  lombok.extern.slf4j.Slf4j;
@@ -33,27 +33,27 @@ public  class  OfflineMessageManager  implements  Plugin
 {
 	public  final  static  OfflineMessageManager  INSTANCE = new  OfflineMessageManager();
 	
+	public  void  stop()
+	{
+		
+	}
+	
+	public  void  initialize( Object  ...  parameters  )
+	{
+		
+	}
+	
 	public  boolean  store( long  senderId,ChatPacket  packet )
 	{
 		try
 		{
-			return  OfflineMessage.dao.update("INSERT  INTO  "+OfflineMessage.dao.getDataSourceBind().table()+"  (CONTACT_ID,RECEIVER_ID,MD5,CONTENT,CONTENT_TYPE,CREATE_TIME)  VALUES  (?,?,?,?,?,?)",new  Object[]{senderId,packet.getContactId(),packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis())}) >= 1;
+			return  OfflineMessageRepository.DAO.update("INSERT  INTO  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  (CONTACT_ID,RECEIVER_ID,MD5,CONTENT,CONTENT_TYPE,CREATE_TIME)  VALUES  (?,?,?,?,?,?)",new  Object[]{senderId,packet.getContactId(),packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis())}) >= 1;
 		}
-		catch(  Exception  e )
+		catch( Throwable  e )
 		{
 			log.error( e.getMessage(),e );
 		}
 		
 		return    false;
-	}
-	
-	public  void  initialize()
-	{
-		
-	}
-	
-	public  void  stop()
-	{
-		
 	}
 }

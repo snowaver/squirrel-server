@@ -23,28 +23,20 @@ import  org.springframework.http.server.ServerHttpRequest;
 import  org.springframework.http.server.ServerHttpResponse;
 import  org.springframework.http.server.ServletServerHttpRequest;
 import  org.springframework.http.server.ServletServerHttpResponse;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
 import  org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import  cc.mashroom.util.StringUtils;
 
 @org.springframework.web.bind.annotation.ControllerAdvice
-public  class  ControllerAdvice  implements  ResponseBodyAdvice<String>
+public  class  ControllerAdvice  implements  ResponseBodyAdvice<Object>
 {
-	@InitBinder
-	public  void  resolveCommonTypes( WebDataBinder  binder )
-	{
-		System.err.println( "resolve.common.types" );
-	}
-	
 	public  boolean  supports( MethodParameter  returnType,Class<? extends HttpMessageConverter<?>>  converterType )
 	{
 		return  true;
 	}
 
 	@Override
-	public  String  beforeBodyWrite( String  body,MethodParameter  returnType,MediaType  selectedContentType,Class<? extends HttpMessageConverter<?>>  selectedConverterType,ServerHttpRequest  request,ServerHttpResponse  response )
+	public  Object  beforeBodyWrite( Object  body,MethodParameter  returnType,MediaType  selectedContentType,Class<? extends HttpMessageConverter<?>>  selectedConverterType,ServerHttpRequest  request,ServerHttpResponse  response )
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(((ServletServerHttpRequest)  request).getServletRequest().getAttribute("REQUEST_COUNTER")),13," ")+"  "+selectedContentType+"/"+((ServletServerHttpResponse)  response).getServletResponse().getStatus()+"/"+body );
 		

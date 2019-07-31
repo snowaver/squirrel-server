@@ -22,13 +22,13 @@ import  lombok.AllArgsConstructor;
 import  lombok.Getter;
 import  lombok.NoArgsConstructor;
 import  lombok.extern.slf4j.Slf4j;
+import  cc.mashroom.squirrel.module.call.model.CallRoomStatus;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallReason;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
-import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 
 @Slf4j
@@ -52,20 +52,20 @@ public  class  LocalClientSession  implements  ClientSession
 		{
 			if( channel.hasAttr(CallPacket.CALL_ROOM_ID) && channel.attr(CallPacket.CALL_ROOM_ID).get() != null )
 			{
-				Map<String,Object>  callRoomStatus = CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").getOne( "SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?  AND  (CALLER_ID = ?  OR  CALLEE_ID = ?)",new  Object[]{channel.attr(CallPacket.CALL_ROOM_ID).get(),clientId,clientId} );
+				CallRoomStatus  callRoomStatus = CacheFactory.getOrCreateMemTableCache("CALL_ROOM_STATUS_CACHE").lookupOne( CallRoomStatus.class,"SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  CALL_ROOM_ID = ?  AND  (CALLER_ID = ?  OR  CALLEE_ID = ?)",new  Object[]{channel.attr(CallPacket.CALL_ROOM_ID).get(),clientId,clientId} );
 				
 				if( callRoomStatus  != null )
 				{
-					CacheFactory.createCache("CALL_ROOM_MEMBER_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.get("ID"),callRoomStatus.get("ID")} );
+					CacheFactory.getOrCreateMemTableCache("CALL_ROOM_STATUS_CACHE").update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",  new  Object[]{callRoomStatus.getId(),callRoomStatus.getCallRoomId()} );
 					
-					this.channel.writeAndFlush( new  CloseCallPacket(callRoomStatus.getLong("CALLER_ID") == clientId ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
+					this.channel.writeAndFlush( new  CloseCallPacket(callRoomStatus.getCallerId() == clientId ? callRoomStatus.getCalleeId() : callRoomStatus.getCallerId(),callRoomStatus.getCallRoomId(),CloseCallReason.NETWORK_ERROR) );
 					
-					PacketRoute.INSTANCE.route( callRoomStatus.getLong("CALLER_ID") == clientId ? callRoomStatus.getLong("CALLEE_ID") : callRoomStatus.getLong("CALLER_ID"),new  CloseCallPacket(clientId,callRoomStatus.getLong("CALL_ROOM_ID"),CloseCallReason.NETWORK_ERROR) );
+					PacketRoute.INSTANCE.route( callRoomStatus.getCallerId() == clientId ? callRoomStatus.getCalleeId() : callRoomStatus.getCallerId(),new  CloseCallPacket(clientId,callRoomStatus.getCallRoomId(),CloseCallReason.NETWORK_ERROR) );
 				}
 			}
 			if( reason >= 0 )
 			{
-				this.channel.writeAndFlush( new  DisconnectAckPacket( reason ) );
+				this.channel.writeAndFlush(    new  DisconnectAckPacket( reason ) );
 			}
 			this.channel.close();
 		}

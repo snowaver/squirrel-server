@@ -57,7 +57,7 @@ public  class  IdentityRecognitionFilter  extends  CacheLoader<String,Map<String
 	{
 		String  requestUri= ((HttpServletRequest)  request).getRequestURI();
 		
-		if( "/user".equals(requestUri) && "POST".equalsIgnoreCase(((HttpServletRequest)  request).getMethod()) || (requestUri.indexOf(".") != -1 && EXCLUDE_SUFFIXES.contains(requestUri.substring(requestUri.lastIndexOf(".")).toLowerCase())) || EXCLUDE_URIS.contains(requestUri) || requestUri.matches("\\/user\\/[0-9]+\\/portrait") )
+		if( "/user".equals(requestUri) && "POST".equalsIgnoreCase(  ((HttpServletRequest)  request).getMethod()) || (requestUri.indexOf(".") != -1 && EXCLUDE_SUFFIXES.contains(requestUri.substring(requestUri.lastIndexOf(".")).toLowerCase())) || EXCLUDE_URIS.contains(requestUri) || requestUri.matches("\\/user\\/[0-9]+\\/portrait") )
 		{
 			chain.doFilter( request, response );
 		}
@@ -102,17 +102,17 @@ public  class  IdentityRecognitionFilter  extends  CacheLoader<String,Map<String
 			{
 				e.printStackTrace();
 				
-				ObjectUtils.cast(response,HttpServletResponse.class).setStatus(   500 );
+				ObjectUtils.cast(response,HttpServletResponse.class).setStatus(    500 );
 				
-				response.getWriter().write( JsonUtils.toJson(new  HashMap<String,Object>().addEntry("STATUS","EM50001").addEntry("MESSAGE",e.getMessage())) );
+				response.getWriter().write(JsonUtils.toJson(new  HashMap<String,Object>().addEntry("STATUS","EM50001").addEntry("MESSAGE",e.getMessage())) );
 			}
 		}
 	}
 	
 	public  Map<String,Object>  load( String  secretKey )  throws  Exception
 	{
-		Map<String,Object>  sessionProfile = CacheFactory.createCache("SESSION_LOCATION_CACHE").getOne( "SELECT  USER_ID,CREATE_TIME,ACCESS_TIME,CLUSTER_NODE_ID,SECRET_KEY,ONLINE  FROM  SESSION_LOCATION  WHERE  SECRET_KEY = ?",new  Object[]{ secretKey } );
+		Map<String,Object>  sessionProfile = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  USER_ID,CREATE_TIME,ACCESS_TIME,CLUSTER_NODE_ID,SECRET_KEY,IS_ONLINE  FROM  SESSION_LOCATION  WHERE  SECRET_KEY = ?",new  Object[]{ secretKey } );
 		
-		return  sessionProfile == null ? new  HashMap<String,Object>() : sessionProfile;  //  Guava  cache  loader  should  return  a  non-null  value ,  so  create  a  new  empty  map  by  default  to  avoid  loading  exception.
+		return  sessionProfile == null ? new  HashMap<String,Object>() :  sessionProfile;  //  Guava  cache  loader  should  return  a  non-null  value ,  so  create  a  new  empty  map  by  default  to  avoid  loading  exception.
 	}
 }

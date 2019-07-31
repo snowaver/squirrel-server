@@ -17,8 +17,6 @@ package cc.mashroom.squirrel.module.system.controller;
 
 import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
 import  org.springframework.web.bind.annotation.RequestMapping;
 import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
@@ -31,12 +29,6 @@ import  cc.mashroom.squirrel.module.system.service.BalancingProxyService;
 @RestController
 public  class  BalancingProxyController  extends  AbstractController
 {
-	@InitBinder
-	public  void  resolveMapperTypes( WebDataBinder  binder )
-	{
-		System.err.println( "resolve.mapper.types" );
-	}
-	
 	@Autowired
 	private  BalancingProxyService  service;
 	

@@ -111,7 +111,7 @@ public  class      CallManager  implements  Plugin
 	
 	public  final  static  CallManager  INSTANCE = new  CallManager();
 	
-	protected  XMemTableCache<? , ?>  callRoomStatusCache;
+	private   XMemTableCache  callRoomStatusCache;
 	
 	public  void  scheduleTerminate( String  id, long  roomId,long  time,TimeUnit  unit )
 	{

@@ -27,7 +27,7 @@ import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.util.collection.map.ConcurrentHashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.XCache;
+import  cc.mashroom.xcache.XMemTableCache;
 import  lombok.NoArgsConstructor;
 
 @NoArgsConstructor
@@ -35,36 +35,36 @@ public  class  ClientSessionManager  implements  Plugin
 {
 	private  Map<Long,ClientSession>  localClientSessionCache = new  ConcurrentHashMap<Long,ClientSession>();
 
-	private  XCache<Long,String>  sessionLocationCache;
+	private  XMemTableCache       sessionLocationCache;
 	
 	public  final  static  ClientSessionManager  INSTANCE  = new  ClientSessionManager();
 	
-	public  void  initialize()
+	public  void  initialize( Object  ...  parameters )
 	{
-		this.sessionLocationCache = CacheFactory.createCache( "SESSION_LOCATION_CACHE" );
+		this.sessionLocationCache = CacheFactory.getOrCreateMemTableCache( "SESSION_LOCATION_CACHE" );
 	}
 
 	public  ClientSession  remove(     long  clientId )
 	{
-		sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{false,clientId} );		
+		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{false,clientId} );		
 		//  leave  the  secret  key  available  for  reconnecting .
 		return  this.localClientSessionCache.remove(    clientId );
 	}
 	
 	public  void  put( long  clientId,LocalClientSession  session )
 	{
-		sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{ServerInfo.INSTANCE.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,clientId} );
+		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{ServerInfo.INSTANCE.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,clientId} );
 
 		localClientSessionCache.put(clientId,session );
 	}
 	
 	public  ClientSession  get( long  clientId )
 	{
-		return  localClientSessionCache.computeIfAbsent( clientId,(key) -> {Map<String,Object>  sessionLocation = sessionLocationCache.getOne( "SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );  return  sessionLocation == null || sessionLocation.get("CLUSTER_NODE_ID") == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getString("CLUSTER_NODE_ID")) ? null : new  ClusteredClientSession( clientId,sessionLocation.getString("CLUSTER_NODE_ID") );} );
+		return  this.localClientSessionCache.computeIfAbsent( clientId,(key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( clientId,sessionLocation.getClusterNodeId() );} );
 	}
 	
 	public  void  stop()
 	{
-		localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.REASON_NETWORK_ERROR); }catch( IOException  e ){} } );
+		this.localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.REASON_NETWORK_ERROR); }catch( IOException  e ){} } );
 	}
 }

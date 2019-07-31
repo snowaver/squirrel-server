@@ -64,14 +64,14 @@ public  class  UserController  extends  AbstractController
 	 */
 	@RequestMapping( value="/signin", method={RequestMethod.POST} )
 	@ResponseBody
-	public  ResponseEntity<String>  signin( @RequestParam("username")  String  username,@RequestParam("password")  String  password,@RequestParam("protocolVersion")  int  protocolVersion,@RequestParam(name="roletype",required=false,defaultValue="0")  Integer  roletype,@RequestParam(name="longitude",required=false)  Double  longitude,@RequestParam(name="latitude",required=false)  Double  latitude,@RequestParam(name="mac",required=false)  String  mac,HttpServletRequest  request )
+	public  ResponseEntity<String>  signin( @RequestParam("username")  String  username,@RequestParam("password")  String  password,@RequestParam(name="protocolVersion",required=false,defaultValue="1")  int  protocolVersion,@RequestParam(name="roletype",required=false,defaultValue="0")  Integer  roletype,@RequestParam(name="longitude",required=false)  Double  longitude,@RequestParam(name="latitude",required=false)  Double  latitude,@RequestParam(name="mac",required=false)  String  mac,HttpServletRequest  request )
 	{
 		return  protocolVersion != ConnectPacket.CURRENT_PROTOCOL_VERSION ? ResponseEntity.status(602).body("") : service.signin( username,password,roletype,getRemoteAddress(request),longitude,latitude,mac );
 	}
 
 	@RequestMapping( method={RequestMethod.POST} )
 	@ResponseBody
-	public  ResponseEntity<String>  add( @RequestParam("user")  User  user , @RequestParam(name="portrait" , required=false)  MultipartFile  portrait )  throws  IOException
+	public  ResponseEntity<String>  add( @RequestParam("user")  User  user , @RequestParam(name = "portrait",required = false)  MultipartFile  portrait )  throws  IOException
 	{
 		return  service.add( user,portrait );
 	}

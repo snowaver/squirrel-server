@@ -21,14 +21,72 @@ import  java.nio.file.FileVisitor;
 import  java.nio.file.Files;
 import  java.nio.file.Path;
 import  java.nio.file.attribute.BasicFileAttributes;
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.List;
 
+import org.apache.commons.lang3.concurrent.BackgroundInitializer;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPool;
+import org.apache.commons.pool2.impl.GenericKeyedObjectPoolConfig;
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.apache.curator.shaded.com.google.common.collect.Lists;
+import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.BackgroundPreinitializer;
+import org.springframework.boot.autoconfigure.logging.ConditionEvaluationReportLoggingListener;
+import org.springframework.boot.cloud.CloudFoundryVcapEnvironmentPostProcessor;
+import org.springframework.boot.context.ConfigurationWarningsApplicationContextInitializer;
+import org.springframework.boot.context.ContextIdApplicationContextInitializer;
+import org.springframework.boot.context.FileEncodingApplicationListener;
+import org.springframework.boot.context.config.AnsiOutputApplicationListener;
+import org.springframework.boot.context.config.ConfigFileApplicationListener;
+import org.springframework.boot.context.config.DelegatingApplicationContextInitializer;
+import org.springframework.boot.context.config.DelegatingApplicationListener;
+import org.springframework.boot.context.event.EventPublishingRunListener;
+import org.springframework.boot.context.logging.ClasspathLoggingApplicationListener;
+import org.springframework.boot.context.logging.LoggingApplicationListener;
+import org.springframework.boot.env.PropertiesPropertySourceLoader;
+import org.springframework.boot.env.RandomValuePropertySource;
+import org.springframework.boot.env.SpringApplicationJsonEnvironmentPostProcessor;
+import org.springframework.boot.env.SystemEnvironmentPropertySourceEnvironmentPostProcessor;
+import org.springframework.boot.env.YamlPropertySourceLoader;
+import org.springframework.boot.liquibase.LiquibaseServiceLocatorApplicationListener;
+import org.springframework.boot.web.context.ServerPortInfoApplicationContextInitializer;
+import org.springframework.context.annotation.ConfigurationClassPostProcessor;
+import org.springframework.core.env.SimpleCommandLinePropertySource;
+import org.springframework.web.servlet.DispatcherServlet;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.PropertySource.StubPropertySource;
+
+import cc.mashroom.squirrel.module.system.controller.BalancingProxyController;
 import  cc.mashroom.util.FileUtils;
 import  cc.mashroom.util.IOUtils;
 
 public  class  Snippets
 {
-	public  static  void  main( String[]  args )  throws  IOException
+	public  static  void  main( String[]  args )  throws  Exception
 	{
+		System.err.println( Lists.newArrayList(BalancingProxyController.class.getSuperclass().getDeclaredMethods()) );
+		
+		Class<?>  configurationclasspostprocessorClass    = ConfigurationClassPostProcessor.class;
+		
+		Class<?>  requestmappinghandleradapterClass = RequestMappingHandlerAdapter.class;
+		
+		Class<?>  beanfactoryClass= DefaultListableBeanFactory.class;
+		
+		Class<?>  dispatcherservletClass   = DispatcherServlet.class;
+		
+		Class<?>  eventpublishingrunListener = EventPublishingRunListener.class;
+		
+		List<Class<?>>  initializers = Lists.newArrayList(DelegatingApplicationContextInitializer.class, /*SharedMetadataReaderFactoryContextInitializer.class,*/ ContextIdApplicationContextInitializer.class, ConfigurationWarningsApplicationContextInitializer.class, ServerPortInfoApplicationContextInitializer.class, ConditionEvaluationReportLoggingListener.class);
+		
+		List<Class<?>>  applicationenvironmentpreparedeventListeners = Lists.newArrayList(ConfigFileApplicationListener.class,AnsiOutputApplicationListener.class,LoggingApplicationListener.class,ClasspathLoggingApplicationListener.class,LoggingApplicationListener.class,BackgroundPreinitializer.class,DelegatingApplicationListener.class,FileEncodingApplicationListener.class);
+		
+		List<Class<?>>  applicationcontextinitializedeventListeners  = Lists.newArrayList(BackgroundPreinitializer.class, DelegatingApplicationListener.class);
+		
+		List<Class<?>>  applicationpreparedeventlisteners = Lists.newArrayList(ConfigFileApplicationListener.class, LoggingApplicationListener.class, BackgroundPreinitializer.class, DelegatingApplicationListener.class);
 		/*
 		Configuration  configuration = new  Configuration();
 		

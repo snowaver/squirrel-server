@@ -44,7 +44,7 @@ public  class  OfflineServiceImpl  implements  OfflineService
 		
 		response.addEntry( "CONTACTS",ContactRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CONTACTS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
 		
-		response.addEntry( "OFFLINE_MESSAGES",OfflineMessageRepository.DAO.lookup(Map.class,"SELECT  UNIX_TIMESTAMP(CREATE_TIME)  AS  ID,CREATE_TIME,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,"+TransportState.RECEIVED.getValue()+"  FROM  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  RECEIVER_ID = ?  ORDER  BY  CREATE_TIME  ASC",new  Object[]{userId}) );
+		response.addEntry( "OFFLINE_CHAT_MESSAGES",OfflineMessageRepository.DAO.lookup(Map.class,"SELECT  UNIX_TIMESTAMP(CREATE_TIME)  AS  ID,CREATE_TIME,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,"+TransportState.RECEIVED.getValue()+"  FROM  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  RECEIVER_ID = ?  ORDER  BY  CREATE_TIME  ASC",new  Object[]{userId}) );
 		
 		OfflineMessageRepository.DAO.update( "DELETE  FROM  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  RECEIVER_ID = ?",new  Object[]{userId} );
 		

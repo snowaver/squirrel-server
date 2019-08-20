@@ -19,5 +19,5 @@ import  org.springframework.http.ResponseEntity;
 
 public  interface  LoginLogsService
 {
-	public  ResponseEntity<String>  search( int  page,int  pageSize );
+	public  ResponseEntity<String>  lookup( int  page,int  pageSize );
 }

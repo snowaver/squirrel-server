@@ -68,9 +68,9 @@ public  class  ChatGroupController     extends  AbstractController
 		return  service.remove( id );
 	}
 	
-	@RequestMapping( value="/search",method={RequestMethod.GET } )
-	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
+	@RequestMapping( value="/lookup",method={RequestMethod.GET } )
+	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action,keyword,JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
+		return  service.lookup( action,keyword,JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
 	}
 }

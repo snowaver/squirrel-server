@@ -25,7 +25,7 @@ import  cc.mashroom.util.collection.map.Map;
 
 public  interface  UserService
 {
-	public  ResponseEntity<String>  search( int  action,String  keyword,Map<String,Object>  extras );
+	public  ResponseEntity<String>  lookup( int  action,String  keyword,Map<String,Object>  extras );
 	
 	public  ResponseEntity<String>  add( User  user,MultipartFile  file )  throws  IOException;
 	

@@ -29,5 +29,5 @@ public  interface  ChatGroupService
 	
 	public  ResponseEntity<String>  remove( long  id );
 	
-	public  ResponseEntity<String>  search( int  action,String  keyword,Map<String,Map<String,Object>>  extras );
+	public  ResponseEntity<String>  lookup( int  action,String  keyword,Map<String,Map<String,Object>>  extras );
 }

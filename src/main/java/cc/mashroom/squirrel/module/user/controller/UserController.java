@@ -107,10 +107,10 @@ public  class  UserController  extends  AbstractController
 		return  service.get( userId );
 	}
 	
-	@RequestMapping( value="/search", method={RequestMethod.GET } )
+	@RequestMapping( value="/lookup", method={RequestMethod.GET } )
 	@ResponseBody
-	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
+	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
 	{
-		return  service.search( action,keyword,new  HashMap<String,Object>().addEntries(JsonUtils.fromJson(extras,new  TypeReference<Map<String,Object>>(){})) );
+		return  service.lookup( action,keyword,new  HashMap<String,Object>().addEntries(JsonUtils.fromJson(extras,new  TypeReference<Map<String,Object>>(){})) );
 	}
 }

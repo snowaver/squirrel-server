@@ -19,5 +19,5 @@ import  org.springframework.http.ResponseEntity;
 
 public  interface  BalancingProxyService
 {
-	public  ResponseEntity<String>  search( int  action,String  keyword );
+	public  ResponseEntity<String>  lookup( int  action,String  keyword );
 }

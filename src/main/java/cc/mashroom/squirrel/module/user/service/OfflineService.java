@@ -21,5 +21,5 @@ import  cc.mashroom.util.collection.map.Map;
 
 public  interface  OfflineService
 {
-	public  ResponseEntity<String>  search( int  action,long  userId,Map<String,Map<String,Object>>  extras );
+	public  ResponseEntity<String>  lookup( int  action,long  userId,Map<String,Map<String,Object>>  extras );
 }

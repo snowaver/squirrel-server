@@ -34,9 +34,9 @@ public  class  LoginLogsController    extends  AbstractController
 	@Autowired
 	private  LoginLogsService  service;
 	
-	@RequestMapping( value="/search",method={RequestMethod.GET} )
-	public  ResponseEntity<String>  search( @RequestParam("page")  int  page,@RequestParam("pageSize")  int  pageSize,HttpServletResponse  response )
+	@RequestMapping( value="/lookup",method={RequestMethod.GET} )
+	public  ResponseEntity<String>  lookup( @RequestParam("page")  int  page,@RequestParam("pageSize")  int  pageSize,HttpServletResponse  response )
 	{
-		return  service.search( page,pageSize );
+		return  service.lookup( page,pageSize );
 	}
 }

@@ -38,9 +38,9 @@ public  class  OfflineController  extends  AbstractController
 	@Autowired
 	private  OfflineService  service;
 	
-	@RequestMapping( value="/search" , method={RequestMethod.GET} )
-	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile )
+	@RequestMapping( value="/lookup" , method={RequestMethod.GET} )
+	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile )
 	{
-		return  service.search( action,sessionProfile.getLong("USER_ID"),JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
+		return  service.lookup( action,sessionProfile.getLong("USER_ID"),JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
 	}
 }

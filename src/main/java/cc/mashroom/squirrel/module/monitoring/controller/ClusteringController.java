@@ -36,8 +36,8 @@ public  class  ClusteringController   extends  AbstractController
 	@Autowired
 	private  ClusterNodeService  service;
 	
-	@RequestMapping( value="/search",method={RequestMethod.GET} )
-	public  ResponseEntity<String>  search( HttpServletResponse   response )
+	@RequestMapping( value="/lookup",method={RequestMethod.GET} )
+	public  ResponseEntity<String>  lookup( HttpServletResponse   response )
 	{
 		return  service.getAll();
 	}

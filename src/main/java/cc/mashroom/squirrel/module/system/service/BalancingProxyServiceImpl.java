@@ -29,7 +29,7 @@ public  class  BalancingProxyServiceImpl  implements  BalancingProxyService
 {
 	@Connection( dataSource=@DataSource(name="squirrel",type="db") )
 	
-	public  ResponseEntity<String>  search(   int  action,String  keyword )
+	public  ResponseEntity<String>  lookup(   int  action,String  keyword )
 	{
 		switch( action )
 		{

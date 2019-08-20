@@ -33,8 +33,8 @@ public  class  BalancingProxyController  extends  AbstractController
 	private  BalancingProxyService  service;
 	
 	@RequestMapping( value="/balancingproxy",method={RequestMethod.GET} )
-	public  ResponseEntity<String>  search( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword )
+	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword )
 	{
-		return  service.search( action,keyword );
+		return  service.lookup( action,keyword );
 	}
 }

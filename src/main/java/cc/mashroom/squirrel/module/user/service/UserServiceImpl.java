@@ -109,7 +109,7 @@ public  class  UserServiceImpl     implements  UserService
 	
 	@Connection( dataSource=@DataSource(type="db" , name="squirrel") )
 	
-	public  ResponseEntity<String>  search( int  action,String  keyword,Map<String,Object>  extras )
+	public  ResponseEntity<String>  lookup( int  action,String  keyword,Map<String,Object>  extras )
 	{
 		switch( action )
 		{

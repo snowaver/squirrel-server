@@ -29,7 +29,7 @@ public  class  LoginLogsServiceImpl  implements  LoginLogsService
 {
 	@Connection(  dataSource=@DataSource(type="db",name="squirrel") )
 	
-	public  ResponseEntity<String>  search( int  page,int  pageSize )
+	public  ResponseEntity<String>  lookup( int  page,int  pageSize )
 	{
 		return  ResponseEntity.ok( JsonUtils.toJson(LoginLogsRepository.DAO.lookup(Map.class,"SELECT  CREATE_TIME,USERNAME,STATE,IP,IP_LOCATION,ASTEXT(GEOMETRY)  AS  GEOMETRY,MAC  FROM  "+LoginLogsRepository.DAO.getDataSourceBind().table()+"  ORDER  BY  CREATE_TIME  DESC  LIMIT  "+pageSize*(page-1)+","+pageSize)) );
 	}

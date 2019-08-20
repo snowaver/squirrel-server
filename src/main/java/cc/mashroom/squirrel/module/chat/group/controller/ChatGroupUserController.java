@@ -15,8 +15,9 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
-import  java.util.LinkedList;
 import  java.util.List;
+import  java.util.Set;
+import  java.util.stream.Collectors;
 
 import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
@@ -26,10 +27,9 @@ import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
-import  com.google.common.collect.Lists;
+import  com.google.common.collect.Sets;
 
 import  cc.mashroom.squirrel.common.AbstractController;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupUserService;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
@@ -46,15 +46,30 @@ public  class  ChatGroupUserController  extends  AbstractController
 	private  ChatGroupUserService  service;
 	
 	@RequestMapping( value="",method={RequestMethod.POST  } )
-	public  ResponseEntity<String>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("inviteeIds")  String  inviteeIdsSeperatedWithComma )
+	public  ResponseEntity<String>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("inviteeIds")   String  inviteeIdsSeperatedWithComma )
 	{
-		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.add( sessionProfile.getLong("USER_ID"),chatGroupId,Lists.newArrayList(CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split( ","))) );
+		Set<Long>  inviteeIds = Sets.newHashSet( CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(",")) );
 		
-		GroupChatEventPacket  groupChatMemberAddedEventPacket     = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED,responseEntity.getBody() );
+		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.add(sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
 		
-		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).forEach( (userId) -> {if(userId != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(userId,groupChatMemberAddedEventPacket);} );
+		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(   Collectors.toList() );
 		
-		return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<>().addEntry("CHAT_GROUP_USERS",responseEntity.getBody().get("CHAT_GROUP_USERS")).addEntry("CHAT_GROUPS",new  LinkedList<>())) );
+		for( Map<String,Object>           chatGroupUser : responseEntity.getBody().get("CHAT_GROUP_USERS") )
+		{
+			if(       sessionProfile.getLong("USER_ID") != chatGroupUser.getLong("CONTACT_ID").longValue() )
+			{
+				if( inviteeIds.contains( chatGroupUser.getLong("CONTACT_ID") ) )
+				{
+					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED, responseEntity.getBody()) );
+				}
+				else
+				{
+					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED, new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUP_USERS",inviteeChatGroupUsers).addEntry("CHAT_GROUPS",responseEntity.getBody().get("CHAT_GROUPS"))) );
+				}
+			}
+		}
+		
+		return  ResponseEntity.ok( JsonUtils.toJson(new  HashMap<>().addEntry("CHAT_GROUP_USERS",inviteeChatGroupUsers).addEntry("CHAT_GROUPS",responseEntity.getBody().get("CHAT_GROUPS"))) );
 	}
 	
 	@RequestMapping( value="",method={RequestMethod.PUT   } )
@@ -62,11 +77,11 @@ public  class  ChatGroupUserController  extends  AbstractController
 	{
 		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.update( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId,vcard );
 	
-		List<? extends Map>  chatGroupAllUsers = responseEntity.getBody().remove( "CHAT_GROUP_ALL_USERS" );
+		List<? extends Map>  chatGroupAllUsers= responseEntity.getBody().remove(   "CHAT_GROUP_ALL_USERS" );
 		
 		GroupChatEventPacket  groupChatMemberUpdatedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_UPDATED,responseEntity.getBody() );
 		
-		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> {if(chatGroupRemainingUser.getLong("CONTACT_ID").longValue() != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID"),groupChatMemberUpdatedEventPacket);} );
+		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> {if(chatGroupRemainingUser.getLong("CONTACT_ID").longValue()!= sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID"),groupChatMemberUpdatedEventPacket);} );
 		
 		return  ResponseEntity.ok( JsonUtils.toJson(responseEntity.getBody()) );
 	}
@@ -76,7 +91,7 @@ public  class  ChatGroupUserController  extends  AbstractController
 	{
 		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.secede( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId );
 		
-		List<? extends Map>  chatGroupAllUsers = responseEntity.getBody().remove( "CHAT_GROUP_ALL_USERS" );
+		List<? extends Map>  chatGroupAllUsers= responseEntity.getBody().remove(   "CHAT_GROUP_ALL_USERS" );
 		
 		GroupChatEventPacket  groupChatMemberRemovedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_REMOVED,responseEntity.getBody() );
 		

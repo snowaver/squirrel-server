@@ -17,6 +17,7 @@ package cc.mashroom.squirrel.module.chat.group.service;
 
 import  java.sql.Timestamp;
 import  java.util.ArrayList;
+import java.util.Collection;
 import  java.util.LinkedList;
 import  java.util.List;
 
@@ -43,7 +44,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  add(    long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  add( long  inviterId,long  chatGroupId,Collection<Long>  inviteeIds )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
@@ -62,7 +63,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 		ChatGroupUserRepository.DAO.insert( ids,"INSERT  INTO  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?)",addChatGroupUserBatchParameters.toArray(new  Object[0][]) );
 		
 		CacheFactory.getOrCreateKeyValueCache("CHATGROUP_USER_IDS_CACHE").remove(chatGroupId );
-		
+		/*
 		List<Map<String,Object>>  addedChatGroupUsers  = new  LinkedList<Map<String,Object>>();
 		
 		for( Reference< Object >  id : ids )
@@ -72,8 +73,8 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 				addedChatGroupUsers.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("IS_DELETED",false).addEntry("CREATE_TIME",now).addEntry("CREATE_BY",inviterId).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",inviterId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",inviteeIds.get(ids.indexOf(id))).addEntry("VCARD",nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id)))) );
 			}
 		}
-		
-		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",addedChatGroupUsers).addEntry("CHAT_GROUPS",ChatGroupRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
+		*/
+		return  ResponseEntity.ok( response.addEntry("CHAT_GROUP_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId})).addEntry("CHAT_GROUPS",ChatGroupRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
 	}
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
@@ -96,7 +97,7 @@ public  class  ChatGroupUserServiceImpl  implements  ChatGroupUserService
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secederId,long  chatGroupId, long  chatGroupUserId )
+	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secederId , long  chatGroupId , long  chatGroupUserId )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		

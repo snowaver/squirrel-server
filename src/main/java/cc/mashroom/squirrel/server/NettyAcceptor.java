@@ -25,20 +25,6 @@ import  io.netty.channel.socket.nio.NioServerSocketChannel;
 
 public  class  NettyAcceptor
 {
-	public  NettyAcceptor()
-	{
-		
-	}
-	
-	private  boolean  isLinux()
-	{
-		return  System.getProperty("os.name").toLowerCase().contains( "linux" );
-	}
-	
-	private  EventLoopGroup  acceptEventGroup;
-	
-	private  EventLoopGroup  handleEventGroup;
-	
 	public  void  stop()
 	{
 		acceptEventGroup.shutdownGracefully();
@@ -46,20 +32,21 @@ public  class  NettyAcceptor
 		handleEventGroup.shutdownGracefully();
 	}
 	
+	private  EventLoopGroup  acceptEventGroup;
+	
+	private  EventLoopGroup  handleEventGroup;
+	
 	public  NettyAcceptor  initialize( String  host,int  port )
 	{
-		boolean  isLinux = isLinux();
-		
-		ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinux ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinux ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer() );
+		boolean  isLinuxSystem = System.getProperty("os.name" ).toLowerCase().contains( "linux" );
 		
 		try
 		{
+			ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer() );
+			
 			bootstrap.bind(host, port).sync();
 		}
-		catch( Throwable  e )
-		{
-			
-		}
+		catch(Throwable  e )  { throw  new  IllegalStateException(e); }
 		
 		return  this;
 	}

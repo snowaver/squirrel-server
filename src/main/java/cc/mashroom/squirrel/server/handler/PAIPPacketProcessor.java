@@ -18,7 +18,7 @@ package cc.mashroom.squirrel.server.handler;
 import  io.netty.channel.Channel;
 import  io.netty.handler.timeout.IdleStateHandler;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
-import  cc.mashroom.squirrel.paip.message.chat.ChatRetractPacket;
+import  cc.mashroom.squirrel.paip.message.chat.ChatRecallPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
@@ -98,7 +98,7 @@ public  class  PAIPPacketProcessor
 		PacketRoute.INSTANCE.route(       packet.getContactId() , packet );
 	}
 	
-	public  void  chatRetract( Channel  channel , long  clientId , ChatRetractPacket  packet )
+	public  void  chatRetract( Channel  channel , long  clientId , ChatRecallPacket  packet )
 	{
 		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
 		{
@@ -114,5 +114,7 @@ public  class  PAIPPacketProcessor
 	public  void  groupChat(   Channel  channel , GroupChatPacket  packet )
 	{
 		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
+	
+		channel.writeAndFlush( new  QosReceiptPacket(packet.getContactId(),packet.getId()) );
 	}
 }

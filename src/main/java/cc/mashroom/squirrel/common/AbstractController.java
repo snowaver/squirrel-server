@@ -46,6 +46,8 @@ public  abstract  class  AbstractController
 		{
 			if( file.exists() )
 			{
+				response.setContentLengthLong(    file.length() );
+				
 				response.setContentType(  "application/octet-stream" );
 				
 		        response.addHeader( "Content-Disposition","attachment;fileName="+(StringUtils.isBlank(fileName) ? file.getName() : fileName) );

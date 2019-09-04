@@ -15,24 +15,7 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.db.annotation.Column;
-import  lombok.Data;
-import  lombok.experimental.Accessors;
-
-@Data
-@Accessors( chain=true   )
-public  class  User
+public  class  OfflineChatMessage
 {
-	@Column( name="ID"   )
-	private  Long  id;
-	@Column( name="USERNAME" )
-	private  String  username;
-	@Column( name="PASSWORD" )
-	private  String  password;
-	@Column( name="NAME" )
-	private  String  name;
-	@Column( name="NICKNAME" )
-	private  String  nickname;
-	@Column( name="ROLETYPE" )
-	private  Integer roleType;
+	
 }

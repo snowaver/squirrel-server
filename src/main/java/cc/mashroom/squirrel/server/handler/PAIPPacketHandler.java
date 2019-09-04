@@ -152,7 +152,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof ChatRecallPacket)
 		{
-			processor.chatRetract(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
+			processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
 		}
 		else
 		{

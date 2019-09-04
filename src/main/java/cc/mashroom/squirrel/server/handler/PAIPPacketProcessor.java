@@ -95,10 +95,10 @@ public  class  PAIPPacketProcessor
 	
 	public  void  qosReceipt( QosReceiptPacket  packet )
 	{
-		PacketRoute.INSTANCE.route(       packet.getContactId() , packet );
+		PacketRoute.INSTANCE.route(      packet.getContactId() ,  packet );
 	}
 	
-	public  void  chatRetract( Channel  channel , long  clientId , ChatRecallPacket  packet )
+	public  void  chatRecall(  Channel  channel , long  clientId , ChatRecallPacket  packet )
 	{
 		if( !PacketRoute.INSTANCE.route(clientId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
 		{
@@ -113,8 +113,8 @@ public  class  PAIPPacketProcessor
 	
 	public  void  groupChat(   Channel  channel , GroupChatPacket  packet )
 	{
-		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
-	
 		channel.writeAndFlush( new  QosReceiptPacket(packet.getContactId(),packet.getId()) );
+		
+		OfflineMessageManager.INSTANCE.store(   channel.attr(ConnectPacket.CLIENT_ID).get() , packet );  ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
 	}
 }

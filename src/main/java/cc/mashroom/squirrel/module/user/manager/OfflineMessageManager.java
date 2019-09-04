@@ -15,14 +15,13 @@
  */
 package cc.mashroom.squirrel.module.user.manager;
 
-import  java.sql.Timestamp;
-
-import  org.joda.time.DateTime;
-import  org.joda.time.DateTimeZone;
-
 import  cc.mashroom.plugin.Plugin;
-import  cc.mashroom.squirrel.module.user.repository.OfflineMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.OfflineChatMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.OfflineGroupChatMessageRepository;
+import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
+import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
+import  cc.mashroom.util.ObjectUtils;
 import  lombok.NoArgsConstructor;
 import  lombok.extern.slf4j.Slf4j;
 
@@ -38,22 +37,34 @@ public  class  OfflineMessageManager  implements  Plugin
 		
 	}
 	
-	public  void  initialize( Object  ...  parameters  )
-	{
-		
-	}
-	
-	public  boolean  store( long  senderId,ChatPacket  packet )
+	public  boolean  store(long  userId,Packet  packet )
 	{
 		try
 		{
-			return  OfflineMessageRepository.DAO.update("INSERT  INTO  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  (CONTACT_ID,RECEIVER_ID,MD5,CONTENT,CONTENT_TYPE,CREATE_TIME)  VALUES  (?,?,?,?,?,?)",new  Object[]{senderId,packet.getContactId(),packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis())}) >= 1;
+			if( packet instanceof ChatPacket )
+			{
+				ChatPacket  chatPacket = ObjectUtils.cast( packet );
+				
+				return  OfflineChatMessageRepository.DAO.update("INSERT  INTO  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?)",new  Object[]{chatPacket.getId(),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}) >= 1;
+			}
+			else
+			if( packet instanceof      GroupChatPacket )
+			{
+				GroupChatPacket  groupChatPacket = ObjectUtils.cast( packet );
+				
+				return  OfflineGroupChatMessageRepository.DAO.update("INSERT  INTO  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[]{groupChatPacket.getId(),groupChatPacket.getGroupId(),groupChatPacket.getContactId(),userId,groupChatPacket.getMd5(),new  String(groupChatPacket.getContent()),groupChatPacket.getContentType().getValue()}) >= 1;
+			}
 		}
 		catch( Throwable  e )
 		{
-			log.error( e.getMessage(),e );
+			log.error(    e.getMessage(), e );
 		}
 		
 		return    false;
+	}
+	
+	public  void  initialize( Object  ...  parameters  )
+	{
+		
 	}
 }

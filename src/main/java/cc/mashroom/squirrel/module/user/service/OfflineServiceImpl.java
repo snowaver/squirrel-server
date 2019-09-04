@@ -16,6 +16,7 @@
 package cc.mashroom.squirrel.module.user.service;
 
 import  java.sql.Timestamp;
+import  java.util.stream.Collectors;
 
 import  org.joda.time.DateTime;
 import  org.springframework.http.ResponseEntity;
@@ -26,7 +27,8 @@ import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.squirrel.module.user.repository.ContactRepository;
-import  cc.mashroom.squirrel.module.user.repository.OfflineMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.OfflineChatMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.OfflineGroupChatMessageRepository;
 import  cc.mashroom.squirrel.paip.message.TransportState;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.ObjectUtils;
@@ -42,11 +44,11 @@ public  class  OfflineServiceImpl  implements  OfflineService
 	{
 		Map<String,Object>  response  = new  HashMap<String,Object>();
 		
-		response.addEntry( "CONTACTS",ContactRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CONTACTS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
+		response.addEntry( "CONTACTS",ContactRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CONTACTS").getOrDefault("LAST_MODIFY_TIME",  "2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
 		
-		response.addEntry( "OFFLINE_CHAT_MESSAGES",OfflineMessageRepository.DAO.lookup(Map.class,"SELECT  UNIX_TIMESTAMP(CREATE_TIME)  AS  ID,CREATE_TIME,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,"+TransportState.RECEIVED.getValue()+"  FROM  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  RECEIVER_ID = ?  ORDER  BY  CREATE_TIME  ASC",new  Object[]{userId}) );
+		response.addEntry( "OFFLINE_CHAT_MESSAGES",OfflineChatMessageRepository.DAO.lookup(Map.class,"SELECT  ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  ORDER  BY  ID  ASC",new  Object[]{userId}).stream().filter((chatMessage) -> {chatMessage.addEntry("CREATE_TIME",new  Timestamp(chatMessage.getLong("ID"))).addEntry("TRANSPORT_STATE",TransportState.RECEIVED.getValue());  return  true;}).collect(Collectors.toList()) );
 		
-		OfflineMessageRepository.DAO.update( "DELETE  FROM  "+OfflineMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  RECEIVER_ID = ?",new  Object[]{userId} );
+		response.addEntry( "OFFLINE_GROUP_CHAT_MESSAGES",OfflineGroupChatMessageRepository.DAO.lookup(Map.class,"SELECT  ID,GROUP_ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  GROUP_ID = ?  ORDER  BY  ID  ASC",new  Object[]{userId}).stream().filter((chatMessage) -> {chatMessage.addEntry("CREATE_TIME",new  Timestamp(chatMessage.getLong("ID"))).addEntry("TRANSPORT_STATE",TransportState.RECEIVED.getValue());  return  true;}).collect(Collectors.toList()) );
 		
 		response.addEntry( "CHAT_GROUP_USERS", ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUP_USERS").getOrDefault("LAST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
 		

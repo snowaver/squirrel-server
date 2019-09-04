@@ -13,16 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.user.repository;
+package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.db.GenericRepository;
-import  cc.mashroom.db.annotation.DataSourceBind;
-import  lombok.AccessLevel;
-import  lombok.NoArgsConstructor;
-
-@DataSourceBind( name="squirrel",table="offline_message",primaryKeys="ID" )
-@NoArgsConstructor( access=AccessLevel.PRIVATE )
-public  class  OfflineMessageRepository  extends  GenericRepository
+public  class  OfflineChatGroupMessage
 {
-	public  final  static  OfflineMessageRepository  DAO = new  OfflineMessageRepository();
+	
 }

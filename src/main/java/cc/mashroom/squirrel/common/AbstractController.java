@@ -17,10 +17,11 @@ package cc.mashroom.squirrel.common;
 
 import  java.io.File;
 import  java.io.IOException;
-import  java.io.OutputStream;
 
 import  javax.servlet.http.HttpServletRequest;
 import  javax.servlet.http.HttpServletResponse;
+
+import  org.apache.commons.io.IOUtils;
 
 import  cc.mashroom.util.FileUtils;
 import  cc.mashroom.util.StringUtils;
@@ -31,36 +32,31 @@ import  lombok.extern.slf4j.Slf4j;
 public  abstract  class  AbstractController
 {
 	/*
-	private  final  org.slf4j.Logger  logger= LoggerFactory.getLogger( AbstractController.class );
+	private  final  org.slf4j.Logger  logger = LoggerFactory.getLogger( AbstractController.class );
 	*/
-	protected  void  allowOriginAccessControl(      HttpServletResponse  response )
+	protected  void  render(     HttpServletResponse  response,File  file,String  fileName )  throws  IOException
 	{
-		response.setHeader( "Access-Control-Allow-Origin" , "*" );
-		
-		response.setHeader( "Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,PATCH,OPTIONS" );
+		if( file.exists() )
+		{
+			response.setContentLengthLong(  file.length() );
+			
+			response.setContentType(      "application/octet-stream" );
+			
+	        response.addHeader( "Content-Disposition","attachment;fileName="+(StringUtils.isBlank(fileName) ? file.getName() : fileName) );
+			
+	        IOUtils.write( FileUtils.readFileToByteArray(file),response.getOutputStream() );
+		}
+		else
+		{
+			response.setStatus(   404 );
+		}
 	}
 	
-	protected  void  render( HttpServletResponse  response,File  file,String  fileName )  throws  IOException
+	protected  void  allowOriginAccessControl(      HttpServletResponse  response )
 	{
-		try( OutputStream  os = response.getOutputStream() )
-		{
-			if( file.exists() )
-			{
-				response.setContentLengthLong(    file.length() );
-				
-				response.setContentType(  "application/octet-stream" );
-				
-		        response.addHeader( "Content-Disposition","attachment;fileName="+(StringUtils.isBlank(fileName) ? file.getName() : fileName) );
-				
-		        os.write( FileUtils.readFileToByteArray( file ) );
-				
-				os.flush();
-			}
-			else
-			{
-				response.setStatus( 404 );
-			}
-		}
+		response.setHeader( "Access-Control-Allow-Origin"  ,     "*" );
+		
+		response.setHeader( "Access-Control-Allow-Methods" , "GET,POST,PUT,DELETE,PATCH,OPTIONS" );
 	}
 	
     protected  String  getRemoteAddress(  HttpServletRequest  request )

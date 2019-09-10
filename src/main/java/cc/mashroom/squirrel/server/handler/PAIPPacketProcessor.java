@@ -61,7 +61,7 @@ public  class  PAIPPacketProcessor
         {
         	try
         	{
-				oldSession.close(DisconnectAckPacket.REASON_REMOTE_LOGIN );
+				oldSession.close(DisconnectAckPacket.REASON_REMOTE_SIGNIN);
 			}
         	catch(Exception  e )
         	{

@@ -101,7 +101,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		
 		if( !( packet instanceof ConnectPacket ) && !context.channel().hasAttr( ConnectPacket.CLIENT_ID ) )
 		{
-			context.channel().write(    new  DisconnectAckPacket(DisconnectAckPacket.REASON_PROACTIVELY) );
+			context.channel().write(  new  DisconnectAckPacket(DisconnectAckPacket.REASON_CLIENT_LOGOUT) );
 			
 			context.channel().close();//  requires  a  connect  packet  first  but  a  non-connect  packet.
 			

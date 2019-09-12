@@ -44,7 +44,7 @@ import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
-import  cc.mashroom.squirrel.paip.message.connect.QosReceiptPacket;
+import  cc.mashroom.squirrel.paip.message.connect.ContactAckPacket;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
 import  cc.mashroom.squirrel.server.session.ClientSession;
@@ -130,9 +130,9 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			this.processor.chat( context.channel(),ObjectUtils.cast(packet,ChatPacket.class).getContactId(),ObjectUtils.cast(packet,ChatPacket.class) );
 		}
 		else
-		if( packet instanceof QosReceiptPacket )
+		if( packet instanceof ContactAckPacket )
 		{
-			processor.qosReceipt( ObjectUtils.cast(packet , QosReceiptPacket.class) );
+			processor.qosReceipt( ObjectUtils.cast(packet , ContactAckPacket.class) );
 		}
 		else
 		if( packet instanceof CallPacket || packet instanceof CallAckPacket || packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )

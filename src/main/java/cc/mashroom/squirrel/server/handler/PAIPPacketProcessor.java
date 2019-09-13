@@ -24,7 +24,7 @@ import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
-import  cc.mashroom.squirrel.paip.message.connect.ContactAckPacket;
+import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
@@ -86,14 +86,14 @@ public  class  PAIPPacketProcessor
 		{
 			OfflineMessageManager.INSTANCE.store( channel.attr(ConnectPacket.CLIENT_ID).get() , packet.setContactId( clientId ) );
 
-			if( /*packet instanceof Receiptable &&*/packet.getHeader().getQos() == 1 )
+			if( /*packet instanceof Receiptable &&*/  packet.getHeader().getAckLevel() == 1 )
 			{
-				channel.writeAndFlush( new  ContactAckPacket(packet.getContactId() , packet.getId()) );
+				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId() , packet.getId()) );
 			}
 		}
 	}
 	
-	public  void  qosReceipt( ContactAckPacket  packet )
+	public  void  qosReceipt( PendingAckPacket  packet )
 	{
 		PacketRoute.INSTANCE.route(      packet.getContactId() ,  packet );
 	}
@@ -113,7 +113,7 @@ public  class  PAIPPacketProcessor
 	
 	public  void  groupChat(   Channel  channel , GroupChatPacket  packet )
 	{
-		channel.writeAndFlush( new  ContactAckPacket(packet.getContactId(),packet.getId()) );
+		channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()) );
 		
 		OfflineMessageManager.INSTANCE.store(   channel.attr(ConnectPacket.CLIENT_ID).get() , packet );  ChatGroupUserManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).forEach( (chatGroupUserId) -> {if( packet.getContactId() != chatGroupUserId ){ PacketRoute.INSTANCE.route(chatGroupUserId,packet); }} );
 	}

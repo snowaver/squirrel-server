@@ -72,16 +72,16 @@ public  class      CallManager  implements  Plugin
 		}
 		if( packet instanceof    CallAckPacket   )
 		{
-			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_ACCEPT && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{2,callRoomStatus.getId(),roomId}) )
+			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_AGREE && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{2,callRoomStatus.getId(),roomId}) )
 			{
 				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 			}
 			else
-			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()  == CallAckPacket.ACK_REJECT )
+			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()   == CallAckPacket.ACK_AGREE )
 			{
 				this.callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId} );
 			
-				PacketRoute.INSTANCE.route( contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.REJECT) );
+				PacketRoute.INSTANCE.route(contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.DECLINE) );
 			}
 		}
 		else

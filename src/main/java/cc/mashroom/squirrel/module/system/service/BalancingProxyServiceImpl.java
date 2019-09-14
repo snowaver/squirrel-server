@@ -35,11 +35,11 @@ public  class  BalancingProxyServiceImpl  implements  BalancingProxyService
 		{
 			case  0:
 			{
-				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table())) );
+				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,SCHEMA  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table())) );
 			}
 			case  1:
 			{
-				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,PROTOCOL,APPLICATION_ID  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table()+"  WHERE  APPLICATION_ID = ?  ORDER  BY  HOST  ASC",new  Object[]{Integer.parseInt(keyword)})) );
+				return  ResponseEntity.ok( JsonUtils.toJson(BalancingProxyRepository.DAO.lookup(Map.class,"SELECT  ID,HOST,PORT,SCHEMA  FROM  "+BalancingProxyRepository.DAO.getDataSourceBind().table()+"  WHERE  APPLICATION_ID = ?  ORDER  BY  HOST  ASC",new  Object[]{Integer.parseInt(keyword)})) );
 			}
 		}
 		

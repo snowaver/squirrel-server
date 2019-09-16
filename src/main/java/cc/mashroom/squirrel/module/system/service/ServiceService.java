@@ -17,7 +17,7 @@ package cc.mashroom.squirrel.module.system.service;
 
 import  org.springframework.http.ResponseEntity;
 
-public  interface  BalancingProxyService
+public  interface  ServiceService
 {
 	public  ResponseEntity<String>  lookup( int  action,String  keyword );
 }

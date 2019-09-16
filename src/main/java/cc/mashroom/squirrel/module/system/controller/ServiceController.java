@@ -23,16 +23,16 @@ import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
 import  cc.mashroom.squirrel.common.AbstractController;
-import  cc.mashroom.squirrel.module.system.service.BalancingProxyService;
+import  cc.mashroom.squirrel.module.system.service.ServiceService;
 
 @RequestMapping( "/system" )
 @RestController
-public  class  BalancingProxyController  extends  AbstractController
+public  class  ServiceController  extends  AbstractController
 {
 	@Autowired
-	private  BalancingProxyService  service;
+	private  ServiceService  service;
 	
-	@RequestMapping( value="/balancingproxy",method={RequestMethod.GET} )
+	@RequestMapping( value="/service" ,method={RequestMethod.GET} )
 	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword )
 	{
 		return  service.lookup( action,keyword );

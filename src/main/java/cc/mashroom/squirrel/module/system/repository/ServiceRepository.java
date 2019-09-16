@@ -20,9 +20,9 @@ import  cc.mashroom.db.annotation.DataSourceBind;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@DataSourceBind( name="squirrel",table="balancing_proxy",primaryKeys="ID" )
+@DataSourceBind( name="squirrel",table="service",primaryKeys="ID" )
 @NoArgsConstructor( access=AccessLevel.PRIVATE )
-public  class  BalancingProxyRepository  extends  GenericRepository
+public  class  ServiceRepository  extends  GenericRepository
 {
-	public  final  static  BalancingProxyRepository  DAO = new  BalancingProxyRepository();
+	public  final  static  ServiceRepository  DAO = new  ServiceRepository();
 }

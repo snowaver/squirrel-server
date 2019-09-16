@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.module.system.model;
 
-public  class  BalancingProxy
+public  class  Service
 {
 	
 }

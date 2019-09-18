@@ -47,7 +47,7 @@ public  class  IdentityRecognitionFilter  extends  CacheLoader<String,Map<String
 {
 	public  final  static  LoadingCache<String,Map<String,Object>>  CACHE = CacheBuilder.newBuilder().initialCapacity(8).expireAfterAccess(24,TimeUnit.HOURS).expireAfterWrite(24,TimeUnit.HOURS).maximumSize(819200).build( new  IdentityRecognitionFilter() );
 	
-	public  final  static  Set<String>  EXCLUDE_URIS = Sets.newHashSet( "/user/signin","/system/balancingproxy","/monitoring/tosignin" );
+	public  final  static  Set<String>  EXCLUDE_URIS = Sets.newHashSet( "/user/signin","/system/service","/monitoring/tosignin" );
 	
 	public  final  static  Set<String>  EXCLUDE_SUFFIXES = Sets.newHashSet( ".css",".js",".ico",".jpg",".png",".gif",".woff",".woff2",".ttf", ".properties" );
 	/**

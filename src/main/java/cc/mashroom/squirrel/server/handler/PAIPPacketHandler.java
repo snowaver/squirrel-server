@@ -150,7 +150,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			this.processor.groupChat( context.channel() , ObjectUtils.cast(packet,GroupChatPacket.class) );
 		}
 		else
-		if( packet instanceof ChatRecallPacket)
+		if( packet instanceof ChatRecallPacket )
 		{
 			processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
 		}

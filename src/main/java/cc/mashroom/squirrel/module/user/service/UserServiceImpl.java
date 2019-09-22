@@ -33,8 +33,6 @@ import  cc.mashroom.squirrel.common.IPLocator;
 import  cc.mashroom.squirrel.module.logs.repository.LoginLogsRepository;
 import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
-import  cc.mashroom.squirrel.server.session.ClientSession;
-import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.xcache.CacheFactory;
 import  lombok.SneakyThrows;
 import  cc.mashroom.util.DigestUtils;
@@ -68,13 +66,6 @@ public  class  UserServiceImpl     implements  UserService
 	@SneakyThrows
 	public  ResponseEntity<String>  logout( long  userId )
 	{
-		ClientSession  clientSession = ClientSessionManager.INSTANCE.get( userId );
-		
-		if( clientSession != null )
-		{
-			clientSession.close(0);
-		}
-		
 		CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").update( "DELETE  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );
 		
 		return  ResponseEntity.status(   200 ).body( "" );

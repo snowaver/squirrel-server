@@ -36,7 +36,7 @@ public  class  ChatGroupUser
 	@Column( name="LAST_MODIFY_TIME"  )
 	private  Timestamp  lastModifyTime;
 	@Column( name="LAST_MODIFY_BY" )
-	private  String    lastModifyBy;
+	private  Long  lastModifyBy;
 	@Column( name="CHAT_GROUP_ID"  )
 	private  Long   chatGroupId;
 	@Column( name="CONTACT_ID" )

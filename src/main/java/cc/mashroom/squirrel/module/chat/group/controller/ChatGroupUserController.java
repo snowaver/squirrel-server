@@ -15,8 +15,8 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
+import  java.util.ArrayList;
 import  java.util.List;
-import  java.util.Set;
 import  java.util.stream.Collectors;
 
 import  org.springframework.beans.factory.annotation.Autowired;
@@ -46,15 +46,15 @@ public  class  ChatGroupUserController  extends  AbstractController
 	private  ChatGroupUserService  service;
 	
 	@RequestMapping( value="",method={RequestMethod.POST  } )
-	public  ResponseEntity<String>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("inviteeIds")   String  inviteeIdsSeperatedWithComma )
+	public  ResponseEntity<String>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId") long  chatGroupId,@RequestParam("inviteeIds")   String  inviteeIdsSeperatedWithComma )
 	{
-		Set<Long>  inviteeIds = Sets.newHashSet( CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(",")) );
+		List<Long>  inviteeIds =         new  ArrayList<Long>( Sets.newHashSet( CollectionUtils.toLongArray(inviteeIdsSeperatedWithComma.trim().split(",")) ) );
 		
-		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.add(sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
+		ResponseEntity<Map<String,List<? extends Map>>>   responseEntity=service.add( sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
 		
 		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(   Collectors.toList() );
 		
-		for( Map<String,Object>           chatGroupUser : responseEntity.getBody().get("CHAT_GROUP_USERS") )
+		for(  Map<String,Object>         chatGroupUser  : responseEntity.getBody().get("CHAT_GROUP_USERS") )
 		{
 			if(       sessionProfile.getLong("USER_ID") != chatGroupUser.getLong("CONTACT_ID").longValue() )
 			{
@@ -89,7 +89,7 @@ public  class  ChatGroupUserController  extends  AbstractController
 	@RequestMapping( value="",method={RequestMethod.DELETE} )
 	public  ResponseEntity<String>  secede( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("chatGroupUserId")  long  chatGroupUserId )
 	{
-		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.secede( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId );
+		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity =  this.service.remove( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId );
 		
 		List<? extends Map>  chatGroupAllUsers= responseEntity.getBody().remove(   "CHAT_GROUP_ALL_USERS" );
 		

@@ -15,7 +15,6 @@
  */
 package cc.mashroom.squirrel.module.chat.group.service;
 
-import  java.util.Collection;
 import  java.util.List;
 
 import  org.springframework.http.ResponseEntity;
@@ -24,9 +23,9 @@ import  cc.mashroom.util.collection.map.Map;
 
 public  interface  ChatGroupUserService
 {
-	public  ResponseEntity<Map<String,List<? extends Map>>>  add( long  inviterId,long  chatGroupId,Collection<Long>  inviteeIds );
+	public  ResponseEntity<Map<String,List<? extends Map>>>  add( long  inviterId,long  chatGroupId,List  <Long>  inviteeIds );
 	
 	public  ResponseEntity<Map<String,List<? extends Map>>>  update( long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard );
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  secede( long  secederId,long  chatGroupId,long  chatGroupUserId );
+	public  ResponseEntity<Map<String,List<? extends Map>>>  remove( long  removerId,long  chatGroupId,long  chatGroupUserId );
 }

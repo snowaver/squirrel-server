@@ -18,6 +18,7 @@ package cc.mashroom.squirrel.module.chat.group.service;
 import  java.sql.Timestamp;
 import  java.util.ArrayList;
 import  java.util.List;
+import  java.util.Set;
 import  java.util.concurrent.TimeUnit;
 import  java.util.concurrent.locks.Lock;
 import  java.util.stream.Collectors;
@@ -32,12 +33,12 @@ import  com.google.common.collect.Lists;
 
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
+import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
-import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
 import  cc.mashroom.util.Reference;
 
@@ -48,7 +49,7 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 	
 	public  ResponseEntity<Map<String,List<? extends Map>>>  add(  long  inviterId, long  chatGroupId,List<Long>   inviteeIds )
 	{
-		XKeyValueCache<Long,Long>  chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
+		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache =  ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
@@ -121,7 +122,7 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 	
 	public  ResponseEntity<Map<String,List<? extends Map>>>  remove( long  removerId ,long  chatGroupId,long  chatGroupUserId )
 	{
-		XKeyValueCache<Long,Long>  chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
+		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache =  ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
@@ -136,7 +137,7 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 			
 			Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_ALL_USERS",new  ArrayList<Map<String,Object>>() );
 			
-			Map<String,Object>  chatGroupUser = ChatGroupUserRepository.DAO.lookupOne( Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?",new  Object[]{chatGroupUserId,chatGroupId} );
+			Map<String,Object>  chatGroupUser= ChatGroupUserRepository.DAO.lookupOne( Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?",new  Object[]{chatGroupUserId,chatGroupId} );
 			
 			Map<String,Object>  chatGroup = ChatGroupRepository.DAO.lookupOne( Map.class,"SELECT  IS_DELETED,CREATE_TIME,CREATE_BY,NAME,(SELECT  COUNT(*)  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE  AND  ID <> ?)  AS  CHAT_GROUP_USER_COUNT  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId,chatGroupUserId,chatGroupId} );
 			
@@ -144,17 +145,12 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 			{
 				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  can  not  remove  the  member  for  authority.  the  creator  can  remove  anyone  but  the  non-creator  can  only  quit  the  group." );
 			}
+			
+			response.addEntry( "CHAT_GROUP_ALL_USERS",chatGroupUserIdsCache.get(chatGroupId).stream().map((contactId) -> new  HashMap<String,Object>().addEntry("CONTACT_ID",contactId)).collect(Collectors.toList()) );
 			//  dismiss  the  chat  group  when  the  creator  left.
-			if( chatGroup != null && chatGroup.getLong( "CREATE_BY")== removerId && chatGroupUser.getLong("CONTACT_ID") == removerId && ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?", new  Object[]{removerId,now,chatGroupId})  >= 1 )
+			if( chatGroup != null && chatGroup.getLong("CREATE_BY") == removerId && chatGroupUser.getLong("CONTACT_ID") == removerId && ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{removerId,now,chatGroupId})  >= 1  )
 			{
 				response.addEntry( "CHAT_GROUPS",Lists.newArrayList(chatGroup.addEntry("ID",chatGroupId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",removerId)) );
-			}
-			
-			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE", new  Object[]{chatGroupId}) );
-			
-			if( chatGroup.getLong("CREATE_BY") == removerId && chatGroupUser.getLong("CONTACT_ID") == removerId && ChatGroupUserRepository.DAO.update("UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  CHAT_GROUP_ID = ?",new  Object[]{removerId,now,chatGroupId})>=0  )
-			{
-				response.addEntry( "CHAT_GROUP_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupUserId,chatGroupId}).stream().map((user) -> user.addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_BY",removerId).addEntry("LAST_MODIFY_TIME",now)).collect(Collectors.toList()) );
 			}
 			else
 			if( chatGroupUser != null && ChatGroupUserRepository.DAO.update("UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{removerId,now,chatGroupUserId}) >= 0 )
@@ -162,9 +158,7 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 				response.addEntry( "CHAT_GROUP_USERS",Lists.newArrayList(chatGroupUser.addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_BY",removerId).addEntry("LAST_MODIFY_TIME",now)) );
 			}
 			
-			chatGroupUserIdsCache.remove( chatGroupId );
-			
-			return  ResponseEntity.status(200).body( response.addEntry("CHAT_GROUP_USERS",Lists.newArrayList(chatGroupUser)) );
+			chatGroupUserIdsCache.remove( chatGroupId );  return  ResponseEntity.status(200   ).body( response );
 		}
 		catch( Exception e )
 		{

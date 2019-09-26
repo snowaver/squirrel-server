@@ -52,9 +52,9 @@ public  class  ChatGroupUserController  extends  AbstractController
 		
 		ResponseEntity<Map<String,List<? extends Map>>>   responseEntity=service.add( sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
 		
-		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(   Collectors.toList() );
+		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(  Collectors.toList() );
 		
-		for(  Map<String,Object>         chatGroupUser  : responseEntity.getBody().get("CHAT_GROUP_USERS") )
+		for(  Map<String,Object>          chatGroupUser : responseEntity.getBody().get("CHAT_GROUP_USERS") )
 		{
 			if(       sessionProfile.getLong("USER_ID") != chatGroupUser.getLong("CONTACT_ID").longValue() )
 			{

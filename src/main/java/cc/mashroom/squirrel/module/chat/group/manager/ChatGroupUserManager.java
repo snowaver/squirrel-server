@@ -24,6 +24,7 @@ import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
+import  lombok.Getter;
 
 public  class      ChatGroupUserManager  implements  Plugin
 {
@@ -39,6 +40,7 @@ public  class      ChatGroupUserManager  implements  Plugin
 		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
 	}
 	
+	@Getter
 	private  XKeyValueCache<Long,Set<Long>>     chatGroupUserIdsCache;
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )

@@ -132,6 +132,13 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof PendingAckPacket )
 		{
+			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() == 0  )
+			{
+				
+				
+				return;
+			}
+			
 			processor.qosReceipt( ObjectUtils.cast(packet , PendingAckPacket.class) );
 		}
 		else

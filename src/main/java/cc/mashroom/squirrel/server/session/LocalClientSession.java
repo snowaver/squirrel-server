@@ -16,6 +16,7 @@
 package cc.mashroom.squirrel.server.session;
 
 import  java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import  io.netty.channel.Channel;
 import  lombok.AllArgsConstructor;
@@ -41,7 +42,7 @@ public  class  LocalClientSession  implements  ClientSession
 	@Getter
 	private  Channel channel;
 	
-	public  void  deliver(   Packet  packet )
+	public  void  deliver( Packet  packet,long  timeout,TimeUnit  timeoutTimeUnit )
 	{
 		this.channel.writeAndFlush( packet );
 	}
@@ -60,12 +61,12 @@ public  class  LocalClientSession  implements  ClientSession
 					
 					this.channel.writeAndFlush( new  CloseCallPacket(callRoomStatus.getCallerId() == clientId ? callRoomStatus.getCalleeId() : callRoomStatus.getCallerId(),callRoomStatus.getCallRoomId(),CloseCallReason.NETWORK_ERROR) );
 					
-					PacketRoute.INSTANCE.route( callRoomStatus.getCallerId() == clientId ? callRoomStatus.getCalleeId() : callRoomStatus.getCallerId(),new  CloseCallPacket(clientId,callRoomStatus.getCallRoomId(),CloseCallReason.NETWORK_ERROR) );
+					PacketRoute.INSTANCE.route( callRoomStatus.getCallerId() == clientId ? callRoomStatus.getCalleeId() : callRoomStatus.getCallerId(),new  CloseCallPacket(clientId,callRoomStatus.getCallRoomId(),CloseCallReason.NETWORK_ERROR),-1 );
 				}
 			}
 			if( reason >= 0 )
 			{
-				this.channel.writeAndFlush(    new  DisconnectAckPacket( reason ) );
+				this.channel.writeAndFlush(   new  DisconnectAckPacket( reason ) );
 			}
 			this.channel.close();
 		}

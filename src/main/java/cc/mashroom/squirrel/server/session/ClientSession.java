@@ -16,6 +16,7 @@
 package cc.mashroom.squirrel.server.session;
 
 import  java.io.IOException;
+import  java.util.concurrent.TimeUnit;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
 
@@ -25,5 +26,5 @@ public  interface  ClientSession
 	
 	public  long  getClientId();
 	
-	public  void  deliver( Packet  packet );
+	public  void  deliver( Packet  packet,long  timeout,TimeUnit  timeoutTimeUnit );
 }

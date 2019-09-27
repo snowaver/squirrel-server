@@ -51,7 +51,7 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventP
 			}
 			case   1:
 			{
-				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
+				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class),parameters.getLong("RESEND_INTERVAL_SECONDS")) );
 			}
 		}
 		

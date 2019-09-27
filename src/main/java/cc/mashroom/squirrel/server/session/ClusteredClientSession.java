@@ -17,6 +17,7 @@ package cc.mashroom.squirrel.server.session;
 
 import  java.io.IOException;
 import  java.util.Arrays;
+import  java.util.concurrent.TimeUnit;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.util.collection.map.HashMap;
@@ -35,11 +36,11 @@ public  class  ClusteredClientSession  implements  ClientSession
 	@Getter
 	private  String  clusterNodeId;
 	
-	public  void  deliver( Packet  packet )
+	public  void  deliver( Packet  packet,long  timeout,TimeUnit  timeoutTimeUnit )
 	{
 		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(ServerInfo.INSTANCE.getLocalNodeId()) )
 		{
-			CacheFactory.call( new  RemoteCallable<Boolean>(1,new  HashMap<String,Object>().addEntry("CLIENT_ID",clientId).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
+			CacheFactory.call( new  RemoteCallable<Boolean>(1,new  HashMap<String,Object>().addEntry("CLIENT_ID",clientId).addEntry("PACKET",packet).addEntry("TIMEOUT",timeout).addEntry("TIMEOUT_TIMEUNIT",timeoutTimeUnit)),Arrays.asList(clusterNodeId) );
 		}
 	}
 	

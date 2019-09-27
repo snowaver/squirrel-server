@@ -15,9 +15,15 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
+import  java.util.concurrent.ScheduledThreadPoolExecutor;
+import  java.util.concurrent.TimeUnit;
+
+import com.google.common.collect.LinkedListMultimap;
+
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
+import  cc.mashroom.squirrel.server.session.LocalClientSession;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
@@ -25,22 +31,36 @@ import  lombok.NoArgsConstructor;
 
 public  class  PacketRoute
 {
+	public  boolean  route( Long clientId,Packet   packet  )
+	{
+		return  this.route( clientId,packet,0 );
+	}
+	
+	private  ScheduledThreadPoolExecutor  scheduler= new  ScheduledThreadPoolExecutor( 2 );
+	
 	public  final  static  PacketRoute  INSTANCE = new  PacketRoute();
 	
-	public  boolean  route( Long  clientId,Packet  packet )
+	public  boolean  route( final  Long  clientId,final  Packet  packet,final  long  resendIntervalSeconds )
 	{
-		if( clientId   != null )
+		if( clientId     != null )
 		{
 			ClientSession  session = ClientSessionManager.INSTANCE.get( clientId );
 			
-			if( session!= null )
+			if( session  != null )
 			{
-				session.deliver( packet );
+				session.deliver( packet , resendIntervalSeconds,TimeUnit.SECONDS );
 				
-				return     true;
+				if( resendIntervalSeconds > 0 && session instanceof LocalClientSession && packet.getHeader().getAckLevel() == 1 && this.pendingPackets.put(clientId,packet) )
+				{
+					scheduler.schedule(()-> { if( this.pendingPackets.containsValue(packet) || this.pendingPackets.get(clientId) != null && this.pendingPackets.get(clientId).isEmpty() )  { route(clientId,pendingPackets.get(clientId).get(0),resendIntervalSeconds); } },resendIntervalSeconds,TimeUnit.SECONDS );
+				}
+				
+				return       true;
 			}
 		}
 		
 		return  false;
 	}
+	
+	private  LinkedListMultimap<Long,Packet>  pendingPackets = LinkedListMultimap.create();
 }

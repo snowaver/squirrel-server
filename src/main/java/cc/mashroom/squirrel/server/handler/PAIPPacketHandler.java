@@ -15,7 +15,6 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
@@ -30,7 +29,7 @@ import  org.joda.time.DateTime;
 import  com.fasterxml.jackson.core.type.TypeReference;
 
 import  cc.mashroom.squirrel.module.call.manager.CallManager;
-import  cc.mashroom.squirrel.paip.message.call.AbstractCallPacket;
+import  cc.mashroom.squirrel.paip.message.call.RoomPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CandidatePacket;
@@ -41,7 +40,7 @@ import  cc.mashroom.squirrel.paip.message.chat.ChatRecallPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
+import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
@@ -132,19 +131,12 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof PendingAckPacket )
 		{
-			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() == 0  )
-			{
-				
-				
-				return;
-			}
-			
 			processor.qosReceipt( ObjectUtils.cast(packet , PendingAckPacket.class) );
 		}
 		else
-		if( packet instanceof CallPacket || packet instanceof CallAckPacket || packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )
+		if( packet instanceof CallPacket || packet instanceof CallAckPacket ||  packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )
 		{
-			CallManager.INSTANCE.process( ObjectUtils.cast(packet,AbstractCallPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,AbstractCallPacket.class).getContactId(),ObjectUtils.cast(packet,AbstractCallPacket.class) );
+			CallManager.INSTANCE.process( ObjectUtils.cast(packet,RoomPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,RoomPacket.class).getContactId(),ObjectUtils.cast(packet,RoomPacket.class) );
 		}
 		else
 		if( packet instanceof GroupChatEventPacket    )

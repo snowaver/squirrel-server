@@ -32,6 +32,7 @@ import  com.google.common.collect.Sets;
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupUserService;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
+import cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.CollectionUtils;
 import  cc.mashroom.util.JsonUtils;
@@ -52,7 +53,7 @@ public  class  ChatGroupUserController  extends  AbstractController
 		
 		ResponseEntity<Map<String,List<? extends Map>>>   responseEntity=service.add( sessionProfile.getLong("USER_ID"),chatGroupId,inviteeIds );
 		
-		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(  Collectors.toList() );
+		List<Map<String,Object>>  inviteeChatGroupUsers = responseEntity.getBody().get("CHAT_GROUP_USERS").stream().filter((chatGroupUser) -> inviteeIds.contains(chatGroupUser.getLong("CONTACT_ID"))).collect(Collectors.toList());
 		
 		for(  Map<String,Object>          chatGroupUser : responseEntity.getBody().get("CHAT_GROUP_USERS") )
 		{
@@ -60,11 +61,11 @@ public  class  ChatGroupUserController  extends  AbstractController
 			{
 				if( inviteeIds.contains( chatGroupUser.getLong("CONTACT_ID") ) )
 				{
-					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED, responseEntity.getBody()) );
+					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED,ServerInfo.INSTANCE.getLocalNodeId(),  responseEntity.getBody()) );
 				}
 				else
 				{
-					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED, new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUP_USERS",inviteeChatGroupUsers).addEntry("CHAT_GROUPS",responseEntity.getBody().get("CHAT_GROUPS"))) );
+					PacketRoute.INSTANCE.route( chatGroupUser.getLong("CONTACT_ID"),new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_MEMBER_ADDED,ServerInfo.INSTANCE.getLocalNodeId(),  new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUP_USERS",inviteeChatGroupUsers).addEntry("CHAT_GROUPS",responseEntity.getBody().get("CHAT_GROUPS"))) );
 				}
 			}
 		}
@@ -73,13 +74,13 @@ public  class  ChatGroupUserController  extends  AbstractController
 	}
 	
 	@RequestMapping( value="",method={RequestMethod.PUT   } )
-	public  ResponseEntity<String>  update( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("chatGroupUserId")  long  chatGroupUserId,@RequestParam("vcard")  String  vcard )
+	public  ResponseEntity<String>  update( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId, @RequestParam("chatGroupUserId" )  long  chatGroupUserId,@RequestParam("vcard")  String  vcard )
 	{
 		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.update( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId,vcard );
 	
 		List<? extends Map>  chatGroupAllUsers= responseEntity.getBody().remove(   "CHAT_GROUP_ALL_USERS" );
 		
-		GroupChatEventPacket  groupChatMemberUpdatedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_UPDATED,responseEntity.getBody() );
+		GroupChatEventPacket  groupChatMemberUpdatedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),responseEntity.getBody() );
 		
 		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> {if(chatGroupRemainingUser.getLong("CONTACT_ID").longValue()!= sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID"),groupChatMemberUpdatedEventPacket);} );
 		
@@ -87,13 +88,13 @@ public  class  ChatGroupUserController  extends  AbstractController
 	}
 	
 	@RequestMapping( value="",method={RequestMethod.DELETE} )
-	public  ResponseEntity<String>  secede( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("chatGroupUserId")  long  chatGroupUserId )
+	public  ResponseEntity<String>  secede( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId, @RequestParam("chatGroupUserId" )  long  chatGroupUserId )
 	{
 		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity =  this.service.remove( sessionProfile.getLong("USER_ID"),chatGroupId,chatGroupUserId );
 		
 		List<? extends Map>  chatGroupAllUsers= responseEntity.getBody().remove(   "CHAT_GROUP_ALL_USERS" );
 		
-		GroupChatEventPacket  groupChatMemberRemovedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_REMOVED,responseEntity.getBody() );
+		GroupChatEventPacket  groupChatMemberRemovedEventPacket = new  GroupChatEventPacket( chatGroupId,GroupChatEventPacket.EVENT_MEMBER_REMOVED,ServerInfo.INSTANCE.getLocalNodeId(),responseEntity.getBody() );
 		
 		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID") , groupChatMemberRemovedEventPacket) );
 		

@@ -13,17 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.server.session;
+package cc.mashroom.squirrel.server.handler;
 
-import  java.io.IOException;
-
-import  cc.mashroom.squirrel.paip.message.Packet;
-
-public  interface  ClientSession
+public  interface  PacketRouteListener
 {
-	public  void  close( int  reason )  throws  IOException;
-	
-	public  long  getClientId();
-	
-	public  void  deliver( Packet  packet );
+	public  void  onRouteComplete( boolean  isRouteSuccessfully );
 }

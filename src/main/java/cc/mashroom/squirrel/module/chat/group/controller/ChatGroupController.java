@@ -30,6 +30,7 @@ import  com.fasterxml.jackson.core.type.TypeReference;
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupService;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
+import cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.HttpUtils;
 import  cc.mashroom.util.JsonUtils;
@@ -55,7 +56,7 @@ public  class  ChatGroupController     extends  AbstractController
 		
 		List<? extends Map>  chatGroupAllUsers = responseEntity.getBody().get( "CHAT_GROUP_USERS" );
 		
-		GroupChatEventPacket  groupChatGroupUpdatedEventPacket = new  GroupChatEventPacket( id,GroupChatEventPacket.EVENT_GROUP_UPDATED,responseEntity.getBody() );
+		GroupChatEventPacket  groupChatGroupUpdatedEventPacket = new  GroupChatEventPacket( id,GroupChatEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),responseEntity.getBody() );
 		
 		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> {if(chatGroupRemainingUser.getLong("CONTACT_ID").longValue() != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID"),groupChatGroupUpdatedEventPacket);} );
 		

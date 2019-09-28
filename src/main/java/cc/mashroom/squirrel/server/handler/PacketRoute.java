@@ -18,12 +18,14 @@ package cc.mashroom.squirrel.server.handler;
 import  java.util.concurrent.ScheduledThreadPoolExecutor;
 import  java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.LinkedListMultimap;
+import  com.google.common.collect.LinkedListMultimap;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
+import  cc.mashroom.squirrel.paip.message.SystemPacket;
+import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-import  cc.mashroom.squirrel.server.session.LocalClientSession;
+import  cc.mashroom.util.ObjectUtils;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
@@ -31,36 +33,41 @@ import  lombok.NoArgsConstructor;
 
 public  class  PacketRoute
 {
-	public  boolean  route( Long clientId,Packet   packet  )
-	{
-		return  this.route( clientId,packet,0 );
-	}
+	private  ScheduledThreadPoolExecutor  scheduler  = new  ScheduledThreadPoolExecutor(2 );
 	
-	private  ScheduledThreadPoolExecutor  scheduler= new  ScheduledThreadPoolExecutor( 2 );
+	public  boolean  route(Long  clientId,Packet  packet )
+	{
+		return  this.route(clientId, packet,0,null,null );
+	}
 	
 	public  final  static  PacketRoute  INSTANCE = new  PacketRoute();
 	
-	public  boolean  route( final  Long  clientId,final  Packet  packet,final  long  resendIntervalSeconds )
+	public  boolean  route(final  Long  clientId,final  Packet  packet,final  long  timeout,final  TimeUnit  timeoutTimeUnit,final  PacketRouteListener  listener  )
 	{
-		if( clientId     != null )
+		if( timeout> 0&& packet instanceof SystemPacket &&     packet.getHeader().getAckLevel() == 1 && listener != null || timeout <= 0 )
 		{
-			ClientSession  session = ClientSessionManager.INSTANCE.get( clientId );
-			
-			if( session  != null )
+			if( clientId     != null )
 			{
-				session.deliver( packet , resendIntervalSeconds,TimeUnit.SECONDS );
+				ClientSession  session      = ClientSessionManager.INSTANCE.get( clientId );
 				
-				if( resendIntervalSeconds > 0 && session instanceof LocalClientSession && packet.getHeader().getAckLevel() == 1 && this.pendingPackets.put(clientId,packet) )
+				if( session  != null )
 				{
-					scheduler.schedule(()-> { if( this.pendingPackets.containsValue(packet) || this.pendingPackets.get(clientId) != null && this.pendingPackets.get(clientId).isEmpty() )  { route(clientId,pendingPackets.get(clientId).get(0),resendIntervalSeconds); } },resendIntervalSeconds,TimeUnit.SECONDS );
+					session.deliver(   packet );
+					
+					if( timeout > 0 && this.pendingPackets.put(clientId,packet) )
+					{
+						ObjectUtils.cast(packet,SystemPacket.class).setClusterNodeId(ServerInfo.INSTANCE.getLocalNodeId());
+						
+						this.scheduler.schedule( () -> {if(    pendingPackets.containsValue(packet)) {  listener.onRouteComplete( false );  pendingPackets.remove(clientId,packet); } },timeout,timeoutTimeUnit );
+					}
+					
+					return       true;
 				}
-				
-				return       true;
 			}
 		}
 		
 		return  false;
 	}
 	
-	private  LinkedListMultimap<Long,Packet>  pendingPackets = LinkedListMultimap.create();
+	private  LinkedListMultimap<Long,Packet>  pendingPackets  = LinkedListMultimap.create();
 }

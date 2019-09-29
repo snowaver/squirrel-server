@@ -15,9 +15,21 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-import  cc.mashroom.squirrel.paip.message.Packet;
+import  java.util.concurrent.TimeUnit;
 
-public  interface  PacketRouteListener
+import  cc.mashroom.squirrel.paip.message.SystemPacket;
+import  lombok.Data;
+import  lombok.RequiredArgsConstructor;
+import  lombok.experimental.Accessors;
+
+@Data
+@Accessors(  chain=true )
+@RequiredArgsConstructor
+public  class    OrderedRouteDispose
 {
-	public  void  onRouteComplete( Packet  packet,boolean  isRouteSuccessfully );
+	private  final  SystemPacket <?> packet;
+	private  final  long    timeout;
+	private  final  TimeUnit   timeoutTimeUnit;
+	private  final  int  maxRetryCount;
+	private  int  currentRetryCount;
 }

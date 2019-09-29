@@ -22,6 +22,7 @@ import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  java.io.IOException;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
+import cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.util.ObjectUtils;
 
@@ -52,6 +53,10 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventP
 			case   1:
 			{
 				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
+			}
+			case   2:
+			{
+				PacketRoute.INSTANCE.completeRoute( parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
 			}
 		}
 		

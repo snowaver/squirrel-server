@@ -22,6 +22,7 @@ import  lombok.Setter;
 import  lombok.SneakyThrows;
 
 import  java.util.ArrayList;
+import java.util.Arrays;
 import  java.util.List;
 
 import  org.joda.time.DateTime;
@@ -46,6 +47,10 @@ import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
+import cc.mashroom.util.collection.map.HashMap;
+import cc.mashroom.xcache.CacheFactory;
+import cc.mashroom.xcache.RemoteCallable;
+import cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
@@ -131,6 +136,21 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof PendingAckPacket )
 		{
+			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() ==  0 )
+			{
+				String  clusterNodeId = ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments().getString( "CLUSTER_NODE_ID" );
+				
+				if( !     clusterNodeId.equals(ServerInfo.INSTANCE.getLocalNodeId()) )
+				{
+					CacheFactory.call( new  RemoteCallable<Boolean>(2,new  HashMap<String,Object>().addEntry("CLIENT_ID",context.channel().attr(ConnectPacket.CLIENT_ID).get()).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
+				}
+				else
+				{
+					PacketRoute.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.CLIENT_ID).get(),ObjectUtils.cast(packet) );
+				}
+				
+				return;
+			}
 			processor.qosReceipt( ObjectUtils.cast(packet , PendingAckPacket.class) );
 		}
 		else
@@ -157,7 +177,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		{
 			for( PAIPPacketExternalProcessor  externalProcessor : externalProcessors )
 			{
-				if(externalProcessor.process(ObjectUtils.cast(packet)) )       return;
+				if(externalProcessor.process(ObjectUtils.cast(packet)) )   { return; }
 			}
 			
 			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );

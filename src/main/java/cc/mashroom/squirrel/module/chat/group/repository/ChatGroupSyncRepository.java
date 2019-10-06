@@ -13,19 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.chat.group.service;
+package cc.mashroom.squirrel.module.chat.group.repository;
 
-import  java.util.List;
+import  cc.mashroom.db.GenericRepository;
+import  cc.mashroom.db.annotation.DataSourceBind;
+import  lombok.AccessLevel;
+import  lombok.NoArgsConstructor;
 
-import  org.springframework.http.ResponseEntity;
-
-import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
-
-public  interface  ChatGroupUserService
+@DataSourceBind( name="squirrel",table="chat_group_sync",primaryKeys="ID" )
+@NoArgsConstructor( access=AccessLevel.PRIVATE )
+public  class  ChatGroupSyncRepository  extends  GenericRepository
 {
-	public  ResponseEntity<OoIData>  add( long  inviterId,long  chatGroupId,List  <Long>  inviteeIds );
-	
-	public  ResponseEntity<OoIData>  update( long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard );
-	
-	public  ResponseEntity<OoIData>  remove( long  removerId,long  chatGroupId,long  chatGroupUserId );
+	public  final  static  ChatGroupSyncRepository  DAO = new  ChatGroupSyncRepository();
 }

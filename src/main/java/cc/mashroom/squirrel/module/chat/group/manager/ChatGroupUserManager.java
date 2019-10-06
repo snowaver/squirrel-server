@@ -21,6 +21,7 @@ import  java.util.stream.Collectors;
 
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
@@ -28,8 +29,6 @@ import  lombok.Getter;
 
 public  class      ChatGroupUserManager  implements  Plugin
 {
-	public  final  static  ChatGroupUserManager  INSTANCE =new  ChatGroupUserManager();
-	
 	public  void  stop()
 	{
 		
@@ -40,8 +39,31 @@ public  class      ChatGroupUserManager  implements  Plugin
 		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
 	}
 	
+	public  final  static  ChatGroupUserManager  INSTANCE =new  ChatGroupUserManager();
 	@Getter
-	private  XKeyValueCache<Long,Set<Long>>     chatGroupUserIdsCache;
+	private  XKeyValueCache  <Long,Set<Long>>   chatGroupUserIdsCache;
+	
+	public  Long  nextSynchronousId( long  userId )
+	{
+		long    nextSynchronousId= CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",null );
+		
+		if( nextSynchronousId   == 1 )
+		{
+			synchronized( ("SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")").intern() )
+			{
+				nextSynchronousId= CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",null );
+				
+				if(        nextSynchronousId == 1 )
+				{
+					Long  maxSynchronousId = ChatGroupSyncRepository.DAO.lookupOne( Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId} );
+				
+					if( maxSynchronousId  != null )  nextSynchronousId =  CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",maxSynchronousId );
+				}
+			}
+		}
+
+		return      nextSynchronousId;
+	}
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )
 	{
@@ -53,11 +75,9 @@ public  class      ChatGroupUserManager  implements  Plugin
 			{
 				chatGroupUserIds       = this.chatGroupUserIdsCache.get( chatGroupId );
 				
-				if( chatGroupUserIds    == null )
+				if(      chatGroupUserIds == null )
 				{
-					chatGroupUserIds= ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect( Collectors.toSet() );
-					
-					this.chatGroupUserIdsCache.put(     chatGroupId,chatGroupUserIds );
+					this.chatGroupUserIdsCache.put( chatGroupId,chatGroupUserIds = ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect(Collectors.toSet()) );
 				}
 			}
 		}

@@ -17,30 +17,48 @@ package cc.mashroom.squirrel.module.chat.group.model;
 
 import  java.sql.Timestamp;
 
+import  com.fasterxml.jackson.annotation.JsonFormat;
+import  com.fasterxml.jackson.annotation.JsonProperty;
+
 import  cc.mashroom.db.annotation.Column;
+import  lombok.AllArgsConstructor;
 import  lombok.Data;
+import  lombok.NoArgsConstructor;
 import  lombok.experimental.Accessors;
 
 @Data
 @Accessors( chain=true )
+@NoArgsConstructor
+@AllArgsConstructor
 public  class  ChatGroupUser
 {
+	@JsonProperty( value="ID"  )
 	@Column( name="ID" )
 	private  Long  id;
+	@JsonProperty( value="IS_DELETED" )
 	@Column( name="IS_DELETED" )
 	private  Boolean  isDeleted;
+	@JsonFormat( pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" )
+	@JsonProperty( value="CREATE_TIME")
 	@Column( name="CREATE_TIME")
 	private  Timestamp   createTime;
+	@JsonProperty( value="CREATE_BY"  )
 	@Column( name="CREATE_BY"  )
-	private  String    createBy;
+	private  Long  createBy;
+	@JsonFormat( pattern="yyyy-MM-dd'T'HH:mm:ss.SSS'Z'" )
+	@JsonProperty( value="LAST_MODIFY_TIME")
 	@Column( name="LAST_MODIFY_TIME"  )
 	private  Timestamp  lastModifyTime;
+	@JsonProperty( value="LAST_MODIFY_BY"  )
 	@Column( name="LAST_MODIFY_BY" )
 	private  Long  lastModifyBy;
+	@JsonProperty( value="CHAT_GROUP_ID"   )
 	@Column( name="CHAT_GROUP_ID"  )
 	private  Long   chatGroupId;
+	@JsonProperty( value="CONTACT_ID" )
 	@Column( name="CONTACT_ID" )
 	private  Long contactId;
+	@JsonProperty( value="VCARD"   )
 	@Column( name="VCARD"  )
 	private  String   vcard;
 }

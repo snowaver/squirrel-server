@@ -15,42 +15,33 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  java.sql.Timestamp;
+import  java.util.List;
 
 import  com.fasterxml.jackson.annotation.JsonProperty;
 
-import  cc.mashroom.db.annotation.Column;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroup;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
 import  lombok.AllArgsConstructor;
 import  lombok.Data;
 import  lombok.NoArgsConstructor;
 import  lombok.experimental.Accessors;
 
 @Data
-@Accessors( chain=  true )
+@Accessors(chain=true)
 @NoArgsConstructor
 @AllArgsConstructor
-public  class OfflineChatMessage
+public  class  OoIData
 {
-	@JsonProperty( value="ID"  )
-	@Column( name="ID"   )
-	private  Long  id;
-	@JsonProperty( value="CREATE_TIME" )
-	@Column( name="CREATE_TIME")
-	private  Timestamp  createTime;
-	@JsonProperty( value="CONTACT_ID"  )
-	private  Long  contactId;
-	@JsonProperty( value="USER_ID")
-	@Column( name="USER_ID" )
-	private  Long  userId;
-	@JsonProperty( value="MD5" )
-	@Column( name="MD5"  )
-	private  String   md5;
-	@JsonProperty( value="CONTENT_TYPE")
-	@Column( name="CONTENT_TYPE"  )
-	private  Integer   contentType;
-	@JsonProperty( value="CONTENT")
-	@Column( name="CONTENT" )
-	private  String  content;
-	@JsonProperty( value="TRANSPORT_STATE" )
-	private  Integer     transportState;
+	@JsonProperty( value="CHAT_GROUPS"   )
+	private  List<ChatGroup>   chatGroups;
+	@JsonProperty( value="CHAT_GROUP_USERS"  )
+	private  List<ChatGroupUser>   chatGroupUsers;
+	@JsonProperty( value="CHAT_GROUP_SYNC_ID")
+	private  Long    chatGroupSyncId;
+	@JsonProperty( value="CONTACTS" )
+	private  List<Contact>  contacts;
+	@JsonProperty( value="OFFLINE_CHAT_MESSAGES" )
+	private  List<OfflineChatMessage>  offlineChatMessages;
+	@JsonProperty( value="OFFLINE_GROUP_CHAT_MESSAGES" )
+	private  List<OfflineChatGroupMessage>  offlineGroupChatMessages;
 }

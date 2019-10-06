@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.chat.group.service;
+package cc.mashroom.squirrel.module.user.conversion;
 
-import  java.util.List;
+import  java.beans.PropertyEditorSupport;
 
-import  org.springframework.http.ResponseEntity;
+import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
+import  cc.mashroom.util.JsonUtils;
 
-import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
-
-public  interface  ChatGroupUserService
+public  class  OoiDataCheckpointsEditor  extends  PropertyEditorSupport
 {
-	public  ResponseEntity<OoIData>  add( long  inviterId,long  chatGroupId,List  <Long>  inviteeIds );
-	
-	public  ResponseEntity<OoIData>  update( long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard );
-	
-	public  ResponseEntity<OoIData>  remove( long  removerId,long  chatGroupId,long  chatGroupUserId );
+	@Override
+	public  void  setAsText( String  text )  throws  IllegalArgumentException
+	{
+		setValue( JsonUtils.fromJson(text ,OoiDataCheckpoints.class) );
+	}
 }

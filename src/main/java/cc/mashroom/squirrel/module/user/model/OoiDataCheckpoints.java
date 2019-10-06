@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.chat.group.service;
+package cc.mashroom.squirrel.module.user.model;
 
-import  java.util.List;
+import  cc.mashroom.db.annotation.Column;
+import  lombok.Data;
+import  lombok.experimental.Accessors;
 
-import  org.springframework.http.ResponseEntity;
-
-import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
-
-public  interface  ChatGroupUserService
+@Data
+@Accessors( chain=true )
+public  class  OoiDataCheckpoints
 {
-	public  ResponseEntity<OoIData>  add( long  inviterId,long  chatGroupId,List  <Long>  inviteeIds );
-	
-	public  ResponseEntity<OoIData>  update( long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard );
-	
-	public  ResponseEntity<OoIData>  remove( long  removerId,long  chatGroupId,long  chatGroupUserId );
+	@Column( name="CHAT_MESSAGE_CHECK_POINT" )
+	private  Long  chatMessageCheckpoint;
+	@Column( name="GROUP_CHAT_MESSAGE_CHECK_POINT" )
+	private  Long  groupChatMessageCheckpoint;
+	@Column( name="CONTACT_CHECK_POINT" )
+	private  Long      contactCheckpoint;
+	@Column( name=  "CHAT_GROUP_CHECK_POINT" )
+	private  Long  chatGroupCheckpoint;
 }

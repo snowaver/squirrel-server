@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.module.chat.group.controller;
 
-import  java.util.List;
+import  java.util.stream.Collectors;
 
 import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
@@ -25,53 +25,39 @@ import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
-import  com.fasterxml.jackson.core.type.TypeReference;
-
 import  cc.mashroom.squirrel.common.AbstractController;
+import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupSync;
+import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupService;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
-import cc.mashroom.squirrel.server.ServerInfo;
+import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
-import  cc.mashroom.util.HttpUtils;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
 
-@RequestMapping( "/chat/group" )
+@RequestMapping("/chat/group" )
 @RestController
-public  class  ChatGroupController     extends  AbstractController
+public  class  ChatGroupController  extends  AbstractController
 {
 	@Autowired
 	private  ChatGroupService  service;
 	
 	@RequestMapping( method={RequestMethod.POST  } )
-	public  ResponseEntity<String>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("name")  String  name )
+	public  ResponseEntity<OoIData>  add(    @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("name") String  name )
 	{
-		return  service.add(  sessionProfile.getLong("USER_ID")  ,  name );
+		return  this.service.add( sessionProfile.getLong("USER_ID"),name );
 	}
 	
 	@RequestMapping( method={RequestMethod.PUT   } )
-	public  ResponseEntity<String>  update( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("id")  long  id,@RequestParam("name")  String  name )
+	public  ResponseEntity<OoIData>  update( @RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile,@RequestParam("chatGroupId")  long  chatGroupId,@RequestParam("name")  String  name )
 	{
-		ResponseEntity<Map<String,List<? extends Map>>>  responseEntity = service.update( sessionProfile.getLong("USER_ID"),id,name );
+		ResponseEntity<OoIData>  responseEntity = this.service.update( sessionProfile.getLong("USER_ID"),chatGroupId,name );
 		
-		List<? extends Map>  chatGroupAllUsers = responseEntity.getBody().get( "CHAT_GROUP_USERS" );
+		java.util.Map<Long,Long>  chatGroupSyncIds = responseEntity.getBody().getChatGroupSyncs().stream().collect(  Collectors.toMap(ChatGroupSync::getUserId,ChatGroupSync::getSyncId) );
 		
-		GroupChatEventPacket  groupChatGroupUpdatedEventPacket = new  GroupChatEventPacket( id,GroupChatEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),responseEntity.getBody() );
+		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).parallelStream().filter((contactId) -> contactId != sessionProfile.getLong("USER_ID")).forEach( (contactId) -> PacketRoute.INSTANCE.route(contactId,new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),JsonUtils.toJson(new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers(),null).setChatGroupSyncId(chatGroupSyncIds.get(contactId))))) );
 		
-		chatGroupAllUsers.forEach( (chatGroupRemainingUser) -> {if(chatGroupRemainingUser.getLong("CONTACT_ID").longValue() != sessionProfile.getLong("USER_ID"))  PacketRoute.INSTANCE.route(chatGroupRemainingUser.getLong("CONTACT_ID"),groupChatGroupUpdatedEventPacket);} );
-		
-		return  ResponseEntity.status(responseEntity.getStatusCode()).body( JsonUtils.toJson(responseEntity.getBody()) );
-	}
-	
-	@RequestMapping( method={RequestMethod.DELETE} )
-	public  ResponseEntity<String>  remove( @RequestParam("id")  long  id )
-	{
-		return  service.remove( id );
-	}
-	
-	@RequestMapping( value="/lookup",method={RequestMethod.GET } )
-	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras )
-	{
-		return  service.lookup( action,keyword,JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
+		return  ResponseEntity.ok( new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers(),null).setChatGroupSyncId( chatGroupSyncIds.get(sessionProfile.getLong("USER_ID"))) );
 	}
 }

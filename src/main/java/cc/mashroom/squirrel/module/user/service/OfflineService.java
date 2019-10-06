@@ -17,9 +17,10 @@ package cc.mashroom.squirrel.module.user.service;
 
 import  org.springframework.http.ResponseEntity;
 
-import  cc.mashroom.util.collection.map.Map;
+import  cc.mashroom.squirrel.module.user.model.OoIData;
+import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
 
 public  interface  OfflineService
 {
-	public  ResponseEntity<String>  lookup( int  action,long  userId,Map<String,Map<String,Object>>  extras );
+	public  ResponseEntity<OoIData>  lookup( int  action, long  userId,OoiDataCheckpoints  checkpoints );
 }

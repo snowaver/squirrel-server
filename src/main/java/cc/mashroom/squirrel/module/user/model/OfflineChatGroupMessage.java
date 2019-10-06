@@ -15,7 +15,47 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-public  class  OfflineChatGroupMessage
+import java.sql.Timestamp;
+
+import  com.fasterxml.jackson.annotation.JsonProperty;
+
+import  cc.mashroom.db.annotation.Column;
+import  lombok.AllArgsConstructor;
+import  lombok.Data;
+import  lombok.EqualsAndHashCode;
+import  lombok.NoArgsConstructor;
+import  lombok.experimental.Accessors;
+
+@Data
+@Accessors( chain=true )
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode( callSuper  = false )
+public  class    OfflineChatGroupMessage
 {
-	
+	@JsonProperty( value="ID"  )
+	@Column( name="ID"   )
+	private  Long  id;
+	@JsonProperty( value="CREATE_TIME" )
+	@Column( name="CREATE_TIME")
+	private  Timestamp  createTime;
+	@JsonProperty( value="CONTACT_ID"  )
+	private  Long  contactId;
+	@JsonProperty( value="USER_ID")
+	@Column( name="USER_ID" )
+	private  Long  userId;
+	@JsonProperty( value="MD5" )
+	@Column( name="MD5"  )
+	private  String   md5;
+	@JsonProperty( value="CONTENT_TYPE")
+	@Column( name="CONTENT_TYPE"  )
+	private  Integer   contentType;
+	@JsonProperty( value="CONTENT")
+	@Column( name="CONTENT" )
+	private  String  content;
+	@JsonProperty( value="TRANSPORT_STATE" )
+	private  Integer     transportState;
+	@JsonProperty( value=   "GROUP_ID" )
+	@Column( name="GROUP_ID")
+	private  String  groupId;
 }

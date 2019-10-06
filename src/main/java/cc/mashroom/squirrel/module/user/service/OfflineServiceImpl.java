@@ -16,42 +16,72 @@
 package cc.mashroom.squirrel.module.user.service;
 
 import  java.sql.Timestamp;
+import  java.util.List;
 import  java.util.stream.Collectors;
 
-import  org.joda.time.DateTime;
 import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
+import  com.google.common.collect.Lists;
+
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroup;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupSync;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
+import  cc.mashroom.squirrel.module.user.model.Contact;
+import  cc.mashroom.squirrel.module.user.model.OfflineChatGroupMessage;
+import  cc.mashroom.squirrel.module.user.model.OfflineChatMessage;
+import  cc.mashroom.squirrel.module.user.model.OoIData;
+import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
 import  cc.mashroom.squirrel.module.user.repository.ContactRepository;
 import  cc.mashroom.squirrel.module.user.repository.OfflineChatMessageRepository;
 import  cc.mashroom.squirrel.module.user.repository.OfflineGroupChatMessageRepository;
 import  cc.mashroom.squirrel.paip.message.TransportState;
-import  cc.mashroom.util.JsonUtils;
-import  cc.mashroom.util.ObjectUtils;
-import  cc.mashroom.util.collection.map.HashMap;
-import  cc.mashroom.util.collection.map.Map;
 
 @Service
 public  class  OfflineServiceImpl  implements  OfflineService
 {
-	@Connection( dataSource = @DataSource(type="db",name="squirrel") )
+	@Connection( dataSource = @DataSource(type="db", name="squirrel") )
 	
-	public  ResponseEntity<String>  lookup( int  action,long  userId,Map<String,Map<String,Object>>  extras )
+	public  ResponseEntity<OoIData>  lookup( int  action,long  userId,OoiDataCheckpoints  checkpoints )
 	{
-		Map<String,Object>  response  = new  HashMap<String,Object>();
+		OoIData  ooiData = new  OoIData().setContacts( checkpoints.getContactCheckpoint() == null ? Lists.newArrayList() : ContactRepository.DAO.lookup(Contact.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoints.getContactCheckpoint())}) );
 		
-		response.addEntry( "CONTACTS",ContactRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CONTACTS").getOrDefault("LATEST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
+		if(     checkpoints.getChatGroupCheckpoint() !=null )
+		{
+			if( checkpoints.getChatGroupCheckpoint() ==   0 )
+			{
+				ooiData.setChatGroups( ChatGroupRepository.DAO.lookup(ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  ORDER  BY  ID  ASC",new  Object[]{userId}) );
+				
+				ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{userId}) );
+			}
+			else
+			if( checkpoints.getChatGroupCheckpoint() >    0 )
+			{
+				ooiData.setChatGroups( Lists.newArrayList() ).setChatGroupUsers(Lists.newArrayList() );
+				
+				List<ChatGroupSync>   chatGroupSyncs = ChatGroupSyncRepository.DAO.lookup( ChatGroupSync.class,"SELECT  *  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?  ORDER  BY  SYNC_ID  DESC",new  Object[]{userId,checkpoints.getChatGroupCheckpoint()} );
+				
+				if( !     chatGroupSyncs.isEmpty() )
+				{
+					for(ChatGroupSync  chatGroupSync : chatGroupSyncs )
+					{
+						ooiData.getChatGroups().addAll( ChatGroupRepository.DAO.lookup(ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  LAST_MODIFY_TIME = ?",new  Object[]{chatGroupSync.getChatGroupId(),chatGroupSync.getLastModifyTime()}) );
+						
+						ooiData.getChatGroupUsers().addAll( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  LAST_MODIFY_TIME = ?",new  Object[]{chatGroupSync.getChatGroupId(),chatGroupSync.getLastModifyTime()}) );
+					}
+					
+					ooiData.setChatGroupSyncId( chatGroupSyncs.get(0).getSyncId() );
+				}
+			}
+		}
 		
-		response.addEntry( "OFFLINE_CHAT_MESSAGES",OfflineChatMessageRepository.DAO.lookup(Map.class,"SELECT  ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,Long.parseLong(extras.get("OFFLINE_CHAT_MESSAGES").get("LATEST_RECEIVED_ID").toString())}).stream().filter((chatMessage) -> {chatMessage.addEntry("CREATE_TIME",new  Timestamp(chatMessage.getLong("ID"))).addEntry("TRANSPORT_STATE",TransportState.RECEIVED.getValue());  return  true;}).collect(Collectors.toList()) );
+		ooiData.setOfflineChatMessages( checkpoints.getChatMessageCheckpoint() == null ? Lists.newArrayList() : OfflineChatMessageRepository.DAO.lookup(OfflineChatMessage.class,"SELECT  ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoints.getChatMessageCheckpoint())}).stream().map((offlineChatMessage) -> offlineChatMessage.setCreateTime(new  Timestamp(offlineChatMessage.getId())).setTransportState(TransportState.RECEIVED.getValue())).collect(Collectors.toList()) );
 		
-		response.addEntry( "OFFLINE_GROUP_CHAT_MESSAGES",OfflineGroupChatMessageRepository.DAO.lookup(Map.class,"SELECT  ID,GROUP_ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  IS_DELETED = FALSE)  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,Long.parseLong(extras.get("OFFLINE_GROUP_CHAT_MESSAGES").get("LATEST_RECEIVED_ID").toString())}).stream().filter((groupChatMessage) -> {groupChatMessage.addEntry("CREATE_TIME",new  Timestamp(groupChatMessage.getLong("ID"))).addEntry("TRANSPORT_STATE",TransportState.RECEIVED.getValue());  return  true;}).collect(Collectors.toList()) );
-		
-		response.addEntry( "CHAT_GROUP_USERS", ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUP_USERS").getOrDefault("LATEST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}) );
-		
-		return  ResponseEntity.status(200).body( JsonUtils.toJson(response.addEntry("CHAT_GROUPS",ChatGroupRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(DateTime.parse(ObjectUtils.cast(extras.get("CHAT_GROUPS").getOrDefault("LATEST_MODIFY_TIME","2000-01-01T00:00:00.000Z"),String.class)).getMillis())}))) );
+		ooiData.setOfflineGroupChatMessages( checkpoints.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : OfflineGroupChatMessageRepository.DAO.lookup(OfflineChatGroupMessage.class,"SELECT  ID,GROUP_ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  IS_DELETED = FALSE)  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoints.getGroupChatMessageCheckpoint())}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setCreateTime(new  Timestamp(offlineGroupChatMessage.getId())).setTransportState(TransportState.RECEIVED.getValue())).collect(Collectors.toList()) );  return  ResponseEntity.ok( ooiData );
 	}
 }

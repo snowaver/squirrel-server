@@ -15,19 +15,16 @@
  */
 package cc.mashroom.squirrel.module.chat.group.service;
 
-import  java.util.List;
-
 import  org.springframework.http.ResponseEntity;
 
-import  cc.mashroom.util.collection.map.Map;
+import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
 
 public  interface  ChatGroupService
 {
-	public  ResponseEntity<String>  add( long  userId,String  name );
+	public  ResponseEntity<OoIData>  add( long  createrId,String  name );
 		
-	public  ResponseEntity<Map<String,List<? extends Map>>>  update( long  updaterId,long  chatGroupId,String  name );
-	
-	public  ResponseEntity<String>  remove( long  id );
-	
-	public  ResponseEntity<String>  lookup( int  action,String  keyword,Map<String,Map<String,Object>>  extras );
+	public  ResponseEntity<OoIData>  update( long  updaterId,long  chatGroupId,String  name );
+	/*
+	public  ResponseEntity<OoIData>  remove( long  id );
+	*/
 }

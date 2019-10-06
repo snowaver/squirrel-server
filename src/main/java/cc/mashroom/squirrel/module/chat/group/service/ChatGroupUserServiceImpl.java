@@ -34,8 +34,14 @@ import  com.google.common.collect.Lists;
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroup;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupSync;
+import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
+import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
+import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
+import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
@@ -43,50 +49,57 @@ import  cc.mashroom.xcache.XKeyValueCache;
 import  cc.mashroom.util.Reference;
 
 @Service
-public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
+public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  add(  long  inviterId, long  chatGroupId,List<Long>   inviteeIds )
+	public  ResponseEntity<OoIData>  add(long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
-		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache =  ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
+		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
 		try
 		{
-			if( ! locker.tryLock(2 , TimeUnit.SECONDS) )
+			if( ! locker.tryLock(2, TimeUnit.SECONDS) )
 			{
 				throw  new  IllegalStateException(  "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  lock  is  not  acquired  before  the  waiting  time  (2  seconds)  elapsed,  give  up." );
 			}
 			
 			Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 			
-			Map<Long,String>  nicknamesMapper  = new  HashMap<Long,String>();
+			Map<Long,String>  nicknamesMapper  =  new  HashMap<Long,String>();
 			
-			List<Reference<Object>>  ids=new  ArrayList<Reference<Object>>();
-					
+			List<Reference<Object>>  ids= new  ArrayList<Reference<Object>>();
+			/*	
 			Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>();
-			
-			UserRepository.DAO.lookup(Map.class,"SELECT  ID,NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(inviteeIds.size()-1)*2+1,",?")+")",inviteeIds.toArray(new  Long[inviteeIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getLong("ID"),user.getString("NICKNAME")) );
+			*/
+			UserRepository.DAO.lookup(User.class,"SELECT  ID,NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  ("+StringUtils.rightPad("?",(inviteeIds.size()-1)*2+1,",?")+")",inviteeIds.toArray(new  Long[inviteeIds.size()])).forEach( (user) -> nicknamesMapper.addEntry(user.getId(),user.getNickname()) );
 			
 			List<Object[]>  addChatGroupUserBatchParameters = inviteeIds.stream().map((contactId)-> new  Object[]{now,contactId,now,contactId,chatGroupId,contactId,nicknamesMapper.getString(contactId),chatGroupId,contactId}).collect( Collectors.toList() );
 			
-			ChatGroupUserRepository.DAO.insert( ids,"INSERT  INTO  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE)",addChatGroupUserBatchParameters.toArray(new  Object[0][]) );
+			ChatGroup  chatGroup = ChatGroupRepository.DAO.lookupOne( ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId} );
 			
-			List<Map>  chatGroupUsers = ChatGroupUserRepository.DAO.lookup( Map.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId} );
-			
-			for( Reference< Object >  id : ids )
+			if( chatGroup.getLastModifyTime().getTime() >=     now.getTime() )
 			{
-				if( id != null && id.get() != null  && Long.parseLong(id.get().toString())   >= 1 )
-				{
-					chatGroupUsers.add( new  HashMap<String,Object>().addEntry("ID",id.get()).addEntry("IS_DELETED",false).addEntry("CREATE_TIME",now).addEntry("CREATE_BY",inviterId).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",inviterId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",inviteeIds.get(ids.indexOf(id))).addEntry("VCARD",nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id)))) );
-				}
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  time  line  error,  check  system  time  please." );
 			}
 			
-			chatGroupUserIdsCache.remove( chatGroupId );
+			ChatGroupRepository.DAO.update( "UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  LAST_MODIFY_BY = ?  AND  LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{inviterId,now,chatGroupId} );
 			
-			return  ResponseEntity.ok(response.addEntry("CHAT_GROUP_USERS",chatGroupUsers).addEntry("CHAT_GROUPS",ChatGroupRepository.DAO.lookup(Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId})) );
+			OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(inviterId).setLastModifyTime(now)) );
+			
+			ChatGroupUserRepository.DAO.insert( ids,"INSERT  INTO  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE)",addChatGroupUserBatchParameters.toArray(new  Object[0][]) );
+			
+			ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE" , new  Object[]{chatGroupId}) );
+			
+			ooiData.getChatGroupUsers().addAll( ids.stream().filter((id) -> id != null && id.get() != null && Long.parseLong(id.get().toString()) >= 1).map((id) -> new  ChatGroupUser(Long.parseLong(id.get().toString()),false,now,inviterId,now,inviterId,chatGroupId,inviteeIds.get(ids.indexOf(id)),nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id))))).collect(Collectors.toList()) );
+
+			ooiData.setChatGroupSyncs( ooiData.getChatGroupUsers().stream().map((chatGroupUser) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(chatGroupUser.getContactId()),chatGroupUser.getContactId(),chatGroupId,now,inviteeIds.contains(chatGroupUser.getContactId()) ? 4 : 5)).collect(Collectors.toList()) );
+
+			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );
+			
+			chatGroupUserIdsCache.remove(chatGroupId );       return  ResponseEntity.ok( ooiData );
 		}
 		catch( Exception e )
 		{
@@ -100,65 +113,84 @@ public  class  ChatGroupUserServiceImpl       implements ChatGroupUserService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  update(long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard )
+	public  ResponseEntity<OoIData>  update(        long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard )
 	{
 		{
 			Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 			
-			if( ChatGroupUserRepository.DAO.update("UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{newVcard,now,chatGroupUserId,chatGroupId,updatorId}) <= 0 )
+			ChatGroup  chatGroup = ChatGroupRepository.DAO.lookupOne( ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId} );
+			
+			if( chatGroup.getLastModifyTime().getTime() >=     now.getTime() )
+			{
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  time  line  error,  check  system  time  please." );
+			}
+			
+			ChatGroupUser  chatGroupUser = ChatGroupUserRepository.DAO.lookupOne( ChatGroupUser.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{chatGroupUserId,chatGroupId,updatorId} );
+			
+			if( chatGroup==null|| chatGroupUser==null )
 			{
 				throw  new  IllegalArgumentException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  user  was  not  found." );
 			}
 			
-			Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUP_USERS",Lists.newArrayList(new  HashMap<String,Object>().addEntry("ID",chatGroupUserId).addEntry("CHAT_GROUP_ID",chatGroupId).addEntry("CONTACT_ID",updatorId).addEntry("VCARD",newVcard).addEntry("LAST_MODIFY_TIME",now)));
+			ChatGroupRepository.DAO.update( "UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  LAST_MODIFY_BY = ?  AND  LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{updatorId,now,chatGroupId} );
 			
-			response.addEntry( "CHAT_GROUP_ALL_USERS",ChatGroupUserRepository.DAO.lookup(Map.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{chatGroupId}) );
+			OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updatorId).setLastModifyTime(now)) );
 			
-			return  ResponseEntity.status(200).body(  response.addEntry("CHAT_GROUPS", new  ArrayList<Map<String,Object>>()) );
+			ChatGroupUserRepository.DAO.update( "UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{newVcard,updatorId,now,chatGroupUserId,chatGroupId,updatorId} );
+			
+			ooiData.setChatGroupUsers(Lists.newArrayList(chatGroupUser.setLastModifyBy(updatorId).setLastModifyTime(now).setVcard(newVcard))).setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,6)).collect(  Collectors.toList()) );
+			
+			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );           return  ResponseEntity.ok( ooiData );
 		}
 	}
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<Map<String,List<? extends Map>>>  remove( long  removerId ,long  chatGroupId,long  chatGroupUserId )
+	public  ResponseEntity<OoIData>  remove( long removerId,long chatGroupId,long chatGroupUserId )
 	{
-		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache =  ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
+		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
 		try
 		{
-			if( ! locker.tryLock(2 , TimeUnit.SECONDS) )
+			if( ! locker.tryLock(2, TimeUnit.SECONDS) )
 			{
 				throw  new  IllegalStateException(  "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  lock  is  not  acquired  before  the  waiting  time  (2  seconds)  elapsed,  give  up." );
 			}
 			
 			Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 			
-			Map<String,List<? extends Map>>  response = new  HashMap<String,List<? extends Map>>().addEntry("CHAT_GROUPS",new  ArrayList<Map<String,Object>>()).addEntry( "CHAT_GROUP_ALL_USERS",new  ArrayList<Map<String,Object>>() );
+			ChatGroup  chatGroup = ChatGroupRepository.DAO.lookupOne( ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?" ,new  Object[]{chatGroupId} );
 			
-			Map<String,Object>  chatGroupUser= ChatGroupUserRepository.DAO.lookupOne( Map.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?",new  Object[]{chatGroupUserId,chatGroupId} );
+			if( chatGroup.getLastModifyTime().getTime() >=     now.getTime() )
+			{
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  time  line  error,  check  system  time  please." );
+			}
 			
-			Map<String,Object>  chatGroup = ChatGroupRepository.DAO.lookupOne( Map.class,"SELECT  IS_DELETED,CREATE_TIME,CREATE_BY,NAME,(SELECT  COUNT(*)  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE  AND  ID <> ?)  AS  CHAT_GROUP_USER_COUNT  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId,chatGroupUserId,chatGroupId} );
+			ChatGroupUser  chatGroupUser= ChatGroupUserRepository.DAO.lookupOne( ChatGroupUser.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?",new  Object[]{chatGroupUserId,chatGroupId} );
 			
-			if( chatGroup.getLong("CREATE_BY") != removerId && chatGroupUser.getLong("CONTACT_ID") != removerId )
+			if( chatGroup.getCreateBy() != removerId && chatGroupUser.getContactId() != removerId )
 			{
 				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  can  not  remove  the  member  for  authority.  the  creator  can  remove  anyone  but  the  non-creator  can  only  quit  the  group." );
 			}
-			
-			response.addEntry( "CHAT_GROUP_ALL_USERS",chatGroupUserIdsCache.get(chatGroupId).stream().map((contactId) -> new  HashMap<String,Object>().addEntry("CONTACT_ID",contactId)).collect(Collectors.toList()) );
+			OoIData  ooiData          = new  OoIData();
 			//  dismiss  the  chat  group  when  the  creator  left.
-			if( chatGroup != null && chatGroup.getLong("CREATE_BY") == removerId && chatGroupUser.getLong("CONTACT_ID") == removerId && ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{removerId,now,chatGroupId})  >= 1  )
+			if( chatGroup != null && chatGroup.getCreateBy() == removerId && chatGroupUser.getContactId() == removerId && ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{removerId,now,chatGroupId}) >= 1 )
 			{
-				response.addEntry( "CHAT_GROUPS",Lists.newArrayList(chatGroup.addEntry("ID",chatGroupId).addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_TIME",now).addEntry("LAST_MODIFY_BY",removerId)) );
+				ooiData.setChatGroups(Lists.newArrayList(chatGroup.setCheckPointTime(chatGroup.getLastModifyTime()).setIsDeleted(true).setLastModifyBy(removerId).setLastModifyTime(now))).setChatGroupUsers( Lists.newArrayList() );
 			}
 			else
 			if( chatGroupUser != null && ChatGroupUserRepository.DAO.update("UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{removerId,now,chatGroupUserId}) >= 0 )
 			{
-				response.addEntry( "CHAT_GROUP_USERS",Lists.newArrayList(chatGroupUser.addEntry("IS_DELETED",true).addEntry("LAST_MODIFY_BY",removerId).addEntry("LAST_MODIFY_TIME",now)) );
+				ChatGroupRepository.DAO.update( "UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  LAST_MODIFY_BY = ?  AND  LAST_MODIFY_TIME = ?  WHERE  ID = ?",     new  Object[]{removerId,now,chatGroupId} );
+				
+				ooiData.setChatGroups(Lists.newArrayList(chatGroup.setCheckPointTime(chatGroup.getLastModifyTime()).setLastModifyBy(removerId).setLastModifyTime(now))).setChatGroupUsers( Lists.newArrayList(chatGroupUser.setIsDeleted(true).setLastModifyBy(removerId).setLastModifyTime(now)) );
 			}
 			
-			chatGroupUserIdsCache.remove( chatGroupId );  return  ResponseEntity.status(200   ).body( response );
+			ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,chatGroup.getCreateBy() == removerId && chatGroupUser.getContactId() == removerId ? 3 : 7)    ).collect(Collectors.toList()) );
+			
+			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );           return  ResponseEntity.ok( ooiData );
 		}
 		catch( Exception e )
 		{

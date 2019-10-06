@@ -17,18 +17,18 @@ package cc.mashroom.squirrel.module.user.controller;
 
 import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
+import  org.springframework.web.bind.WebDataBinder;
+import  org.springframework.web.bind.annotation.InitBinder;
 import  org.springframework.web.bind.annotation.RequestAttribute;
 import  org.springframework.web.bind.annotation.RequestMapping;
-import  org.springframework.web.bind.annotation.RequestMethod;
 import  org.springframework.web.bind.annotation.RequestParam;
 import  org.springframework.web.bind.annotation.RestController;
 
-import  com.fasterxml.jackson.core.type.TypeReference;
-
 import  cc.mashroom.squirrel.common.AbstractController;
+import  cc.mashroom.squirrel.module.user.conversion.OoiDataCheckpointsEditor;
+import  cc.mashroom.squirrel.module.user.model.OoIData;
+import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
 import  cc.mashroom.squirrel.module.user.service.OfflineService;
-import  cc.mashroom.util.HttpUtils;
-import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
 
 @RequestMapping( "/offline" )
@@ -38,9 +38,15 @@ public  class  OfflineController  extends  AbstractController
 	@Autowired
 	private  OfflineService  service;
 	
-	@RequestMapping( value="/lookup" , method={RequestMethod.GET} )
-	public  ResponseEntity<String>  lookup( @RequestParam("action")  int  action,@RequestParam("keyword")  String  keyword,@RequestParam("extras")  String  extras,@RequestAttribute("SESSION_PROFILE")  Map<String,Object>  sessionProfile )
+	@RequestMapping(value="/lookup" )
+	public  ResponseEntity<OoIData>  lookup( @RequestAttribute("SESSION_PROFILE" )  Map<String,Object>  sessionProfile,@RequestParam("checkpoints")  OoiDataCheckpoints  checkpoints )
 	{
-		return  service.lookup( action,sessionProfile.getLong("USER_ID"),JsonUtils.fromJson(HttpUtils.decodeQuietly(extras,"UTF-8"),new  TypeReference<Map<String,Map<String,Object>>>(){}) );
+		return  service.lookup( 0,sessionProfile.getLong("USER_ID"),checkpoints );
+	}
+	
+	@InitBinder
+	public  void  binder( WebDataBinder  binder )
+	{
+		binder.registerCustomEditor( OoiDataCheckpoints.class,new  OoiDataCheckpointsEditor() );
 	}
 }

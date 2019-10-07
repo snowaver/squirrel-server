@@ -15,7 +15,8 @@
  */
 package cc.mashroom.squirrel.module.user.model;
 
-import  cc.mashroom.db.annotation.Column;
+import  com.fasterxml.jackson.annotation.JsonProperty;
+
 import  lombok.Data;
 import  lombok.experimental.Accessors;
 
@@ -23,12 +24,12 @@ import  lombok.experimental.Accessors;
 @Accessors( chain=true )
 public  class  OoiDataCheckpoints
 {
-	@Column( name="CHAT_MESSAGE_CHECK_POINT" )
+	@JsonProperty( value="CHAT_MESSAGE_CHECK_POINT" )
 	private  Long  chatMessageCheckpoint;
-	@Column( name="GROUP_CHAT_MESSAGE_CHECK_POINT" )
+	@JsonProperty( value="GROUP_CHAT_MESSAGE_CHECK_POINT" )
 	private  Long  groupChatMessageCheckpoint;
-	@Column( name="CONTACT_CHECK_POINT" )
+	@JsonProperty( value="CONTACT_CHECK_POINT" )
 	private  Long      contactCheckpoint;
-	@Column( name=  "CHAT_GROUP_CHECK_POINT" )
+	@JsonProperty( value=  "CHAT_GROUP_CHECK_POINT" )
 	private  Long  chatGroupCheckpoint;
 }

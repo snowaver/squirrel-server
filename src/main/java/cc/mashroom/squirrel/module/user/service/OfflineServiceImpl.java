@@ -58,6 +58,8 @@ public  class  OfflineServiceImpl  implements  OfflineService
 				ooiData.setChatGroups( ChatGroupRepository.DAO.lookup(ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  ORDER  BY  ID  ASC",new  Object[]{userId}) );
 				
 				ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  ORDER  BY  LAST_MODIFY_TIME  ASC",new  Object[]{userId}) );
+			
+				ooiData.setChatGroupSyncId(0L);
 			}
 			else
 			if( checkpoints.getChatGroupCheckpoint() >    0 )
@@ -65,6 +67,8 @@ public  class  OfflineServiceImpl  implements  OfflineService
 				ooiData.setChatGroups( Lists.newArrayList() ).setChatGroupUsers(Lists.newArrayList() );
 				
 				List<ChatGroupSync>   chatGroupSyncs = ChatGroupSyncRepository.DAO.lookup( ChatGroupSync.class,"SELECT  *  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?  ORDER  BY  SYNC_ID  DESC",new  Object[]{userId,checkpoints.getChatGroupCheckpoint()} );
+				
+				ooiData.setChatGroupSyncId(0L);
 				
 				if( !     chatGroupSyncs.isEmpty() )
 				{

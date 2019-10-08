@@ -42,7 +42,6 @@ public  class  OoIData
 	@NonNull
 	@JsonProperty( value="CHAT_GROUP_USERS" )
 	private  List<ChatGroupUser>  chatGroupUsers;
-	@NonNull
 	@JsonIgnore
 	private  List<ChatGroupSync>  chatGroupSyncs;
 }

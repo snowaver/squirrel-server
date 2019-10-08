@@ -93,10 +93,8 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE" , new  Object[]{chatGroupId}) );
 			
-			ooiData.getChatGroupUsers().addAll( ids.stream().filter((id) -> id != null && id.get() != null && Long.parseLong(id.get().toString()) >= 1).map((id) -> new  ChatGroupUser(Long.parseLong(id.get().toString()),false,now,inviterId,now,inviterId,chatGroupId,inviteeIds.get(ids.indexOf(id)),nicknamesMapper.getString(inviteeIds.get(ids.indexOf(id))))).collect(Collectors.toList()) );
-
 			ooiData.setChatGroupSyncs( ooiData.getChatGroupUsers().stream().map((chatGroupUser) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(chatGroupUser.getContactId()),chatGroupUser.getContactId(),chatGroupId,now,inviteeIds.contains(chatGroupUser.getContactId()) ? 4 : 5)).collect(Collectors.toList()) );
-
+			
 			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );
 			
 			chatGroupUserIdsCache.remove(chatGroupId );       return  ResponseEntity.ok( ooiData );

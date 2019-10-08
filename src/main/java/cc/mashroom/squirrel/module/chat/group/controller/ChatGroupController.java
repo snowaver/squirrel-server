@@ -56,8 +56,8 @@ public  class  ChatGroupController  extends  AbstractController
 		
 		java.util.Map<Long,Long>  chatGroupSyncIds = responseEntity.getBody().getChatGroupSyncs().stream().collect(  Collectors.toMap(ChatGroupSync::getUserId,ChatGroupSync::getSyncId) );
 		
-		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).parallelStream().filter((contactId) -> contactId != sessionProfile.getLong("USER_ID")).forEach( (contactId) -> PacketRoute.INSTANCE.route(contactId,new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),JsonUtils.toJson(new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers(),null).setChatGroupSyncId(chatGroupSyncIds.get(contactId))))) );
+		ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).parallelStream().filter((contactId) -> contactId != sessionProfile.getLong("USER_ID")).forEach( (contactId) -> PacketRoute.INSTANCE.route(contactId,new  GroupChatEventPacket(chatGroupId,GroupChatEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),JsonUtils.toJson(new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers()).setChatGroupSyncId(chatGroupSyncIds.get(contactId))))) );
 		
-		return  ResponseEntity.ok( new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers(),null).setChatGroupSyncId( chatGroupSyncIds.get(sessionProfile.getLong("USER_ID"))) );
+		return  ResponseEntity.ok( new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers()).setChatGroupSyncId( chatGroupSyncIds.get(sessionProfile.getLong("USER_ID"))) );
 	}
 }

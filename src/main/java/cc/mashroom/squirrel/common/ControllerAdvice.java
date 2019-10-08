@@ -25,6 +25,7 @@ import  org.springframework.http.server.ServletServerHttpRequest;
 import  org.springframework.http.server.ServletServerHttpResponse;
 import  org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
+import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.StringUtils;
 
 @org.springframework.web.bind.annotation.ControllerAdvice
@@ -38,7 +39,7 @@ public  class  ControllerAdvice  implements  ResponseBodyAdvice<Object>
 	@Override
 	public  Object  beforeBodyWrite( Object  body,MethodParameter  returnType,MediaType  selectedContentType,Class<? extends HttpMessageConverter<?>>  selectedConverterType,ServerHttpRequest  request,ServerHttpResponse  response )
 	{
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(((ServletServerHttpRequest)  request).getServletRequest().getAttribute("REQUEST_COUNTER")),13," ")+"  "+selectedContentType+"/"+((ServletServerHttpResponse)  response).getServletResponse().getStatus()+"/"+body );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  "+StringUtils.rightPad(String.valueOf(((ServletServerHttpRequest)  request).getServletRequest().getAttribute("REQUEST_COUNTER")),13," ")+"  "+selectedContentType+"/"+((ServletServerHttpResponse)  response).getServletResponse().getStatus()+"/"+(body instanceof String ? body : JsonUtils.toJson(body)) );
 		
 		return  body;
 	}

@@ -25,6 +25,7 @@ import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepositor
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
+import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  lombok.Getter;
 
 public  class      ChatGroupUserManager  implements  Plugin
@@ -45,35 +46,33 @@ public  class      ChatGroupUserManager  implements  Plugin
 	
 	public  Long  nextSynchronousId( long  userId )
 	{
-		long    nextSynchronousId= CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",null );
+		XAtomicLong  synchronousIncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")" );
 		
-		if( nextSynchronousId   == 1 )
+		if( synchronousIncId.get()==0 )
 		{
 			synchronized( ("SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")").intern() )
 			{
-				nextSynchronousId= CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",null );
-				
-				if(        nextSynchronousId == 1 )
+				if(   synchronousIncId.get() == 0 )
 				{
 					Long  maxSynchronousId = ChatGroupSyncRepository.DAO.lookupOne( Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId} );
-				
-					if( maxSynchronousId  != null )  nextSynchronousId =  CacheFactory.getNextSequence( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")",maxSynchronousId );
+					
+					if(maxSynchronousId   != null )             synchronousIncId.set( maxSynchronousId );
 				}
 			}
 		}
 
-		return      nextSynchronousId;
+		return  synchronousIncId.incrementAndGet();
 	}
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )
 	{
-		Set<Long>  chatGroupUserIds    = this.chatGroupUserIdsCache.get( chatGroupId );
+		Set<Long>  chatGroupUserIds   = this.chatGroupUserIdsCache.get(  chatGroupId );
 		
-		if( chatGroupUserIds == null )
+		if( chatGroupUserIds  == null )
 		{
 			synchronized(     String.valueOf( chatGroupId ).intern() )
 			{
-				chatGroupUserIds       = this.chatGroupUserIdsCache.get( chatGroupId );
+				chatGroupUserIds      = this.chatGroupUserIdsCache.get(  chatGroupId );
 				
 				if(      chatGroupUserIds == null )
 				{

@@ -98,7 +98,7 @@ public  class  ChatGroupServiceImpl    implements  ChatGroupService
 		
 		OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updaterId).setLastModifyTime(now).setName(name))).setChatGroupUsers( Lists.newArrayList() );
 		
-		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),updaterId,chatGroupId,now,2)).collect(Collectors.toList()) );
+		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,2)).collect(Collectors.toList()) );
 		
 		ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );  return  ResponseEntity.ok( ooiData );
 	}

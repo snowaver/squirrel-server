@@ -55,7 +55,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 	
 	public  ResponseEntity<OoIData>  add(long  inviterId,long  chatGroupId,List<Long>  inviteeIds )
 	{
-		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
+		XKeyValueCache<Long,Set<Long>>   chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
@@ -90,6 +90,8 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(inviterId).setLastModifyTime(now)) );
 			
 			ChatGroupUserRepository.DAO.insert( ids,"INSERT  INTO  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  (CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,CHAT_GROUP_ID,CONTACT_ID,VCARD)  SELECT  ?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE)",addChatGroupUserBatchParameters.toArray(new  Object[0][]) );
+			//  users  who  may  already  exist  in  the  chat  group  should  be  removed  from  the  invitee  list,  and  no  further  chat  group  event  will  be  sent  to  them.
+			inviteeIds.retainAll(ids.stream().filter((id) -> id.get() != null).map((id) -> (long)  addChatGroupUserBatchParameters.get(ids.indexOf(id))[1]).collect(Collectors.toList()) );
 			
 			ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE" , new  Object[]{chatGroupId}) );
 			
@@ -111,7 +113,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<OoIData>  update(        long  updatorId,long  chatGroupId,long  chatGroupUserId,String  newVcard )
+	public  ResponseEntity<OoIData>  update( long  updatorId,long  chatGroupId  , long  chatGroupUserId,String  newVcard )
 	{
 		{
 			Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
@@ -127,7 +129,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			if( chatGroup==null|| chatGroupUser==null )
 			{
-				throw  new  IllegalArgumentException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  user  was  not  found." );
+				throw  new  IllegalArgumentException( "SQUIRREL-SERVER:  ** CHAT  GROUP  USER  SERVICE  IMPL **  the  chat  group  or  chat  group  user  was  not  found." );
 			}
 			
 			ChatGroupRepository.DAO.update( "UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  LAST_MODIFY_BY = ?  AND  LAST_MODIFY_TIME = ?  WHERE  ID = ?",new  Object[]{updatorId,now,chatGroupId} );
@@ -138,7 +140,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			ooiData.setChatGroupUsers(Lists.newArrayList(chatGroupUser.setLastModifyBy(updatorId).setLastModifyTime(now).setVcard(newVcard))).setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,6)).collect(  Collectors.toList()) );
 			
-			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );           return  ResponseEntity.ok( ooiData );
+			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );       return  ResponseEntity.ok( ooiData );
 		}
 	}
 	
@@ -146,7 +148,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 	
 	public  ResponseEntity<OoIData>  remove( long removerId,long chatGroupId,long chatGroupUserId )
 	{
-		XKeyValueCache<Long,Set<Long>>       chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
+		XKeyValueCache<Long,Set<Long>>   chatGroupUserIdsCache = ChatGroupUserManager.INSTANCE.getChatGroupUserIdsCache();
 		
 		Lock  locker = chatGroupUserIdsCache.getLock( chatGroupId );
 		
@@ -188,7 +190,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,chatGroup.getCreateBy() == removerId && chatGroupUser.getContactId() == removerId ? 3 : 7)    ).collect(Collectors.toList()) );
 			
-			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );           return  ResponseEntity.ok( ooiData );
+			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );       return  ResponseEntity.ok( ooiData );
 		}
 		catch( Exception e )
 		{

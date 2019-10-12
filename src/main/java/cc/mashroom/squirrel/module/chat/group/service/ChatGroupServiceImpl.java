@@ -39,11 +39,11 @@ import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepositor
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
 
 @Service
-public  class  ChatGroupServiceImpl     implements  ChatGroupService
+public  class  ChatGroupServiceImpl    implements  ChatGroupService
 {
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
-	public  ResponseEntity<OoIData>  add(   long  createrId,String  name )
+	public  ResponseEntity<OoIData>  add( long  createrId  ,String  name )
 	{
 		Reference<Object>  idRef = new  Reference<Object>();
 		
@@ -56,7 +56,7 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 		
 		Reference<Object>  chatGroupUserIdRef = new   Reference<Object>();
 		
-		String  nickname = UserRepository.DAO.lookupOne( String.class,"SELECT  NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",  new  Object[]{createrId} );
+		String  nickname = UserRepository.DAO.lookupOne( String.class,"SELECT  NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",  new  Object[]  {createrId} );
 		
 		OoIData  ooiData = new  OoIData().setChatGroups( Lists.newArrayList(new  ChatGroup(Long.parseLong(idRef.get().toString()),false,now,createrId,now,createrId,now,name)) );
 		
@@ -68,7 +68,7 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 		
 		ooiData.setChatGroupSyncs( Lists.newArrayList(chatGroupSync   ) );
 		
-		ooiData.setChatGroupSyncId(     chatGroupSync.getSyncId() );
+		ooiData.setChatGroupSyncId(    chatGroupSync.getSyncId() );
 		
 		ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );  return  ResponseEntity.ok( ooiData );
 	}
@@ -77,21 +77,26 @@ public  class  ChatGroupServiceImpl     implements  ChatGroupService
 	
 	public  ResponseEntity<OoIData>  update(  long  updaterId,long  chatGroupId,String  name )
 	{
-		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
-		
 		ChatGroup  chatGroup = ChatGroupRepository.DAO.lookupOne( ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{chatGroupId} );
+		
+		if( chatGroup.getCreateBy()  != updaterId )
+		{
+			throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  only  the  chat  group  owner  can  modify  the  group  name." );
+		}
+		
+		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		if( chatGroup.getLastModifyTime().getTime() >=     now.getTime() )
 		{
 			throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please." );
 		}
 		
-		OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updaterId).setLastModifyTime(now).setName(name))).setChatGroupUsers( Lists.newArrayList() );
-		
 		if( ChatGroupRepository.DAO.update("UPDATE  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  SET  NAME = ?,LAST_MODIFY_TIME = ?,LAST_MODIFY_BY = ?  WHERE  ID = ?",new  Object[]{name,now,updaterId,chatGroupId}) != 1 )
 		{
 			return  ResponseEntity.status(601).body( null );
 		}
+		
+		OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updaterId).setLastModifyTime(now).setName(name))).setChatGroupUsers( Lists.newArrayList() );
 		
 		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),updaterId,chatGroupId,now,2)).collect(Collectors.toList()) );
 		

@@ -59,5 +59,5 @@ public  class    OfflineChatGroupMessage
 	private  Integer     transportState;
 	@JsonProperty( value=   "GROUP_ID" )
 	@Column( name="GROUP_ID")
-	private  String  groupId;
+	private  Long    groupId;
 }

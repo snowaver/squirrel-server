@@ -42,6 +42,7 @@ public  class    OfflineChatGroupMessage
 	@Column( name="CREATE_TIME")
 	private  Timestamp  createTime;
 	@JsonProperty( value="CONTACT_ID"  )
+	@Column( name="CONTACT_ID" )
 	private  Long  contactId;
 	@JsonProperty( value="USER_ID")
 	@Column( name="USER_ID" )

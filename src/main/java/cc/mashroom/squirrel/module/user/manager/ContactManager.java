@@ -33,7 +33,7 @@ public  class  ContactManager  implements  Plugin
 	
 	public  void  initialize( Object  ...  parameters )
 	{
-		this.updateLockerCache = CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CONTACT.UPDATE_LOCKER" );
+		this.updateLockerCache = CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CONTACT.UPDATE_LOCKER_CACHE" );
 	}
 	
 	public  void  stop()

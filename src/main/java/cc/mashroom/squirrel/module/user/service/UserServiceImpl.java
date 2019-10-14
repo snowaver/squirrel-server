@@ -95,7 +95,7 @@ public  class  UserServiceImpl     implements  UserService
 	{
 		Map<String,Object>  user = UserRepository.DAO.lookupOne( Map.class,"SELECT  ID,USERNAME,NAME,NICKNAME  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  ID = ?",new  Object[]{userId} );
 		
-		return  user == null ? ResponseEntity.status(601).body("") : ResponseEntity.ok( JsonUtils.toJson(user) );
+		return  user == null ? ResponseEntity.status(601).body("") : ResponseEntity.ok( JsonUtils.toJson(   user) );
 	}
 	
 	@Connection( dataSource=@DataSource(type="db" , name="squirrel") )
@@ -114,6 +114,6 @@ public  class  UserServiceImpl     implements  UserService
 			}
 		}
 		
-		throw  new  IllegalStateException(  "SQUIRREL-SERVER:  ** USER  SERVICE  IMPL **  action  not  found." );
+		throw  new  IllegalArgumentException( String.format("SQUIRREL-SERVER:  ** USER  SERVICE  IMPL **  action  ( %d )  is  not  supported." ,   action) );
 	}
 }

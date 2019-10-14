@@ -64,7 +64,7 @@ public  class  ChatGroupServiceImpl    implements  ChatGroupService
 		
 		ooiData.setChatGroupUsers( Lists.newArrayList(new  ChatGroupUser((Long)  chatGroupUserIdRef.get(),false,now,createrId,now,createrId,(Long)  idRef.get(),createrId,nickname)) );
 		
-		ChatGroupSync  chatGroupSync = new  ChatGroupSync( ChatGroupUserManager.INSTANCE.nextSynchronousId(createrId),createrId,  Long.parseLong(idRef.get().toString()),now,1 );
+		ChatGroupSync  chatGroupSync = new  ChatGroupSync( ChatGroupUserManager.INSTANCE.getChatGroupSyncId(createrId).incrementAndGet(),createrId,  Long.parseLong(idRef.get().toString()),now,1 );
 		
 		ooiData.setChatGroupSyncs( Lists.newArrayList(chatGroupSync   ) );
 		
@@ -98,7 +98,7 @@ public  class  ChatGroupServiceImpl    implements  ChatGroupService
 		
 		OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updaterId).setLastModifyTime(now).setName(name))).setChatGroupUsers( Lists.newArrayList() );
 		
-		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,2)).collect(Collectors.toList()) );
+		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.getChatGroupSyncId(contactId).incrementAndGet(),contactId,chatGroupId,now,2)).collect(Collectors.toList()) );
 		
 		ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );  return  ResponseEntity.ok( ooiData );
 	}

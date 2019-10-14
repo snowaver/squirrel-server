@@ -15,8 +15,8 @@
  */
 package cc.mashroom.squirrel.module.chat.group.manager;
 
-import  java.util.HashSet;
 import  java.util.Set;
+import  java.util.concurrent.TimeUnit;
 import  java.util.stream.Collectors;
 
 import  cc.mashroom.plugin.Plugin;
@@ -26,6 +26,7 @@ import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepositor
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
+import  cc.mashroom.xcache.util.SafeCacher;
 import  lombok.Getter;
 
 public  class      ChatGroupUserManager  implements  Plugin
@@ -35,52 +36,33 @@ public  class      ChatGroupUserManager  implements  Plugin
 		
 	}
 	
-	public  void  initialize( Object  ...  params )  throws  Exception
-	{
-		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "CHATGROUP_USER_IDS_CACHE" );
-	}
-	
 	public  final  static  ChatGroupUserManager  INSTANCE =new  ChatGroupUserManager();
 	@Getter
 	private  XKeyValueCache  <Long,Set<Long>>   chatGroupUserIdsCache;
 	
-	public  Long  nextSynchronousId( long  userId )
+	public  void  initialize( Object  ...  params )  throws  Exception
 	{
-		XAtomicLong  synchronousIncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")" );
-		
-		if( synchronousIncId.get()==0 )
+		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CHAT_GROUP.USER_IDS_CACHE" );
+	}
+	
+	public  XAtomicLong  getChatGroupSyncId( long  userId )
+	{
+		XAtomicLong  chatGroupSyncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_GROUP.SYNC_ID("+userId+")" );
+		  
+		if( chatGroupSyncId.get() == 0 )
 		{
-			synchronized( ("SQUIRREL.CHAT_GROUP.SYNCHRONOUS_ID("+userId+")").intern() )
-			{
-				if(   synchronousIncId.get() == 0 )
-				{
-					Long  maxSynchronousId = ChatGroupSyncRepository.DAO.lookupOne( Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId} );
-					
-					if(maxSynchronousId   != null )             synchronousIncId.set( maxSynchronousId );
-				}
-			}
+			Long  chatGroupMaxSyncId = ChatGroupSyncRepository.DAO.lookupOne( Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId} );
+			
+			if(       chatGroupMaxSyncId  != null )  chatGroupSyncId.compareAndSet( 0 ,chatGroupMaxSyncId );
 		}
-
-		return  synchronousIncId.incrementAndGet();
+		
+		return  chatGroupSyncId;
 	}
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )
 	{
-		Set<Long>  chatGroupUserIds   = this.chatGroupUserIdsCache.get(  chatGroupId );
+		Set<Long>   chatGroupUserIds = this.chatGroupUserIdsCache.get(   chatGroupId );
 		
-		if( chatGroupUserIds  == null )
-		{
-			synchronized(     String.valueOf( chatGroupId ).intern() )
-			{
-				chatGroupUserIds      = this.chatGroupUserIdsCache.get(  chatGroupId );
-				
-				if(      chatGroupUserIds == null )
-				{
-					this.chatGroupUserIdsCache.put( chatGroupId,chatGroupUserIds = ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect(Collectors.toSet()) );
-				}
-			}
-		}
-		
-		return      new  HashSet<Long>( chatGroupUserIds );
+		return  chatGroupUserIds != null ? chatGroupUserIds : SafeCacher.cache( this.chatGroupUserIdsCache.getLock(chatGroupId),2,TimeUnit.SECONDS,chatGroupUserIdsCache,chatGroupId,() -> ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect(Collectors.toSet()) );
 	}
 }

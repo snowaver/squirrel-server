@@ -95,7 +95,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			ooiData.setChatGroupUsers( ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  *  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?  AND  IS_DELETED = FALSE" , new  Object[]{chatGroupId}) );
 			
-			ooiData.setChatGroupSyncs( ooiData.getChatGroupUsers().stream().map((chatGroupUser) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(chatGroupUser.getContactId()),chatGroupUser.getContactId(),chatGroupId,now,inviteeIds.contains(chatGroupUser.getContactId()) ? 4 : 5)).collect(Collectors.toList()) );
+			ooiData.setChatGroupSyncs( ooiData.getChatGroupUsers().stream().map((chatGroupUser) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.getChatGroupSyncId(chatGroupUser.getContactId()).incrementAndGet(),chatGroupUser.getContactId(),chatGroupId,now,inviteeIds.contains(chatGroupUser.getContactId()) ? 4 : 5)).collect(Collectors.toList()) );
 			
 			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );
 			
@@ -138,7 +138,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 			
 			ChatGroupUserRepository.DAO.update( "UPDATE  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  SET  VCARD = ?,LAST_MODIFY_BY = ?,LAST_MODIFY_TIME = ?  WHERE  ID = ?  AND  CHAT_GROUP_ID = ?  AND  CONTACT_ID = ?",new  Object[]{newVcard,updatorId,now,chatGroupUserId,chatGroupId,updatorId} );
 			
-			ooiData.setChatGroupUsers(Lists.newArrayList(chatGroupUser.setLastModifyBy(updatorId).setLastModifyTime(now).setVcard(newVcard))).setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,6)).collect(  Collectors.toList()) );
+			ooiData.setChatGroupUsers(Lists.newArrayList(chatGroupUser.setLastModifyBy(updatorId).setLastModifyTime(now).setVcard(newVcard))).setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.getChatGroupSyncId(contactId).incrementAndGet(),contactId,chatGroupId,now,6)).collect(  Collectors.toList()) );
 			
 			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );       return  ResponseEntity.ok( ooiData );
 		}
@@ -188,7 +188,7 @@ public  class  ChatGroupUserServiceImpl      implements   ChatGroupUserService
 				ooiData.setChatGroups(Lists.newArrayList(chatGroup.setCheckPointTime(chatGroup.getLastModifyTime()).setLastModifyBy(removerId).setLastModifyTime(now))).setChatGroupUsers( Lists.newArrayList(chatGroupUser.setIsDeleted(true).setLastModifyBy(removerId).setLastModifyTime(now)) );
 			}
 			
-			ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.nextSynchronousId(contactId),contactId,chatGroupId,now,chatGroup.getCreateBy() == removerId && chatGroupUser.getContactId() == removerId ? 3 : 7)    ).collect(Collectors.toList()) );
+			ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.getChatGroupSyncId(contactId).incrementAndGet(),contactId,chatGroupId,now,chatGroup.getCreateBy() == removerId && chatGroupUser.getContactId() == removerId ? 3 : 7)  ).collect(Collectors.toList()) );
 			
 			ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );       return  ResponseEntity.ok( ooiData );
 		}

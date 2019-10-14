@@ -29,14 +29,14 @@ import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
 import  lombok.Getter;
 
-public  class      ChatGroupUserManager  implements  Plugin
+public  class          ChatGroupManager  implements  Plugin
 {
 	public  void  stop()
 	{
 		
 	}
 	
-	public  final  static  ChatGroupUserManager  INSTANCE =new  ChatGroupUserManager();
+	public  final  static  ChatGroupManager  INSTANCE = new  ChatGroupManager();
 	@Getter
 	private  XKeyValueCache  <Long,Set<Long>>   chatGroupUserIdsCache;
 	
@@ -61,7 +61,7 @@ public  class      ChatGroupUserManager  implements  Plugin
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )
 	{
-		Set<Long>   chatGroupUserIds = this.chatGroupUserIdsCache.get(   chatGroupId );
+		Set<Long>   chatGroupUserIds = chatGroupUserIdsCache.get( chatGroupId );
 		
 		return  chatGroupUserIds != null ? chatGroupUserIds : SafeCacher.cache( this.chatGroupUserIdsCache.getLock(chatGroupId),2,TimeUnit.SECONDS,chatGroupUserIdsCache,chatGroupId,() -> ChatGroupUserRepository.DAO.lookup(ChatGroupUser.class,"SELECT  CONTACT_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CHAT_GROUP_ID = ?",new  Object[]{chatGroupId}).stream().map(ChatGroupUser::getContactId).collect(Collectors.toSet()) );
 	}

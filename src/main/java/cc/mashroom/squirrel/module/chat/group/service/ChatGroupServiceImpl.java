@@ -28,7 +28,7 @@ import  com.google.common.collect.Lists;
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
 import  cc.mashroom.util.Reference;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupUserManager;
+import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.chat.group.model.ChatGroup;
 import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupSync;
 import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
@@ -64,7 +64,7 @@ public  class  ChatGroupServiceImpl    implements  ChatGroupService
 		
 		ooiData.setChatGroupUsers( Lists.newArrayList(new  ChatGroupUser((Long)  chatGroupUserIdRef.get(),false,now,createrId,now,createrId,(Long)  idRef.get(),createrId,nickname)) );
 		
-		ChatGroupSync  chatGroupSync = new  ChatGroupSync( ChatGroupUserManager.INSTANCE.getChatGroupSyncId(createrId).incrementAndGet(),createrId,  Long.parseLong(idRef.get().toString()),now,1 );
+		ChatGroupSync  chatGroupSync = new  ChatGroupSync( ChatGroupManager.INSTANCE.getChatGroupSyncId(createrId).incrementAndGet(),createrId,   Long.parseLong(idRef.get().toString()),now,1 );
 		
 		ooiData.setChatGroupSyncs( Lists.newArrayList(chatGroupSync   ) );
 		
@@ -98,7 +98,7 @@ public  class  ChatGroupServiceImpl    implements  ChatGroupService
 		
 		OoIData  ooiData = new  OoIData().setChatGroups(Lists.newArrayList(chatGroup.setLastModifyBy(updaterId).setLastModifyTime(now).setName(name))).setChatGroupUsers( Lists.newArrayList() );
 		
-		ooiData.setChatGroupSyncs( ChatGroupUserManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupUserManager.INSTANCE.getChatGroupSyncId(contactId).incrementAndGet(),contactId,chatGroupId,now,2)).collect(Collectors.toList()) );
+		ooiData.setChatGroupSyncs( ChatGroupManager.INSTANCE.getChatGroupUserIds(chatGroupId).stream().map((contactId) -> new  ChatGroupSync(ChatGroupManager.INSTANCE.getChatGroupSyncId(contactId).incrementAndGet(),contactId,chatGroupId,now,2)).collect(Collectors.toList()) );
 		
 		ChatGroupSyncRepository.DAO.insert( ooiData.getChatGroupSyncs() );  return  ResponseEntity.ok( ooiData );
 	}

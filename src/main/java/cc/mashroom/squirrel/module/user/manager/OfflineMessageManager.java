@@ -40,50 +40,20 @@ import  lombok.extern.slf4j.Slf4j;
 
 public  class  OfflineMessageManager  implements  Plugin
 {
-	public  final  static  OfflineMessageManager  INSTANCE   = new  OfflineMessageManager();
+	public  final  static  OfflineMessageManager  INSTANCE  = new  OfflineMessageManager();
 	
 	public  void  stop()
 	{
 		
 	}
 	
-	private  XAtomicLong  getGroupChatMessageSyncId(long    userId )
-	{
-		XAtomicLong  groupChatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.GROUP_CHAT_MESSAGE.SYNC_ID("+userId+")" );
-		
-		SafeCacher.compareAndSet( groupChatMessageSyncId,0,() -> OfflineGroupChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  groupChatMessageSyncId;
-	}
-	
-	private  XAtomicLong  getChatMessageSyncId(     long    userId )
-	{
-		XAtomicLong  chatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")" );
-		
-		SafeCacher.compareAndSet( chatMessageSyncId,0,() -> OfflineChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  chatMessageSyncId;
-	}
+
 	
 	public  boolean  store(long  userId,Packet  packet )
 	{
 		try
 		{
-			if( packet instanceof ChatPacket )
-			{
-				ChatPacket  chatPacket = ObjectUtils.cast( packet );
-				
-				Object[][]  params = { {chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(userId),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(chatPacket.getContactId()),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()} };
 
-				return  ConnectionUtils.batchUpdatedCount(OfflineChatMessageRepository.DAO.update("INSERT  INTO  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",params)) == 2;
-			}
-			else
-			if( packet instanceof      GroupChatPacket )
-			{
-				GroupChatPacket  groupChatPacket = ObjectUtils.cast( packet );
-				
-//				Object[][]  params = new  Object[][];
-				
-//				ChatGroupManager.INSTANCE.getChatGroupUserIds(groupChatPacket.getGroupId()).forEach();
-				
-				return  OfflineGroupChatMessageRepository.DAO.update("INSERT  INTO  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?,?)",new  Object[]{groupChatPacket.getId(),groupChatPacket.getGroupId(),groupChatPacket.getContactId(),userId,groupChatPacket.getMd5(),new  String(groupChatPacket.getContent()),groupChatPacket.getContentType().getValue()}) >= 1;
-			}
 		}
 		catch( Throwable  e )
 		{

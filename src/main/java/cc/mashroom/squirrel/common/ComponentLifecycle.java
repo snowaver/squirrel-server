@@ -43,27 +43,11 @@ public  class     ComponentLifecycle  implements  ApplicationListener<Applicatio
 	
 	public  void  onApplicationEvent( ApplicationEvent  event )
 	{
-		if( event instanceof ApplicationReadyEvent )
-		{
-			this.socketAcceptor = new  NettyAcceptor().initialize( Config.server.getProperty("host","0.0.0.0"),Config.server.getInt("port",8012) );
-		}
-		else
 		if( event         instanceof ApplicationPreparedEvent )
 		{
 			RemoteEventProcessorDelegate.INSTANCE.setProcessor(    new  RemoteEventProcessor() );
 			
-			CacheFactoryStrategy  cacheFactoryStrategy = Config.server.getBoolean("cluster.enabled",false) ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
-			
-			PluginRegistry.INSTANCE.register(new  Db(),(Plugin)  cacheFactoryStrategy,ClientSessionManager.INSTANCE,ChatGroupManager.INSTANCE,CallManager.INSTANCE,ContactManager.INSTANCE).initialize();
-			
-			ServerInfo.INSTANCE.setLocalNodeId(cacheFactoryStrategy.getLocalNodeId() );
-		}
-		else
-		if( event   instanceof ContextStoppedEvent )
-		{
-			if( socketAcceptor != null ) socketAcceptor.stop();
-			
-			PluginRegistry.INSTANCE.stop();
+//			PluginRegistry.INSTANCE.register(ChatGroupManager.INSTANCE).initialize();
 		}
 	}
 }

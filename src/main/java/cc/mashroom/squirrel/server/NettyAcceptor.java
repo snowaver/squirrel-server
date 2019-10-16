@@ -46,7 +46,10 @@ public  class  NettyAcceptor
 			
 			bootstrap.bind(host, port).sync();
 		}
-		catch(Throwable  e )  { throw  new  IllegalStateException(e); }
+		catch(Throwable  e )
+		{
+			throw  new  IllegalStateException( e );
+		}
 		
 		return  this;
 	}

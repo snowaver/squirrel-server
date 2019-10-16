@@ -31,7 +31,7 @@ import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
 
-public  class  DefaultMessageStorageEngine
+public  class  DefaultMessageStorageEngine  implements  MessageStorageEngine
 {
 	private  XAtomicLong  getGroupChatMessageSyncId(  long  userId )
 	{
@@ -48,6 +48,11 @@ public  class  DefaultMessageStorageEngine
 		return  ConnectionUtils.batchUpdatedCount( ChatMessageRepository.DAO.update("INSERT  INTO  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[][]{{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(userId),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(chatPacket.getContactId()),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}}) ) == 2;
 	}
 	
+	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId )
+	{
+		return  ChatMessageRepository.DAO.lookup( ChatMessage.class,"SELECT  *  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,syncOffsetId} );
+	}
+	
 	public  boolean  insert( long  userId,GroupChatPacket  groupChatPacket )
 	{
 		Set<Long>  chatGroupUserIds = ChatGroupManager.INSTANCE.getChatGroupUserIds( groupChatPacket.getGroupId() );
@@ -55,12 +60,7 @@ public  class  DefaultMessageStorageEngine
 		return  ConnectionUtils.batchUpdatedCount( ChatGroupMessageRepository.DAO.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?,?)",(Object[][])  chatGroupUserIds.parallelStream().map((chatGroupUserId) -> new  Object[]{groupChatPacket.getId(),getGroupChatMessageSyncId(chatGroupUserId).incrementAndGet(),groupChatPacket.getGroupId(),groupChatPacket.getContactId(),chatGroupUserId,groupChatPacket.getMd5(),new  String(groupChatPacket.getContent()),groupChatPacket.getContentType().getValue()}).toArray()) ) == chatGroupUserIds.size();
 	}
 	
-	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId )
-	{
-		return  ChatMessageRepository.DAO.lookup( ChatMessage.class,"SELECT  *  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,syncOffsetId} );
-	}
-	
-	public  List<ChatGroupMessage>  lookupGroupChatMessage( long  userId,long  syncOffsetId )
+	public  List<ChatGroupMessage>  lookupChatGroupMessage( long  userId,long  syncOffsetId )
 	{
 		return  ChatGroupMessageRepository.DAO.lookup( ChatGroupMessage.class,"SELECT  *  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,syncOffsetId} );
 	}

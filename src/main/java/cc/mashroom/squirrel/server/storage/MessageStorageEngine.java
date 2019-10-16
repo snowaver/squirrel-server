@@ -17,11 +17,18 @@ package cc.mashroom.squirrel.server.storage;
 
 import  java.util.List;
 
-import  cc.mashroom.squirrel.paip.message.Packet;
+import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
+import  cc.mashroom.squirrel.module.user.model.ChatMessage;
+import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
+import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 
 public  interface  MessageStorageEngine
 {
-	public  List<?>  lookup( long  userId,long  messageIdOffset );
+	public  boolean  insert( long  userId,ChatPacket  chatPacket );
 	
-	public  boolean  insert( Packet  chatOrGroupChatPacket );
+	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId );
+	
+	public  boolean  insert( long  userId,GroupChatPacket  groupChatPacket );
+	
+	public  List<ChatGroupMessage>  lookupChatGroupMessage( long  userId,long  syncOffsetId );
 }

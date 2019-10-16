@@ -105,6 +105,11 @@ public  class      CallManager  implements  Plugin
 		this.callRoomStatusCache = CacheFactory.getOrCreateMemTableCache( "CALL_ROOM_STATUS_CACHE" );
 	}
 	
+	public  void  initialize()   throws  Exception
+	{
+		this.initialize( null );
+	}
+	
 	public  void  stop()
 	{
 		callTimeoutChecker.shutdown();

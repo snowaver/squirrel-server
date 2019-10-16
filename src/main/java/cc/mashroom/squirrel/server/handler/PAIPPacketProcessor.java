@@ -84,7 +84,7 @@ public  class  PAIPPacketProcessor
 	{
 		if( !PacketRoute.INSTANCE.route(userId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get())) )
 		{
-			OfflineMessageManager.INSTANCE.store( channel.attr(ConnectPacket.CLIENT_ID).get() , packet.setContactId( clientId ) );
+//			OfflineMessageManager.INSTANCE.store( channel.attr(ConnectPacket.CLIENT_ID).get() , packet.setContactId( clientId ) );
 
 			if( /*packet instanceof Receiptable &&*/  packet.getHeader().getAckLevel() == 1 )
 			{

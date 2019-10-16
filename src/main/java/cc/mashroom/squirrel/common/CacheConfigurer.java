@@ -13,29 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.user.manager;
+package cc.mashroom.squirrel.common;
 
-import  cc.mashroom.plugin.Plugin;
+import  org.springframework.context.annotation.Bean;
+import  org.springframework.context.annotation.Configuration;
+import  org.springframework.context.annotation.DependsOn;
+
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
-import  lombok.Getter;
-import  lombok.NoArgsConstructor;
-import  lombok.extern.slf4j.Slf4j;
 
-@Slf4j
-@NoArgsConstructor
-
-public  class  ContactManager  implements  Plugin
+@Configuration
+@DependsOn( value="CACHE_FACTORY_STRATEGY" )
+public  class  CacheConfigurer
 {
-	public  final  static  ContactManager  INSTANCE = new  ContactManager();
-
-	public  void  initialize( Object  ...  parameters )
+	@Bean( value="CONTACT_UPDATE_LOCKER_CACHE" )
+	public  XKeyValueCache<String,Object>  contactUpdateLockerCache()
 	{
-		
-	}
-	
-	public  void  stop()
-	{
-		
+		return  CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CONTACT.UPDATE_LOCKER_CACHE" );
 	}
 }

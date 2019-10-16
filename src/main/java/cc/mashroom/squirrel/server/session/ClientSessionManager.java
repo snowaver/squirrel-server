@@ -63,6 +63,11 @@ public  class  ClientSessionManager  implements  Plugin
 		return  this.localClientSessionCache.computeIfAbsent( clientId,(key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{clientId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( clientId,sessionLocation.getClusterNodeId() );} );
 	}
 	
+	public  void  initialize()
+	{
+		this.initialize( null );
+	}
+	
 	public  void  stop()
 	{
 		this.localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.REASON_UNKNOWN_ERROR ); }catch( IOException  e ){} } );

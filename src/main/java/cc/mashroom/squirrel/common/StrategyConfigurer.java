@@ -15,31 +15,68 @@
  */
 package cc.mashroom.squirrel.common;
 
+import java.util.Set;
+
+import org.springframework.beans.factory.annotation.Value;
 import  org.springframework.context.annotation.Bean;
 import  org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import  org.springframework.web.servlet.LocaleResolver;
 import  org.springframework.web.servlet.i18n.CookieLocaleResolver;
 
+import cc.mashroom.config.Config;
+import cc.mashroom.plugin.Plugin;
+import cc.mashroom.plugin.db.Db;
+import cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
+import cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
+import cc.mashroom.squirrel.module.call.manager.CallManager;
+import cc.mashroom.squirrel.server.NettyAcceptor;
+import cc.mashroom.squirrel.server.ServerInfo;
+import cc.mashroom.squirrel.server.session.ClientSessionManager;
+import cc.mashroom.util.ObjectUtils;
+import cc.mashroom.xcache.CacheFactory;
+import cc.mashroom.xcache.CacheFactoryStrategy;
+import cc.mashroom.xcache.XCacheStrategy;
+import cc.mashroom.xcache.XKeyValueCache;
+
 @Configuration
-public  class   StrategyConfigurer
+public  class  StrategyConfigurer
 {
-	/*
-	@Bean
-	public  UndertowServletWebServerFactory  getUndertowServletWebServerFactory()
+	@Bean( name="LOCALE_RESOLVER"   )
+	public  LocaleResolver getLocaleResolver()
 	{
-		UndertowServletWebServerFactory  undertowServletWebServerFactory = new  UndertowServletWebServerFactory();
-		
-		undertowServletWebServerFactory.addBuilderCustomizers( (builder) -> builder.addHttpListener(8012,"0.0.0.0") );
-		
-		undertowServletWebServerFactory.addDeploymentInfoCustomizers( (customizer) -> customizer.addSecurityConstraint(new  SecurityConstraint().addWebResourceCollection(new  WebResourceCollection().addUrlPattern("/**")).setTransportGuaranteeType(TransportGuaranteeType.CONFIDENTIAL).setEmptyRoleSemantic(SecurityInfo.EmptyRoleSemantic.PERMIT)).setConfidentialPortManager((exchange) -> 8011) );
-		
-		return  undertowServletWebServerFactory;
+		return    new  CookieLocaleResolver();
 	}
-	*/
-	@Bean( name="localeResolver" )
-	
-	public  LocaleResolver   getLocaleResolver()
+	@Bean( name="DB"  ,destroyMethod= "stop" )
+	public  Db  db()
 	{
-		return  new  CookieLocaleResolver();
+		return  new  Db();
+	}
+	@Bean( name="CACHE_FACTORY_STRATEGY",destroyMethod="stop" )
+	public  CacheFactoryStrategy  cacheFactoryStrategy( @Value("${squirrel.cluster.enabled:false}")  boolean  isClusterEnabled,@Value("${squirrel.memory.policy:/memory-policy.ddl}")  String  scriptFileResourcePath )  throws  Exception
+	{
+		CacheFactoryStrategy  cacheFactoryStrategy = isClusterEnabled ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
+		
+		ObjectUtils.cast(cacheFactoryStrategy,Plugin.class).initialize( scriptFileResourcePath );
+		
+		ServerInfo.INSTANCE.setLocalNodeId(cacheFactoryStrategy.getLocalNodeId() );
+		
+		return  cacheFactoryStrategy;
+	}
+	@Bean( name="CLIENT_SESSION_MANAGER",initMethod="initialize",destroyMethod="stop" )
+	public  ClientSessionManager  clientSessionManager()
+	{
+		return  ClientSessionManager.INSTANCE;
+	}
+	@Bean( name="CALL_MANAGER",initMethod="initialize",destroyMethod="stop" )
+	public  CallManager callManager()
+	{
+		return  CallManager.INSTANCE;
+	}
+	@Bean( name="NETTY_ACCEPTOR", destroyMethod="stop" )
+	@Order( value=Integer.MAX_VALUE )
+	public  NettyAcceptor  nettyAcceptor( @Value( "${squirrel.acceptor.host:0.0.0.0}" )  String  host,@Value("${squirrel.acceptor.port:8012}")  int  port )
+	{
+		return  new  NettyAcceptor().initialize( host , port );
 	}
 }

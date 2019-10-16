@@ -16,58 +16,52 @@
 package cc.mashroom.squirrel.server.storage;
 
 import  java.util.List;
+import  java.util.Set;
 
-import  com.google.common.collect.Lists;
-
+import  cc.mashroom.db.util.ConnectionUtils;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatManager;
-import  cc.mashroom.squirrel.module.user.repository.OfflineChatMessageRepository;
-import  cc.mashroom.squirrel.module.user.repository.OfflineGroupChatMessageRepository;
-import  cc.mashroom.squirrel.paip.message.Packet;
+import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
+import  cc.mashroom.squirrel.module.user.model.ChatMessage;
+import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
 
 public  class  DefaultMessageStorageEngine
 {
-	private  XAtomicLong  getGroupChatMessageSyncId( long  userId )
+	private  XAtomicLong  getGroupChatMessageSyncId(  long  userId )
 	{
-		XAtomicLong  groupChatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.GROUP_CHAT_MESSAGE.SYNC_ID("+userId+")" );
+		return  SafeCacher.compareAndSetQuietly( CacheFactory.atomicLong("SQUIRREL.GROUP_CHAT_MESSAGE.SYNC_ID("+userId+")"),0,() -> ChatGroupMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+	}
 		
-		SafeCacher.compareAndSet( groupChatMessageSyncId,0,() -> OfflineGroupChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  groupChatMessageSyncId;
-	}
-	
-	public  List<?>  lookup( long  userId , long  messageIdOffset )
-	{
-		return  Lists.newArrayList();
-	}
-	
 	private  XAtomicLong  getChatMessageSyncId( long  userId )
 	{
-		XAtomicLong  chatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")" );
-		
-		SafeCacher.compareAndSet( chatMessageSyncId,0,() -> OfflineChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  chatMessageSyncId;
+		return  SafeCacher.compareAndSetQuietly( CacheFactory.atomicLong("SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")"),0,() -> ChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
 	}
 	
-	public  boolean  insert( long  userId  ,  Packet  chatOrGroupChatPacket )
+	public  boolean  insert( long  userId,ChatPacket  chatPacket   )
 	{
-		if( chatOrGroupChatPacket instanceof      ChatPacket )
-		{
-			ChatPacket  chatPacket = ObjectUtils.cast( chatOrGroupChatPacket,ChatPacket.class );
-			
-			OfflineChatMessageRepository.DAO.update( "INSERT  INTO  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[][]{{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(userId),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(chatPacket.getContactId()),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}} );
-		}
-		else
-		if( chatOrGroupChatPacket instanceof GroupChatPacket )
-		{
-			GroupChatPacket  groupChatPacket =  ObjectUtils.cast( chatOrGroupChatPacket,GroupChatPacket.class );
-			
-			OfflineGroupChatMessageRepository.DAO.update( "INSERT  INTO  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?,?)",(Object[][])  ChatGroupManager.INSTANCE.getChatGroupUserIds(groupChatPacket.getGroupId()).parallelStream().map((chatGroupUserId) -> new  Object[]{groupChatPacket.getId(),getGroupChatMessageSyncId(chatGroupUserId).incrementAndGet(),groupChatPacket.getGroupId(),groupChatPacket.getContactId(),chatGroupUserId,groupChatPacket.getMd5(),new  String(groupChatPacket.getContent()),groupChatPacket.getContentType().getValue()}).toArray() );
-		}
+		return  ConnectionUtils.batchUpdatedCount( ChatMessageRepository.DAO.update("INSERT  INTO  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[][]{{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(userId),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(chatPacket.getContactId()),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}}) ) == 2;
+	}
+	
+	public  boolean  insert( long  userId,GroupChatPacket  groupChatPacket )
+	{
+		Set<Long>  chatGroupUserIds = ChatGroupManager.INSTANCE.getChatGroupUserIds( groupChatPacket.getGroupId() );
 		
-		return  true;
+		return  ConnectionUtils.batchUpdatedCount( ChatGroupMessageRepository.DAO.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?,?)",(Object[][])  chatGroupUserIds.parallelStream().map((chatGroupUserId) -> new  Object[]{groupChatPacket.getId(),getGroupChatMessageSyncId(chatGroupUserId).incrementAndGet(),groupChatPacket.getGroupId(),groupChatPacket.getContactId(),chatGroupUserId,groupChatPacket.getMd5(),new  String(groupChatPacket.getContent()),groupChatPacket.getContentType().getValue()}).toArray()) ) == chatGroupUserIds.size();
+	}
+	
+	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId )
+	{
+		return  ChatMessageRepository.DAO.lookup( ChatMessage.class,"SELECT  *  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,syncOffsetId} );
+	}
+	
+	public  List<ChatGroupMessage>  lookupGroupChatMessage( long  userId,long  syncOffsetId )
+	{
+		return  ChatGroupMessageRepository.DAO.lookup( ChatGroupMessage.class,"SELECT  *  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,syncOffsetId} );
 	}
 }

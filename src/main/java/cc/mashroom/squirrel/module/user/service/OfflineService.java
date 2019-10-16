@@ -18,9 +18,9 @@ package cc.mashroom.squirrel.module.user.service;
 import  org.springframework.http.ResponseEntity;
 
 import  cc.mashroom.squirrel.module.user.model.OoIData;
-import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
+import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
 
 public  interface  OfflineService
 {
-	public  ResponseEntity<OoIData>  lookup( int  action, long  userId,OoiDataCheckpoints  checkpoints );
+	public  ResponseEntity<OoIData>  lookup( int  action, long  userId,OoiDataSyncCheckpoint  checkpoints );
 }

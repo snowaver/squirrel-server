@@ -30,7 +30,7 @@ import  lombok.experimental.Accessors;
 @Accessors( chain=  true )
 @NoArgsConstructor
 @AllArgsConstructor
-public  class OfflineChatMessage
+public  class ChatMessage
 {
 	@JsonProperty( value="ID"  )
 	@Column( name="ID"   )

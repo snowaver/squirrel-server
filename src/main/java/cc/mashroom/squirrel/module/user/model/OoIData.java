@@ -41,7 +41,7 @@ public  class  OoIData
 	@JsonProperty( value="CONTACTS" )
 	private  List<Contact>  contacts;
 	@JsonProperty( value="OFFLINE_CHAT_MESSAGES" )
-	private  List<OfflineChatMessage>  offlineChatMessages;
+	private  List<ChatMessage>  offlineChatMessages;
 	@JsonProperty( value="OFFLINE_GROUP_CHAT_MESSAGES" )
-	private  List<OfflineChatGroupMessage>  offlineGroupChatMessages;
+	private  List<ChatGroupMessage>  offlineGroupChatMessages;
 }

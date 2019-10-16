@@ -13,23 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package cc.mashroom.squirrel.module.user.model;
+package cc.mashroom.squirrel.module.user.repository;
 
-import  com.fasterxml.jackson.annotation.JsonProperty;
+import  cc.mashroom.db.GenericRepository;
+import  cc.mashroom.db.annotation.DataSourceBind;
+import  lombok.AccessLevel;
+import  lombok.NoArgsConstructor;
 
-import  lombok.Data;
-import  lombok.experimental.Accessors;
-
-@Data
-@Accessors( chain=true )
-public  class  OoiDataCheckpoints
+@DataSourceBind( name="squirrel",table="chat_message" )
+@NoArgsConstructor( access=AccessLevel.PRIVATE )
+public  class  ChatMessageRepository  extends  GenericRepository
 {
-	@JsonProperty( value="CHAT_MESSAGE_CHECK_POINT" )
-	private  Long  chatMessageCheckpoint;
-	@JsonProperty( value="GROUP_CHAT_MESSAGE_CHECK_POINT" )
-	private  Long  groupChatMessageCheckpoint;
-	@JsonProperty( value="CONTACT_CHECK_POINT" )
-	private  Long      contactCheckpoint;
-	@JsonProperty( value=  "CHAT_GROUP_CHECK_POINT" )
-	private  Long  chatGroupCheckpoint;
+	public  final  static  ChatMessageRepository  DAO = new  ChatMessageRepository();
 }

@@ -19,7 +19,7 @@ import  io.netty.channel.Channel;
 import  io.netty.handler.timeout.IdleStateHandler;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatRecallPacket;
-import  cc.mashroom.squirrel.paip.message.chat.GroupChatEventPacket;
+import  cc.mashroom.squirrel.paip.message.chat.ChatGroupEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
@@ -106,7 +106,7 @@ public  class  PAIPPacketProcessor
 		}
 	}
 	
-	public  void  groupChatInvited( Channel  channel   ,GroupChatEventPacket  packet )
+	public  void  groupChatInvited( Channel  channel   ,ChatGroupEventPacket  packet )
 	{
 		PacketRoute.INSTANCE.route(      packet.getContactId(),packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
 	}

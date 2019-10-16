@@ -32,7 +32,7 @@ import  lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode( callSuper  = false )
-public  class    OfflineChatGroupMessage
+public  class    ChatGroupMessage
 {
 	@JsonProperty( value="ID"  )
 	@Column( name="ID"   )

@@ -27,7 +27,7 @@ import  org.springframework.web.bind.annotation.RestController;
 import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.user.conversion.OoiDataCheckpointsEditor;
 import  cc.mashroom.squirrel.module.user.model.OoIData;
-import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
+import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
 import  cc.mashroom.squirrel.module.user.service.OfflineService;
 import  cc.mashroom.util.collection.map.Map;
 
@@ -39,7 +39,7 @@ public  class  OfflineController  extends  AbstractController
 	private  OfflineService  service;
 	
 	@RequestMapping(value="/lookup" )
-	public  ResponseEntity<OoIData>  lookup( @RequestAttribute("SESSION_PROFILE" )  Map<String,Object>  sessionProfile,@RequestParam("checkpoints")  OoiDataCheckpoints  checkpoints )
+	public  ResponseEntity<OoIData>  lookup( @RequestAttribute("SESSION_PROFILE" )  Map<String,Object>  sessionProfile,@RequestParam("checkpoints")  OoiDataSyncCheckpoint  checkpoints )
 	{
 		return  service.lookup( 0,sessionProfile.getLong("USER_ID"),checkpoints );
 	}
@@ -47,6 +47,6 @@ public  class  OfflineController  extends  AbstractController
 	@InitBinder
 	public  void  binder( WebDataBinder  binder )
 	{
-		binder.registerCustomEditor( OoiDataCheckpoints.class,new  OoiDataCheckpointsEditor() );
+		binder.registerCustomEditor( OoiDataSyncCheckpoint.class,new  OoiDataCheckpointsEditor() );
 	}
 }

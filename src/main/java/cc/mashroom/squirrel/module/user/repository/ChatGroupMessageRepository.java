@@ -20,9 +20,9 @@ import  cc.mashroom.db.annotation.DataSourceBind;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@DataSourceBind( name="squirrel",table="offline_chat_message",primaryKeys="ID" )
+@DataSourceBind( name="squirrel",table="chat_group_message" )
 @NoArgsConstructor( access=AccessLevel.PRIVATE )
-public  class  OfflineChatMessageRepository  extends  GenericRepository
+public  class  ChatGroupMessageRepository  extends  GenericRepository
 {
-	public  final  static  OfflineChatMessageRepository  DAO = new  OfflineChatMessageRepository();
+	public  final  static  ChatGroupMessageRepository  DAO = new  ChatGroupMessageRepository();
 }

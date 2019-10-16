@@ -17,14 +17,14 @@ package cc.mashroom.squirrel.module.user.conversion;
 
 import  java.beans.PropertyEditorSupport;
 
-import  cc.mashroom.squirrel.module.user.model.OoiDataCheckpoints;
+import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
 import  cc.mashroom.util.JsonUtils;
 
 public  class  OoiDataCheckpointsEditor  extends  PropertyEditorSupport
 {
 	@Override
-	public  void  setAsText( String  text )  throws  IllegalArgumentException
+	public  void  setAsText(   String  text )  throws  IllegalArgumentException
 	{
-		setValue( JsonUtils.fromJson(text ,OoiDataCheckpoints.class) );
+		super.setValue( JsonUtils.fromJson(text,OoiDataSyncCheckpoint.class) );
 	}
 }

@@ -16,8 +16,8 @@
 package cc.mashroom.squirrel.module.chat.group.manager;
 
 import  cc.mashroom.plugin.Plugin;
-import  cc.mashroom.squirrel.module.user.repository.OfflineChatMessageRepository;
-import  cc.mashroom.squirrel.module.user.repository.OfflineGroupChatMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
+import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
@@ -40,13 +40,13 @@ public  class       ChatManager  implements  Plugin
 	{
 		XAtomicLong  groupChatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.GROUP_CHAT_MESSAGE.SYNC_ID("+userId+")" );
 		
-		SafeCacher.compareAndSet( groupChatMessageSyncId,0,() -> OfflineGroupChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineGroupChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  groupChatMessageSyncId;
+		SafeCacher.compareAndSet( groupChatMessageSyncId,0,() -> ChatGroupMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  groupChatMessageSyncId;
 	}
 	
 	public  XAtomicLong  getChatMessageSyncId( long  userId )
 	{
 		XAtomicLong  chatMessageSyncId = CacheFactory.atomicLong( "SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")" );
 		
-		SafeCacher.compareAndSet( chatMessageSyncId,0,() -> OfflineChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+OfflineChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  chatMessageSyncId;
+		SafeCacher.compareAndSet( chatMessageSyncId,0,() -> ChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );  return  chatMessageSyncId;
 	}
 }

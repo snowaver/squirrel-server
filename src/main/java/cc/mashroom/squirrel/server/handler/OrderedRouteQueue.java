@@ -54,7 +54,7 @@ public  class   OrderedRouteQueue      implements  PacketRouteListener
 		{
 			try
 			{
-				ClientSessionManager.INSTANCE.get(this.clientId).close( DisconnectAckPacket.REASON_UNKNOWN_ERROR );
+				ClientSessionManager.INSTANCE.get( this.userId ).close( DisconnectAckPacket.REASON_UNKNOWN_ERROR );
 			}
 			catch( Exception  e )
 			{
@@ -65,13 +65,13 @@ public  class   OrderedRouteQueue      implements  PacketRouteListener
 	
 	protected LinkedBlockingQueue   <OrderedRouteDispose>  queue = new  LinkedBlockingQueue<OrderedRouteDispose>();
 	@NonNull
-	protected Long      clientId;
+	protected Long        userId;
 	
 	public  void  route()
 	{
 		OrderedRouteDispose  dispose = this.queue.peek();
 		
-		if( dispose == null || !PacketRoute.INSTANCE.route(this.clientId, dispose.getPacket(),dispose.getTimeout(), dispose.getTimeoutTimeUnit(),this) )
+		if( dispose == null || !PacketRoute.INSTANCE.route(this.userId, dispose.getPacket(),dispose.getTimeout(), dispose.getTimeoutTimeUnit(),this) )
 		{
 			onRouteComplete( dispose.getPacket(),false );
 		}

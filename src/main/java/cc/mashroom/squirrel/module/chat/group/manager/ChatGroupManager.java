@@ -40,7 +40,7 @@ public  class          ChatGroupManager  implements  Plugin
 	@Getter
 	private  XKeyValueCache  <Long,Set<Long>>   chatGroupUserIdsCache;
 	
-	public  void  initialize( Object  ...  params )  throws  Exception
+	public  void  initialize( Object  ...  params )//throws  Exception
 	{
 		this.chatGroupUserIdsCache = CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CHAT_GROUP.USER_IDS_CACHE" );
 	}

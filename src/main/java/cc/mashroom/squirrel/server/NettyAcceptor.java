@@ -15,6 +15,7 @@
  */
 package cc.mashroom.squirrel.server;
 
+import cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 import  io.netty.bootstrap.ServerBootstrap;
 import  io.netty.channel.ChannelOption;
 import  io.netty.channel.EventLoopGroup;
@@ -36,13 +37,13 @@ public  class  NettyAcceptor
 	
 	private  EventLoopGroup  handleEventGroup;
 	
-	public  NettyAcceptor  initialize( String  host,int  port )
+	public  NettyAcceptor  initialize( String  host,int  port,MessageStorageEngine  messageStorageEngine )
 	{
 		boolean  isLinuxSystem = System.getProperty("os.name" ).toLowerCase().contains( "linux" );
 		
 		try
 		{
-			ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer() );
+			ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer(messageStorageEngine) );
 			
 			bootstrap.bind(host, port).sync();
 		}

@@ -15,68 +15,48 @@
  */
 package cc.mashroom.squirrel.common;
 
-import java.util.Set;
-
-import org.springframework.beans.factory.annotation.Value;
+import  org.springframework.beans.factory.annotation.Value;
 import  org.springframework.context.annotation.Bean;
 import  org.springframework.context.annotation.Configuration;
-import org.springframework.core.annotation.Order;
+import  org.springframework.context.annotation.DependsOn;
 import  org.springframework.web.servlet.LocaleResolver;
 import  org.springframework.web.servlet.i18n.CookieLocaleResolver;
 
-import cc.mashroom.config.Config;
-import cc.mashroom.plugin.Plugin;
-import cc.mashroom.plugin.db.Db;
-import cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
-import cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
-import cc.mashroom.squirrel.module.call.manager.CallManager;
-import cc.mashroom.squirrel.server.NettyAcceptor;
-import cc.mashroom.squirrel.server.ServerInfo;
-import cc.mashroom.squirrel.server.session.ClientSessionManager;
-import cc.mashroom.util.ObjectUtils;
-import cc.mashroom.xcache.CacheFactory;
-import cc.mashroom.xcache.CacheFactoryStrategy;
-import cc.mashroom.xcache.XCacheStrategy;
-import cc.mashroom.xcache.XKeyValueCache;
+import  cc.mashroom.plugin.Plugin;
+import  cc.mashroom.plugin.PluginManager;
+import  cc.mashroom.plugin.db.Db;
+import  cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
+import  cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
+import  cc.mashroom.squirrel.module.call.manager.CallManager;
+import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
+import  cc.mashroom.squirrel.module.user.manager.ContactManager;
+import  cc.mashroom.squirrel.server.NettyAcceptor;
+import  cc.mashroom.squirrel.server.ServerInfo;
+import  cc.mashroom.squirrel.server.session.ClientSessionManager;
+import  cc.mashroom.squirrel.server.storage.DefaultMessageStorageEngine;
+import  cc.mashroom.xcache.CacheFactoryStrategy;
 
 @Configuration
 public  class  StrategyConfigurer
 {
-	@Bean( name="LOCALE_RESOLVER"   )
+	@Bean( name="COOKIE_LOCALE_RESOLVER" )
 	public  LocaleResolver getLocaleResolver()
 	{
 		return    new  CookieLocaleResolver();
 	}
-	@Bean( name="DB"  ,destroyMethod= "stop" )
-	public  Db  db()
+	@Bean( name="NETTY_ACCEPTOR",destroyMethod="stop" )
+	@DependsOn( value={"PLUGIN_MANAGER"} )
+	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port )
 	{
-		return  new  Db();
+		return  new  NettyAcceptor().initialize( host , port, new  DefaultMessageStorageEngine() );
 	}
-	@Bean( name="CACHE_FACTORY_STRATEGY",destroyMethod="stop" )
-	public  CacheFactoryStrategy  cacheFactoryStrategy( @Value("${squirrel.cluster.enabled:false}")  boolean  isClusterEnabled,@Value("${squirrel.memory.policy:/memory-policy.ddl}")  String  scriptFileResourcePath )  throws  Exception
+	@Bean( name="PLUGIN_MANAGER",destroyMethod="stop",initMethod="initialize" )
+	public  PluginManager  pluginManager( @Value("${squirrel.cluster.enabled:false}")  boolean isCacheClusterEnabled,@Value("${squirrel.memory.policy:/memory-policy.ddl}")  String  cacheMemoryPolicyScriptFileResourcePath )
 	{
-		CacheFactoryStrategy  cacheFactoryStrategy = isClusterEnabled ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
+		CacheFactoryStrategy  cacheFactoryStrategy= isCacheClusterEnabled ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 		
-		ObjectUtils.cast(cacheFactoryStrategy,Plugin.class).initialize( scriptFileResourcePath );
+		PluginManager  pluginManager = PluginManager.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy,cacheMemoryPolicyScriptFileResourcePath).register(ClientSessionManager.INSTANCE).register(ChatGroupManager.INSTANCE).register(CallManager.INSTANCE).register( ContactManager.INSTANCE );
 		
-		ServerInfo.INSTANCE.setLocalNodeId(cacheFactoryStrategy.getLocalNodeId() );
-		
-		return  cacheFactoryStrategy;
-	}
-	@Bean( name="CLIENT_SESSION_MANAGER",initMethod="initialize",destroyMethod="stop" )
-	public  ClientSessionManager  clientSessionManager()
-	{
-		return  ClientSessionManager.INSTANCE;
-	}
-	@Bean( name="CALL_MANAGER",initMethod="initialize",destroyMethod="stop" )
-	public  CallManager callManager()
-	{
-		return  CallManager.INSTANCE;
-	}
-	@Bean( name="NETTY_ACCEPTOR", destroyMethod="stop" )
-	@Order( value=Integer.MAX_VALUE )
-	public  NettyAcceptor  nettyAcceptor( @Value( "${squirrel.acceptor.host:0.0.0.0}" )  String  host,@Value("${squirrel.acceptor.port:8012}")  int  port )
-	{
-		return  new  NettyAcceptor().initialize( host , port );
+		ServerInfo.INSTANCE.setLocalNodeId(  cacheFactoryStrategy.getLocalNodeId() );  return  pluginManager;
 	}
 }

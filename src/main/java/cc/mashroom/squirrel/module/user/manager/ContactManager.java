@@ -18,20 +18,22 @@ package cc.mashroom.squirrel.module.user.manager;
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XKeyValueCache;
+import lombok.AccessLevel;
 import  lombok.Getter;
 import  lombok.NoArgsConstructor;
 import  lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-@NoArgsConstructor
-
+@NoArgsConstructor( access =AccessLevel.PRIVATE )
 public  class  ContactManager  implements  Plugin
 {
 	public  final  static  ContactManager  INSTANCE = new  ContactManager();
-
+	@Getter
+	private XKeyValueCache<String,Object>  updateLockerCache;
+	
 	public  void  initialize( Object  ...  parameters )
 	{
-		
+		this.updateLockerCache = CacheFactory.getOrCreateKeyValueCache( "SQUIRREL.CONTACT.UPDATE_LOCKER_CACHE" );
 	}
 	
 	public  void  stop()

@@ -20,7 +20,6 @@ import  java.util.Set;
 
 import  cc.mashroom.db.util.ConnectionUtils;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatManager;
 import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
@@ -45,7 +44,7 @@ public  class  DefaultMessageStorageEngine  implements  MessageStorageEngine
 	
 	public  boolean  insert( long  userId,ChatPacket  chatPacket   )
 	{
-		return  ConnectionUtils.batchUpdatedCount( ChatMessageRepository.DAO.update("INSERT  INTO  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[][]{{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(userId),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),ChatManager.INSTANCE.getChatMessageSyncId(chatPacket.getContactId()),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}}) ) == 2;
+		return  ConnectionUtils.batchUpdatedCount( ChatMessageRepository.DAO.update("INSERT  INTO  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE)  VALUES  (?,?,?,?,?,?,?)",new  Object[][]{{chatPacket.getId(),getChatMessageSyncId(userId).incrementAndGet(),chatPacket.getContactId(),userId,chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()},{chatPacket.getId(),getChatMessageSyncId(chatPacket.getContactId()).incrementAndGet(),userId,chatPacket.getContactId(),chatPacket.getMd5(),new  String(chatPacket.getContent()),chatPacket.getContentType().getValue()}}) ) == 2;
 	}
 	
 	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId )

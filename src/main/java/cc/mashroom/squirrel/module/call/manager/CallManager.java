@@ -45,20 +45,19 @@ public  class      CallManager  implements  Plugin
 	
 	public  void  process( long  roomId,Channel  channel,long  contactId,Packet  packet )
 	{
-		//  sdp  and  candidate  packet  exchanging  is  very  frequent  and  they  are  controlled  by  the  client,   so  route  it  without  call  state  verifying.
+		//  sdp  and  candidate  packet  exchanging  is  very  frequent  and  they  are  resolved  by  the  client,  so  route  it  without  call  state  verifying.
 		if( packet instanceof SDPPacket || packet instanceof CandidatePacket  /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
 		{
-			/* if( callRoomStatus.getInteger("STATE") == 2 && (callRoomStatus.getLong("CALLER_ID") == contactId  && callRoomStatus.getLong("CALLEE_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() || callRoomStatus.getLong("CALLER_ID") == channel.attr(ConnectPacket.CLIENT_ID).get() && callRoomStatus.getLong("CALLEE_ID") == contactId) ) */
 			{
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
+				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 		}
 		
-		CallRoomStatus  callRoomStatus = this.callRoomStatusCache.lookupOne( CallRoomStatus.class,"SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{Math.min(contactId,channel.attr(ConnectPacket.CLIENT_ID).get())+":"+Math.max(contactId,channel.attr(ConnectPacket.CLIENT_ID).get()),roomId} );
+		CallRoomStatus  callRoomStatus = this.callRoomStatusCache.lookupOne( CallRoomStatus.class,"SELECT  ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{Math.min(contactId,channel.attr(ConnectPacket.USER_ID).get())+":"+Math.max(contactId,channel.attr(ConnectPacket.USER_ID).get()),roomId} );
 		
 		if( callRoomStatus ==   null )
 		{
-			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus == null ? CloseCallReason.ROOM_NOT_FOUND : CloseCallReason.STATE_ERROR) );
+			channel.write( new  CloseCallPacket(contactId,roomId,callRoomStatus==null ? CloseCallReason.ROOM_NOT_FOUND:CloseCallReason.STATE_ERROR) );
 			
 			return;
 		}
@@ -68,21 +67,21 @@ public  class      CallManager  implements  Plugin
 			{
 				channel.attr( CallPacket.CALL_ROOM_ID ).set( roomId );
 				
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
+				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 		}
 		if( packet instanceof    CallAckPacket   )
 		{
 			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_AGREE && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{2,callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()) );
+				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 			else
 			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()   == CallAckPacket.ACK_AGREE )
 			{
 				this.callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId} );
 			
-				PacketRoute.INSTANCE.route(contactId,new  CloseCallPacket(channel.attr(ConnectPacket.CLIENT_ID).get(),roomId,CloseCallReason.DECLINE) );
+				PacketRoute.INSTANCE.route(contactId,new  CloseCallPacket(channel.attr(ConnectPacket.USER_ID).get(),roomId,CloseCallReason.DECLINE) );
 			}
 		}
 		else
@@ -90,24 +89,19 @@ public  class      CallManager  implements  Plugin
 		{
 			if( callRoomStatus.getState() == 1 && this.callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.CANCEL ) );
+				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.CANCEL ) );
 			}
 			else
 			if( callRoomStatus.getState() == 2 && this.callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.CLIENT_ID).get()).setReason(CloseCallReason.BY_USER) );
+				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.BY_USER) );
 			}
 		}
 	}
 	
-	public  void  initialize( Object ...  params )   throws  Exception
+	public  void  initialize( Object ...  params ) //throws  Exception
 	{
 		this.callRoomStatusCache = CacheFactory.getOrCreateMemTableCache( "CALL_ROOM_STATUS_CACHE" );
-	}
-	
-	public  void  initialize()   throws  Exception
-	{
-		this.initialize( null );
 	}
 	
 	public  void  stop()

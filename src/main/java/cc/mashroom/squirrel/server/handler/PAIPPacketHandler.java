@@ -19,15 +19,15 @@ import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.codec.CorruptedFrameException;
 import  lombok.Setter;
-import  lombok.SneakyThrows;
 
 import  java.util.ArrayList;
-import java.util.Arrays;
+import  java.util.Arrays;
 import  java.util.List;
 
 import  org.joda.time.DateTime;
 
 import  com.fasterxml.jackson.core.type.TypeReference;
+import  com.google.common.collect.Lists;
 
 import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.paip.message.call.RoomPacket;
@@ -47,63 +47,68 @@ import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
-import cc.mashroom.util.collection.map.HashMap;
-import cc.mashroom.xcache.CacheFactory;
-import cc.mashroom.xcache.RemoteCallable;
-import cc.mashroom.squirrel.server.ServerInfo;
+import  cc.mashroom.util.collection.map.HashMap;
+import  cc.mashroom.xcache.CacheFactory;
+import  cc.mashroom.xcache.RemoteCallable;
+import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
-public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
+public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 {
-	@SneakyThrows
-	public  PAIPPacketHandler(    PAIPPacketProcessor  packetProcessor )  //throws  InstantiationException,IllegalAccessException,ClassNotFoundException
+	public  PAIPPacketHandler(      PAIPPacketProcessor  processor )  //  throws  InstantiationException,IllegalAccessException,ClassNotFoundException
 	{
-		this.setProcessor(    packetProcessor );
+		this.processor= processor;
 		
-		for( String  processorClassName:System.getProperty("squirrel.server.externalProcessorClasses","").split("," ) )
-		{
-			if( StringUtils.isNotBlank(processorClassName) )
-			{
-				this.externalProcessors.add( ObjectUtils.cast(Class.forName(processorClassName),new  TypeReference<Class<? extends PAIPPacketExternalProcessor>>(){}).newInstance() );
-			}
-		}
+		Lists.newArrayList(System.getProperty("squirrel.acceptor.externalProcessorClasses","").split(",")).stream().filter((processorClassName) -> StringUtils.isNotBlank(processorClassName)).forEach( (processorClassName) -> addExternalPacketProcessor(processorClassName) );
 	}
 	
-	protected  List<PAIPPacketExternalProcessor>  externalProcessors   = new  ArrayList<PAIPPacketExternalProcessor>();
+	protected  List<PAIPPacketExternalProcessor>  externalProcessors =  new  ArrayList <PAIPPacketExternalProcessor>();
 	@Setter
 	protected  PAIPPacketProcessor    processor;
 	
-	public  void  exceptionCaught( ChannelHandlerContext  context ,         Throwable  caughtError )  throws  Exception
+	protected  void  addExternalPacketProcessor(  String  processorClassName )
 	{
-		caughtError.printStackTrace();
+		try
+		{
+			this.externalProcessors.add( ObjectUtils.cast(Class.forName(processorClassName),new  TypeReference<Class<? extends PAIPPacketExternalProcessor>>(){}).newInstance() );
+		}
+		catch(Throwable  e )
+		{
+			throw  new  IllegalStateException( String.format("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  create  packet  external  processor  instance  for  class  %s.",processorClassName),e );
+		}
 	}
 	
-	public  void  channelInactive( ChannelHandlerContext  context )  throws  Exception
+	public  void  channelInactive( ChannelHandlerContext   context ) throws  Exception
 	{
-		Long  clientId =      context.channel().attr( ConnectPacket.CLIENT_ID ).get();
+		Long  userId  =   context.channel().attr(ConnectPacket.USER_ID).get();
 		
-		System.out.println(DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.LEFT:\tCLIENT.ID="+clientId );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS") +"  CHANNEL.LEFT:\tUSER.ID="  +userId );
 		
-		if( clientId != null )
+		if( userId != null )
 		{
-			ClientSession  session = ClientSessionManager.INSTANCE.remove( clientId );
+			ClientSession  session   = ClientSessionManager.INSTANCE.remove( userId );
 			
-			if(      session != null )
+			if( session  != null )
 			{
+				session.close(-1);
 				/*
-				System.err.println( String.format("the  connection  channel  is  inactive  now  so  close  the  session  (client  id:  %d)",clientId) );
+				System.err.println( String.format("the  connection  channel  is  inactive  now  so  close  the  session  (user  id:  %d)",userId) );
 				*/
-				session.close(   -1 );
 			}
 		}
 	}
 	
-	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws  Exception
+	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  ukerror )    throws  Exception
+	{
+		ukerror.printStackTrace();
+	}
+	
+	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws Exception
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
 		
-		if( !( packet instanceof ConnectPacket ) && !context.channel().hasAttr( ConnectPacket.CLIENT_ID ) )
+		if( !( packet instanceof ConnectPacket ) && !  context.channel().hasAttr( ConnectPacket.USER_ID ) )
 		{
 			context.channel().write(  new  DisconnectAckPacket(DisconnectAckPacket.REASON_CLIENT_LOGOUT) );
 			
@@ -117,16 +122,9 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 			this.processor.connect(    context.channel(),ObjectUtils.cast(packet,   ConnectPacket.class) );
 		}
 		else
-		/*
-		if( packet instanceof DisconnectPacket )
-		{
-			this.processor.disconnect( context.channel(),ObjectUtils.cast(packet,DisconnectPacket.class) );
-		}
-		else
-		*/
 		if( packet instanceof PingPacket )
 		{
-			context.channel().writeAndFlush(     new  PingAckPacket() );
+			context.channel().writeAndFlush( new  PingAckPacket() );
 		}
 		else
 		if( packet instanceof ChatPacket )
@@ -142,15 +140,16 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 				
 				if( !     clusterNodeId.equals(ServerInfo.INSTANCE.getLocalNodeId()) )
 				{
-					CacheFactory.call( new  RemoteCallable<Boolean>(2,new  HashMap<String,Object>().addEntry("CLIENT_ID",context.channel().attr(ConnectPacket.CLIENT_ID).get()).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
+					CacheFactory.call( new  RemoteCallable<Boolean>(2,new  HashMap<String,Object>().addEntry("USER_ID",context.channel().attr(ConnectPacket.USER_ID).get()).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
 				}
 				else
 				{
-					PacketRoute.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.CLIENT_ID).get(),ObjectUtils.cast(packet) );
+					PacketRoute.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.USER_ID).get() , ObjectUtils.cast(packet) );
 				}
 				
 				return;
 			}
+			
 			processor.qosReceipt( ObjectUtils.cast(packet , PendingAckPacket.class) );
 		}
 		else
@@ -161,7 +160,7 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof ChatGroupEventPacket    )
 		{
-			this.processor.groupChatInvited( context.channel(),ObjectUtils.cast(packet,ChatGroupEventPacket.class) );
+			this.processor.groupChatInvited( context.channel() , ObjectUtils.cast(packet,ChatGroupEventPacket.class) );
 		}
 		else
 		if( packet instanceof GroupChatPacket  )
@@ -175,12 +174,10 @@ public  class  PAIPPacketHandler   extends  ChannelInboundHandlerAdapter
 		}
 		else
 		{
-			for( PAIPPacketExternalProcessor  externalProcessor : externalProcessors )
+			if( !this.externalProcessors.stream().anyMatch( (externalProcessor) -> externalProcessor.process(ObjectUtils.cast(packet))) )
 			{
-				if(externalProcessor.process(ObjectUtils.cast(packet)) )   { return; }
+				throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );
 			}
-			
-			throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );
 		}
 	}
 }

@@ -22,31 +22,28 @@ import  java.util.concurrent.locks.Lock;
 import  org.apache.curator.shaded.com.google.common.collect.Lists;
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
-import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
 import  cc.mashroom.db.annotation.DataSource;
 import  cc.mashroom.db.annotation.Connection;
+import  cc.mashroom.squirrel.module.user.manager.ContactManager;
 import  cc.mashroom.squirrel.module.user.repository.ContactRepository;
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
 import  cc.mashroom.util.collection.map.ConcurrentHashMap;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
-import  cc.mashroom.xcache.XKeyValueCache;
 
 @Service
 public  class  ContactServiceImpl  implements  ContactService
 {
-	private  Map<Integer,Integer>  subscribeeStatus = new  ConcurrentHashMap<Integer,Integer>().addEntry(2, 1).addEntry(4, 3).addEntry(6, 5).addEntry( 8, 7 );
-	@Autowired
-	private XKeyValueCache<String,Object>  updateLockerCache;
+	private  Map<Integer,Integer>  subscribeeStatus = new  ConcurrentHashMap<Integer,Integer>().addEntry(2, 1).addEntry(4, 3).addEntry(6, 5).addEntry(8, 7 );
 	
 	@Connection( dataSource=@DataSource(type="db",name="squirrel"),transactionIsolationLevel=java.sql.Connection.TRANSACTION_REPEATABLE_READ )
 	
 	public  ResponseEntity<Map<String,Object>>  update( long  userId,long  contactId,String  remark,String  group )
 	{
-		Lock  locker = updateLockerCache.getLock( Math.min(userId, contactId) + ":" + Math.max(userId,contactId) );
+		Lock  locker = ContactManager.INSTANCE.getUpdateLockerCache().getLock( Math.min(userId, contactId)+ ":"+ Math.max(userId,contactId) );
 		
 		try
 		{
@@ -59,7 +56,7 @@ public  class  ContactServiceImpl  implements  ContactService
 			
 			if( Lists.newArrayList(userId).stream().map((id) -> ContactRepository.DAO.lookupOne(Timestamp.class,"SELECT  MAX(LAST_MODIFY_TIME)  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{id})).mapToLong((latestModifyTime) -> latestModifyTime == null ? 0L : latestModifyTime.getTime()).max().getAsLong() >= now.getTime() )
 			{
-				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."   );
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."  );
 			}
 			
 			ContactRepository.DAO.update( "UPDATE  "+ContactRepository.DAO.getDataSourceBind().table()+"  SET  REMARK = ?,GROUP_NAME = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{remark,group,now,userId,contactId} );
@@ -80,7 +77,7 @@ public  class  ContactServiceImpl  implements  ContactService
 	
 	public  ResponseEntity<Map<String,Object>>  unsubscribe( long  unsubscriberId,long  unsubscribeeId )
 	{
-		Lock  locker = this.updateLockerCache.getLock( Math.min(unsubscriberId,unsubscribeeId)+":"+Math.max(unsubscriberId, unsubscribeeId) );
+		Lock  locker = ContactManager.INSTANCE.getUpdateLockerCache().getLock( Math.min(unsubscriberId , unsubscribeeId)    + ":" + Math.max(unsubscriberId , unsubscribeeId) );
 		
 		try
 		{
@@ -93,7 +90,7 @@ public  class  ContactServiceImpl  implements  ContactService
 			
 			if( Lists.newArrayList(unsubscriberId,unsubscribeeId).stream().map((id) -> ContactRepository.DAO.lookupOne(Timestamp.class,"SELECT  MAX(LAST_MODIFY_TIME)  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{id})).mapToLong((latestModifyTime) -> latestModifyTime == null ? 0L : latestModifyTime.getTime()).max().getAsLong() >= now.getTime() )
 			{
-				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."   );
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."  );
 			}
 			
 			ContactRepository.DAO.update( "UPDATE  "+ContactRepository.DAO.getDataSourceBind().table()+"  SET  IS_DELETED = TRUE,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{now,unsubscriberId,unsubscribeeId} );
@@ -114,7 +111,7 @@ public  class  ContactServiceImpl  implements  ContactService
 	
 	public  ResponseEntity<Map<String,Object>>  subscribe( long  subscriberId,long  subscribeeId,String  remark,String  group  )
 	{
-		Lock  locker = updateLockerCache.getLock( Math.min(subscriberId,subscribeeId)+":"+Math.max(subscriberId,subscribeeId) );
+		Lock  locker = ContactManager.INSTANCE.getUpdateLockerCache().getLock( Math.min(subscriberId,subscribeeId)+":"+Math.max(subscriberId,subscribeeId) );
 		
 		try
 		{
@@ -127,7 +124,7 @@ public  class  ContactServiceImpl  implements  ContactService
 			
 			if( Lists.newArrayList(subscriberId  ,  subscribeeId).stream().map((id) -> ContactRepository.DAO.lookupOne(Timestamp.class,"SELECT  MAX(LAST_MODIFY_TIME)  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{id})).mapToLong((latestModifyTime) -> latestModifyTime == null ? 0L : latestModifyTime.getTime()).max().getAsLong() >= now.getTime() )
 			{
-				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."   );
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."  );
 			}
 			
 			Map<Long,Map<String,Object>>  subscribingProfiles = new  HashMap<Long,Map<String,Object>>();
@@ -167,7 +164,7 @@ public  class  ContactServiceImpl  implements  ContactService
 			throw  new  IllegalArgumentException( "SQUIRREL-SERVER:  ** CONTACT  SERVICE  IMPL **  only  8  ( ACCEPT )  is  acceptable."    );
 		}
 		
-		Lock  locker = updateLockerCache.getLock( Math.min(subscriberId,subscribeeId)+":"+Math.max(subscriberId,subscribeeId) );
+		Lock  locker = ContactManager.INSTANCE.getUpdateLockerCache().getLock( Math.min(subscriberId,subscribeeId)+":"+Math.max(subscriberId,subscribeeId) );
 		
 		try
 		{
@@ -180,7 +177,7 @@ public  class  ContactServiceImpl  implements  ContactService
 			
 			if( Lists.newArrayList(subscriberId  ,  subscribeeId).stream().map((id) -> ContactRepository.DAO.lookupOne(Timestamp.class,"SELECT  MAX(LAST_MODIFY_TIME)  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{id})).mapToLong((latestModifyTime) -> latestModifyTime == null ? 0L : latestModifyTime.getTime()).max().getAsLong() >= now.getTime() )
 			{
-				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."   );
+				throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  SERVICE  IMPL **  time  line  error,  check  system  time  please."  );
 			}
 			
 			ContactRepository.DAO.update( "UPDATE  "+ContactRepository.DAO.getDataSourceBind().table()+"  SET  SUBSCRIBE_STATUS = ?,LAST_MODIFY_TIME = ?  WHERE  USER_ID = ?  AND  CONTACT_ID = ?  AND  IS_DELETED = FALSE",new  Object[]{subscribeeStatus.get(status),now,subscriberId, subscribeeId} );

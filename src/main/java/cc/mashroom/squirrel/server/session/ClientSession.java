@@ -21,9 +21,9 @@ import  cc.mashroom.squirrel.paip.message.Packet;
 
 public  interface  ClientSession
 {
-	public  void  close( int  reason )  throws  IOException;
+	public  long  getUserId();
 	
-	public  long  getClientId();
+	public  void  close( int  reason )  throws  IOException;
 	
 	public  void  deliver( Packet  packet );
 }

@@ -15,39 +15,13 @@
  */
 package cc.mashroom.squirrel.common;
 
-import  org.springframework.boot.context.event.ApplicationPreparedEvent;
-import  org.springframework.boot.context.event.ApplicationReadyEvent;
 import  org.springframework.context.ApplicationEvent;
 import  org.springframework.context.ApplicationListener;
-import  org.springframework.context.event.ContextStoppedEvent;
 
-import  cc.mashroom.config.Config;
-import  cc.mashroom.plugin.Plugin;
-import  cc.mashroom.plugin.PluginRegistry;
-import  cc.mashroom.plugin.db.Db;
-import  cc.mashroom.plugin.h2.H2CacheFactoryStrategy;
-import  cc.mashroom.plugin.ignite.IgniteCacheFactoryStrategy;
-import  cc.mashroom.squirrel.module.call.manager.CallManager;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
-import  cc.mashroom.squirrel.module.user.manager.ContactManager;
-import  cc.mashroom.squirrel.server.NettyAcceptor;
-import  cc.mashroom.squirrel.server.ServerInfo;
-import  cc.mashroom.squirrel.server.remotetask.RemoteEventProcessor;
-import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-import  cc.mashroom.xcache.CacheFactoryStrategy;
-import  cc.mashroom.xcache.RemoteEventProcessorDelegate;
-
-public  class     ComponentLifecycle  implements  ApplicationListener<ApplicationEvent>
+public  class  ComponentLifecycle  implements  ApplicationListener<ApplicationEvent>
 {
-	private  NettyAcceptor  socketAcceptor;
-	
 	public  void  onApplicationEvent( ApplicationEvent  event )
 	{
-		if( event         instanceof ApplicationPreparedEvent )
-		{
-			RemoteEventProcessorDelegate.INSTANCE.setProcessor(    new  RemoteEventProcessor() );
-			
-//			PluginRegistry.INSTANCE.register(ChatGroupManager.INSTANCE).initialize();
-		}
+		
 	}
 }

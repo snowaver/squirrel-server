@@ -31,19 +31,19 @@ import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 @Slf4j
 @NoArgsConstructor
 @AllArgsConstructor
-public  class  LocalClientSession  implements        ClientSession
+public  class  LocalClientSession  implements      ClientSession
 {
 	@Getter
-	private  long   clientId;
+	private  long   userId;
 	@Getter
 	private  Channel     channel;
 	
-	public  void  deliver( Packet  packet   )
+	public  void  deliver(   Packet  packet )
 	{
-		this.channel.writeAndFlush(packet  );
+		this.channel.writeAndFlush(  packet);
 	}
 	
-	public  void  close(   int  closeReason )  throws  IOException
+	public  void  close(   int  closeReason )throws  IOException
 	{
 		try
 		{
@@ -55,7 +55,7 @@ public  class  LocalClientSession  implements        ClientSession
 		}
 		finally
 		{
-			ClientSessionManager.INSTANCE.remove( this.clientId );
+			ClientSessionManager.INSTANCE.remove( this.userId );
 		}
 	}
 }

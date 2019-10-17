@@ -34,7 +34,7 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventP
 		{
 			case  0:
 			{
-				ClientSession  clientSession = ClientSessionManager.INSTANCE.get( parameters.getLong("CLIENT_ID") );
+				ClientSession  clientSession = ClientSessionManager.INSTANCE.get( parameters.getLong("USER_ID") );
 				
 				if( clientSession != null )
 				{
@@ -52,11 +52,11 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventP
 			}
 			case   1:
 			{
-				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
+				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
 			}
 			case   2:
 			{
-				PacketRoute.INSTANCE.completeRoute( parameters.getLong("CLIENT_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
+				PacketRoute.INSTANCE.completeRoute( parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
 			}
 		}
 		

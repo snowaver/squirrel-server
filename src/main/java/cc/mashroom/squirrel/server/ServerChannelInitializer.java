@@ -18,19 +18,25 @@ package cc.mashroom.squirrel.server;
 import  io.netty.channel.socket.SocketChannel;
 import  io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import  io.netty.handler.ssl.SslHandler;
+import  lombok.AllArgsConstructor;
 import  cc.mashroom.squirrel.server.handler.ChannelDuplexIdleTimeoutHandler;
 import  cc.mashroom.squirrel.server.handler.PAIPDecoder;
 import  cc.mashroom.squirrel.server.handler.PAIPEncoder;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketHandler;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketProcessor;
+import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 import  cc.mashroom.util.SecureUtils;
 
 import  javax.net.ssl.SSLEngine;
 
 import  cc.mashroom.config.Config;
 
+@AllArgsConstructor
+
 public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitializer<SocketChannel>
 {
+	protected  MessageStorageEngine  messageStorageEngine;
+	
 	protected  void  initChannel( SocketChannel  channel )  throws  Exception
 	{
 		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store").replace("classpath:","/")).createSSLEngine();
@@ -39,6 +45,6 @@ public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitia
 		/*
 		sslEngine.setNeedClientAuth( true );
 		*/
-		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketHandler(new  PAIPPacketProcessor()) );
+		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketHandler(new  PAIPPacketProcessor(this.messageStorageEngine)) );
 	}
 }

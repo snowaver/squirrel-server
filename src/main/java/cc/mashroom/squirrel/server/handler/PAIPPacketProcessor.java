@@ -28,7 +28,6 @@ import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.squirrel.server.session.LocalClientSession;
@@ -37,7 +36,7 @@ import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 @AllArgsConstructor
 public  class  PAIPPacketProcessor
 {
-	public  void  connect(        Channel  channel, ConnectPacket  packet )
+	public  void  connect(        Channel  channel, ConnectPacket  packet   )
 	{
         if( packet.getProtocolVersion() != 1 )
         {
@@ -46,7 +45,7 @@ public  class  PAIPPacketProcessor
             return;
         }
 
-        long  userId = Long.parseUnsignedLong(     packet.getAccessKey() );
+        long  userId = Long.parseUnsignedLong(      packet.getAccessKey()  );
         
         Map<String,Object>  clientSessionLocation = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );
         
@@ -57,13 +56,13 @@ public  class  PAIPPacketProcessor
         	return;
         }
         //  the  old  session  should  be  removed  to  avoid  delayed  session  inactive  event  from  closing  the  new  created  session  managed  by  session  manager.
-        ClientSession  oldSession     = ClientSessionManager.INSTANCE.remove(userId );
+        ClientSession  oldSession     = ClientSessionManager.INSTANCE.remove( userId );
         //  close  the  old  session  if  the  secret  key  is  different  from  the  old  one.  (NOTE:  a  client  holds  a  unique  secret  key,  so  should  not  close  the  session  with  the  same  secret  key)
         if( oldSession != null && clientSessionLocation != null && !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
         	try
         	{
-				oldSession.close(DisconnectAckPacket.REASON_REMOTE_SIGNIN);
+				oldSession.close( DisconnectAckPacket.REASON_REMOTE_SIGNIN );
 			}
         	catch( Exception  e )
         	{
@@ -73,55 +72,57 @@ public  class  PAIPPacketProcessor
         	return;
         }
         
-        channel.attr(ConnectPacket.USER_ID).set(userId);
+        channel.attr(ConnectPacket.USER_ID).set(userId );
         
-        channel.attr(ConnectPacket.KEEPALIVE).set( packet.getKeepalive() );
+        channel.attr(ConnectPacket.KEEPALIVE).set(   packet.getKeepalive() );
         
-        ClientSessionManager.INSTANCE.put(      userId , new  LocalClientSession(userId , channel) );
+        ClientSessionManager.INSTANCE.put(      userId  ,new  LocalClientSession(userId , channel) );
 
         channel.pipeline().addFirst("handler.idle.state",new  IdleStateHandler((int)  (packet.getKeepalive()*1.5f), 0, 0) );
         
         channel.writeAndFlush(   new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
 	}
 	
-	private  MessageStorageEngine  messageStorageEngine;
+	private   MessageStorageEngine  messageStorageEngine;
 	
-	public  void  chat( Channel  channel,long  userId, ChatPacket  packet )
+	public  void  groupChatInvited( Channel  channel    ,ChatGroupEventPacket  packet )
 	{
-		if( this.messageStorageEngine.insert(channel.attr(ConnectPacket.USER_ID).get(),packet) && !PacketRoute.INSTANCE.route(userId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get())) )
+		PacketRoute.INSTANCE.route(packet.getContactId(),packet.setContactId( channel.attr(ConnectPacket.USER_ID).get() ) );
+	}
+	
+	public  void  chat( Channel  channel,long  contactId,ChatPacket  packet )
+	{
+		java.util.Map<Long,Long>  syncIds = this.messageStorageEngine.insert( channel.attr(ConnectPacket.USER_ID).get(), packet );
+		
+		if( !PacketRoute.INSTANCE.route(contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()).setSyncId(syncIds.get(contactId)).setContactSyncId(syncIds.get(channel.attr(ConnectPacket.USER_ID).get()))) )
 		{
-			if( packet.getHeader().getAckLevel()  == 1 )
+			if( packet.getHeader().getAckLevel() ==   1 )
 			{
-				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()) );
+				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()).setAttatchments(String.format("{\"SYNC_ID\":%d}",packet.getContactSyncId())) );
 			}
 		}
 	}
-	
-	public  void  qosReceipt( PendingAckPacket  packet )
-	{
-		PacketRoute.INSTANCE.route(      packet.getContactId() ,  packet );
-	}
 		
-	public  void  chatRecall(Channel  channel,long  userId,ChatRecallPacket  packet )
+	public  void  chatRecall( Channel  channel ,long  userId,ChatRecallPacket  packet )
 	{
 		PacketRoute.INSTANCE.route( userId , packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 	}
 	
-	public  void  groupChat( Channel  channel,    GroupChatPacket  packet )
+	public  void  qosReceipt(   PendingAckPacket packet )
 	{
-		if( this.messageStorageEngine.insert(     channel.attr(ConnectPacket.USER_ID).get(),packet) )
-		{
-			if( packet.getHeader().getAckLevel()  == 1 )
-			{
-				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()) );
-			}
-			
-			ChatGroupManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).parallelStream().filter( (chatGroupUserId) -> chatGroupUserId != packet.getContactId()).forEach( (chatGroupUserId) -> PacketRoute.INSTANCE.route(chatGroupUserId,packet) );
-		}
+		PacketRoute.INSTANCE.route(          packet.getContactId(),  packet);
 	}
 	
-	public  void  groupChatInvited( Channel  channel , ChatGroupEventPacket  packet )
+	public  void  groupChat(  Channel  channel ,long  userId, GroupChatPacket  packet )
 	{
-		PacketRoute.INSTANCE.route( packet.getContactId(), packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+		java.util.Map<Long,Long>  chatGroupUserSyncIds = this.messageStorageEngine.insert( channel.attr(ConnectPacket.USER_ID).get(),packet );
+		{
+			if( packet.getHeader().getAckLevel() ==   1 )
+			{
+				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()).setAttatchments(String.format("{\"SYNC_ID\":%d}",chatGroupUserSyncIds.get(channel.attr(ConnectPacket.USER_ID).get()))) );
+			}
+			
+			chatGroupUserSyncIds.entrySet().parallelStream().filter((entry)->  entry.getKey() != packet.getContactId()).forEach(    (entry) -> PacketRoute.INSTANCE.route(entry.getKey(),packet.clone().setSyncId(entry.getValue())) );
+		}
 	}
 }

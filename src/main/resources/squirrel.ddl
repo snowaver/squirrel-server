@@ -10,7 +10,7 @@ Target Server Type    : MYSQL
 Target Server Version : 50722
 File Encoding         : 65001
 
-Date: 2019-10-08 17:57:54
+Date: 2019-10-21 18:07:28
 */
 
 SET FOREIGN_KEY_CHECKS=0;
@@ -28,13 +28,32 @@ CREATE TABLE `chat_group` (
   `LAST_MODIFY_BY` bigint(255) NOT NULL,
   `NAME` varchar(255) NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of chat_group
 -- ----------------------------
-INSERT INTO `chat_group` VALUES ('24', '\0', '2019-10-08 17:21:55', '21', '2019-10-08 17:21:55', '0', 'A');
-INSERT INTO `chat_group` VALUES ('25', '\0', '2019-10-08 17:28:13', '21', '2019-10-08 17:28:13', '0', 'B');
+INSERT INTO `chat_group` VALUES ('31', '\0', '2019-10-21 16:53:21', '20', '2019-10-21 16:53:21', '0', 'A');
+
+-- ----------------------------
+-- Table structure for chat_group_message
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_group_message`;
+CREATE TABLE `chat_group_message` (
+  `ID` bigint(20) DEFAULT NULL,
+  `GROUP_ID` bigint(20) DEFAULT NULL,
+  `SYNC_ID` bigint(20) DEFAULT NULL,
+  `CONTACT_ID` bigint(20) DEFAULT NULL,
+  `USER_ID` bigint(20) DEFAULT NULL,
+  `MD5` varchar(32) DEFAULT NULL,
+  `CONTENT` varchar(255) DEFAULT NULL,
+  `CONTENT_TYPE` int(11) DEFAULT NULL,
+  `TRANSPORT_STATE` int(11) DEFAULT NULL COMMENT '传输状态：1、已接收，3、已发送'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of chat_group_message
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for chat_group_sync
@@ -51,15 +70,13 @@ CREATE TABLE `chat_group_sync` (
 -- ----------------------------
 -- Records of chat_group_sync
 -- ----------------------------
-INSERT INTO `chat_group_sync` VALUES ('1', '21', '1', '24', '2019-10-08 17:21:55');
-INSERT INTO `chat_group_sync` VALUES ('2', '21', '5', '24', '2019-10-08 17:22:55');
-INSERT INTO `chat_group_sync` VALUES ('1', '20', '4', '24', '2019-10-08 17:22:55');
-INSERT INTO `chat_group_sync` VALUES ('3', '21', '1', '25', '2019-10-08 17:28:13');
-INSERT INTO `chat_group_sync` VALUES ('4', '21', '5', '25', '2019-10-08 17:28:31');
-INSERT INTO `chat_group_sync` VALUES ('2', '20', '4', '25', '2019-10-08 17:28:31');
-INSERT INTO `chat_group_sync` VALUES ('5', '21', '5', '25', '2019-10-08 17:49:33');
-INSERT INTO `chat_group_sync` VALUES ('3', '20', '5', '25', '2019-10-08 17:49:33');
-INSERT INTO `chat_group_sync` VALUES ('1', '23', '4', '25', '2019-10-08 17:49:33');
+INSERT INTO `chat_group_sync` VALUES ('1', '20', '1', '31', '2019-10-21 16:53:21');
+INSERT INTO `chat_group_sync` VALUES ('2', '20', '5', '31', '2019-10-21 16:53:39');
+INSERT INTO `chat_group_sync` VALUES ('1', '21', '4', '31', '2019-10-21 16:53:39');
+INSERT INTO `chat_group_sync` VALUES ('3', '20', '7', '31', '2019-10-21 16:53:50');
+INSERT INTO `chat_group_sync` VALUES ('2', '21', '7', '31', '2019-10-21 16:53:50');
+INSERT INTO `chat_group_sync` VALUES ('4', '20', '5', '31', '2019-10-21 16:54:02');
+INSERT INTO `chat_group_sync` VALUES ('3', '21', '4', '31', '2019-10-21 16:54:02');
 
 -- ----------------------------
 -- Table structure for chat_group_user
@@ -76,16 +93,39 @@ CREATE TABLE `chat_group_user` (
   `CONTACT_ID` bigint(20) NOT NULL,
   `VCARD` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of chat_group_user
 -- ----------------------------
-INSERT INTO `chat_group_user` VALUES ('27', '\0', '2019-10-08 17:21:55', '21', '2019-10-08 17:21:55', '21', '24', '21', 'LAN');
-INSERT INTO `chat_group_user` VALUES ('28', '\0', '2019-10-08 17:22:55', '20', '2019-10-08 17:22:55', '20', '24', '20', 'JOHNNY');
-INSERT INTO `chat_group_user` VALUES ('29', '\0', '2019-10-08 17:28:13', '21', '2019-10-08 17:28:13', '21', '25', '21', 'LAN');
-INSERT INTO `chat_group_user` VALUES ('30', '\0', '2019-10-08 17:28:31', '20', '2019-10-08 17:28:31', '20', '25', '20', 'JOHNNY');
-INSERT INTO `chat_group_user` VALUES ('31', '\0', '2019-10-08 17:49:33', '23', '2019-10-08 17:49:33', '23', '25', '23', 'XUN');
+INSERT INTO `chat_group_user` VALUES ('44', '\0', '2019-10-21 16:53:21', '20', '2019-10-21 16:53:21', '20', '31', '20', 'JOHNNY');
+INSERT INTO `chat_group_user` VALUES ('45', '', '2019-10-21 16:53:39', '21', '2019-10-21 16:53:50', '21', '31', '21', 'LAN');
+INSERT INTO `chat_group_user` VALUES ('46', '\0', '2019-10-21 16:54:02', '21', '2019-10-21 16:54:02', '21', '31', '21', 'LAN');
+
+-- ----------------------------
+-- Table structure for chat_message
+-- ----------------------------
+DROP TABLE IF EXISTS `chat_message`;
+CREATE TABLE `chat_message` (
+  `ID` bigint(20) DEFAULT NULL,
+  `SYNC_ID` bigint(20) DEFAULT NULL,
+  `CONTACT_ID` bigint(20) DEFAULT NULL,
+  `USER_ID` bigint(20) DEFAULT NULL,
+  `MD5` varchar(32) DEFAULT NULL,
+  `CONTENT` varchar(255) DEFAULT NULL,
+  `CONTENT_TYPE` int(11) DEFAULT NULL,
+  `TRANSPORT_STATE` int(11) DEFAULT NULL COMMENT '传输状态：1、已接收，3、已发送'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of chat_message
+-- ----------------------------
+INSERT INTO `chat_message` VALUES ('1571643521927', '1', '21', '20', '2DA58CF8378BDA797B67E4CFC2163D84', '2DA58CF8378BDA797B67E4CFC2163D84', '2', '3');
+INSERT INTO `chat_message` VALUES ('1571643521927', '1', '20', '21', '2DA58CF8378BDA797B67E4CFC2163D84', '2DA58CF8378BDA797B67E4CFC2163D84', '2', '1');
+INSERT INTO `chat_message` VALUES ('1571647884603', '2', '21', '20', 'F9729F60F77435009500F2DB9EAF1B27', 'F9729F60F77435009500F2DB9EAF1B27', '2', '3');
+INSERT INTO `chat_message` VALUES ('1571647884603', '2', '20', '21', 'F9729F60F77435009500F2DB9EAF1B27', 'F9729F60F77435009500F2DB9EAF1B27', '2', '1');
+INSERT INTO `chat_message` VALUES ('1571647914600', '3', '21', '20', 'E977EF9854202CD65750C472441C906E', 'E977EF9854202CD65750C472441C906E', '4', '3');
+INSERT INTO `chat_message` VALUES ('1571647914600', '3', '20', '21', 'E977EF9854202CD65750C472441C906E', 'E977EF9854202CD65750C472441C906E', '4', '1');
 
 -- ----------------------------
 -- Table structure for contact
@@ -103,15 +143,13 @@ CREATE TABLE `contact` (
   `GROUP_NAME` varchar(255) DEFAULT '我的好友',
   `LAST_MODIFY_TIME` datetime NOT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=33 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=39 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of contact
 -- ----------------------------
-INSERT INTO `contact` VALUES ('29', '20', '21', '18702963722', 'LAN', '7', '\0', '2019-09-01 17:18:25', 'MY WIFE', '2019-09-01 17:30:55');
-INSERT INTO `contact` VALUES ('30', '21', '20', '15091323262', 'JOHNNY', '8', '\0', '2019-09-01 17:18:25', 'MY HUSBAND', '2019-09-01 17:30:55');
-INSERT INTO `contact` VALUES ('31', '23', '20', '15091323262', 'JOHNNY', '7', '\0', '2019-09-20 23:50:32', 'BROTHERS', '2019-09-20 23:51:09');
-INSERT INTO `contact` VALUES ('32', '20', '23', '18791004529', 'XUN', '8', '\0', '2019-09-20 23:50:32', 'SISTERS', '2019-09-20 23:51:09');
+INSERT INTO `contact` VALUES ('37', '21', '20', '15091323262', 'JOHNNY', '7', '\0', '2019-10-21 15:21:52', 'FAMILY', '2019-10-21 15:22:44');
+INSERT INTO `contact` VALUES ('38', '20', '21', '18702963722', 'LAN', '8', '\0', '2019-10-21 15:21:52', 'FAMILY', '2019-10-21 15:22:44');
 
 -- ----------------------------
 -- Table structure for login_logs
@@ -127,92 +165,67 @@ CREATE TABLE `login_logs` (
   `GEOMETRY` geometry DEFAULT NULL,
   `MAC` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=1654 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=1787 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
 -- Records of login_logs
 -- ----------------------------
-INSERT INTO `login_logs` VALUES ('1636', '2019-10-08 10:48:41', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1637', '2019-10-08 11:01:41', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1638', '2019-10-08 11:04:03', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1639', '2019-10-08 11:05:33', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1640', '2019-10-08 11:39:43', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1641', '2019-10-08 11:48:43', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1642', '2019-10-08 11:49:44', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1643', '2019-10-08 16:32:01', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1644', '2019-10-08 16:37:45', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1645', '2019-10-08 16:46:57', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1646', '2019-10-08 16:52:17', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1647', '2019-10-08 16:59:36', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1648', '2019-10-08 17:03:04', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1649', '2019-10-08 17:05:44', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.557966)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1650', '2019-10-08 17:08:45', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936054 22.557973)'), '3A:6E:A2:2C:CB:24');
-INSERT INTO `login_logs` VALUES ('1651', '2019-10-08 17:21:37', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1652', '2019-10-08 17:27:40', '18702963722', '1', '10.208.61.195', '局域网', GeomFromText('POINT(113.936065 22.557922)'), '1A:A6:2B:76:4C:17');
-INSERT INTO `login_logs` VALUES ('1653', '2019-10-08 17:48:51', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936048 22.557998)'), '3A:6E:A2:2C:CB:24');
-
--- ----------------------------
--- Table structure for offline_chat_message
--- ----------------------------
-DROP TABLE IF EXISTS `offline_chat_message`;
-CREATE TABLE `offline_chat_message` (
-  `ID` bigint(20) DEFAULT NULL,
-  `CONTACT_ID` bigint(20) DEFAULT NULL,
-  `USER_ID` bigint(20) DEFAULT NULL,
-  `MD5` varchar(32) DEFAULT NULL,
-  `CONTENT` varchar(255) DEFAULT NULL,
-  `CONTENT_TYPE` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of offline_chat_message
--- ----------------------------
-INSERT INTO `offline_chat_message` VALUES ('1568960182193', '21', '20', '7A7D04824B6C69ED85424952CDF0FC9F', '7A7D04824B6C69ED85424952CDF0FC9F', '2');
-INSERT INTO `offline_chat_message` VALUES ('1568960182322', '21', '20', '2DD858EDB9EE90773693E82C8680C34E', '2DD858EDB9EE90773693E82C8680C34E', '2');
-INSERT INTO `offline_chat_message` VALUES ('1568962318603', '21', '20', '3F1A492A2A2769F47D7CA2A7A64C5525', '5660', '3');
-
--- ----------------------------
--- Table structure for offline_group_chat_message
--- ----------------------------
-DROP TABLE IF EXISTS `offline_group_chat_message`;
-CREATE TABLE `offline_group_chat_message` (
-  `ID` bigint(20) DEFAULT NULL,
-  `GROUP_ID` bigint(20) DEFAULT NULL,
-  `CONTACT_ID` bigint(20) DEFAULT NULL,
-  `USER_ID` bigint(20) DEFAULT NULL,
-  `MD5` varchar(32) DEFAULT NULL,
-  `CONTENT` varchar(255) DEFAULT NULL,
-  `CONTENT_TYPE` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
--- ----------------------------
--- Records of offline_group_chat_message
--- ----------------------------
-INSERT INTO `offline_group_chat_message` VALUES ('1568960242177', '1', '20', '20', '4A0169A762CF354E66AF18F6A60504DD', '4A0169A762CF354E66AF18F6A60504DD', '2');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960242782', '1', '20', '20', '494700C07BD705A0071EFF29CBDA0514', '494700C07BD705A0071EFF29CBDA0514', '2');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960242624', '1', '20', '20', 'BC39ADD06F57FAB1245F22EF134A57E6', 'BC39ADD06F57FAB1245F22EF134A57E6', '2');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960322967', '1', '20', '20', '90A1C4304CEC0CDC4C2200A4393CB843', '90A1C4304CEC0CDC4C2200A4393CB843', '2');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960322830', '1', '20', '20', '0F3AE06B4161001AE8E7A05EC7604866', '0F3AE06B4161001AE8E7A05EC7604866', '4');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960323007', '1', '20', '20', '7EA9A789B969B35755E6664A41ABC10B', '7EA9A789B969B35755E6664A41ABC10B', '2');
-INSERT INTO `offline_group_chat_message` VALUES ('1568960353650', '1', '20', '20', '5D72CBDBC0735B96DBD657008891AF96', '6000', '3');
-INSERT INTO `offline_group_chat_message` VALUES ('1569404409357', '1', '21', '21', 'DADB876665A7BC08654E3A88A78AF8A2', 'DADB876665A7BC08654E3A88A78AF8A2', '2');
-
--- ----------------------------
--- Table structure for offline_message
--- ----------------------------
-DROP TABLE IF EXISTS `offline_message`;
-CREATE TABLE `offline_message` (
-  `CONTACT_ID` bigint(20) DEFAULT NULL,
-  `RECEIVER_ID` bigint(20) DEFAULT NULL,
-  `MD5` varchar(255) DEFAULT NULL,
-  `CONTENT` varchar(255) DEFAULT NULL,
-  `CREATE_TIME` datetime DEFAULT NULL,
-  `CONTENT_TYPE` int(11) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8 ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
--- Records of offline_message
--- ----------------------------
+INSERT INTO `login_logs` VALUES ('1731', '2019-10-21 15:17:00', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936052 22.557995)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1732', '2019-10-21 15:19:21', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1733', '2019-10-21 15:46:31', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1734', '2019-10-21 15:47:42', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1735', '2019-10-21 15:49:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1736', '2019-10-21 15:49:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1737', '2019-10-21 15:49:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1738', '2019-10-21 15:49:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1739', '2019-10-21 15:49:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1740', '2019-10-21 15:49:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1741', '2019-10-21 15:50:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1742', '2019-10-21 15:50:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1743', '2019-10-21 15:50:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1744', '2019-10-21 16:35:23', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1745', '2019-10-21 16:35:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1746', '2019-10-21 16:35:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1747', '2019-10-21 16:41:12', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1748', '2019-10-21 16:41:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1749', '2019-10-21 16:41:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1750', '2019-10-21 16:41:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1751', '2019-10-21 16:41:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1752', '2019-10-21 16:41:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1753', '2019-10-21 16:42:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1754', '2019-10-21 16:42:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1755', '2019-10-21 16:42:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1756', '2019-10-21 16:42:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1757', '2019-10-21 16:42:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1758', '2019-10-21 16:42:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1759', '2019-10-21 16:43:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1760', '2019-10-21 16:43:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1761', '2019-10-21 16:43:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1762', '2019-10-21 16:43:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1763', '2019-10-21 16:44:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1764', '2019-10-21 16:44:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1765', '2019-10-21 16:44:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1766', '2019-10-21 16:44:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1767', '2019-10-21 16:44:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1768', '2019-10-21 16:44:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1769', '2019-10-21 16:45:24', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1770', '2019-10-21 16:45:32', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1771', '2019-10-21 16:45:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1772', '2019-10-21 16:45:43', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1773', '2019-10-21 16:45:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1774', '2019-10-21 16:46:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1775', '2019-10-21 16:46:13', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1776', '2019-10-21 16:46:23', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1777', '2019-10-21 16:46:33', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1778', '2019-10-21 16:46:44', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1779', '2019-10-21 16:46:53', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1780', '2019-10-21 16:47:03', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1781', '2019-10-21 16:47:34', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936039 22.55796)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1782', '2019-10-21 16:47:42', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1783', '2019-10-21 17:27:07', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1784', '2019-10-21 17:28:24', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.93605 22.558006)'), '3A:6E:A2:2C:CB:24');
+INSERT INTO `login_logs` VALUES ('1785', '2019-10-21 17:53:25', '18702963722', '1', '10.208.60.190', '局域网', null, '02:00:00:44:55:66');
+INSERT INTO `login_logs` VALUES ('1786', '2019-10-21 17:53:35', '15091323262', '1', '10.208.60.236', '局域网', GeomFromText('POINT(113.936037 22.557968)'), '3A:6E:A2:2C:CB:24');
 
 -- ----------------------------
 -- Table structure for service

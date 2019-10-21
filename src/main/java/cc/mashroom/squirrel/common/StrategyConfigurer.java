@@ -15,6 +15,7 @@
  */
 package cc.mashroom.squirrel.common;
 
+import  org.intellij.lang.annotations.Identifier;
 import  org.springframework.beans.factory.annotation.Value;
 import  org.springframework.context.annotation.Bean;
 import  org.springframework.context.annotation.Configuration;
@@ -33,7 +34,7 @@ import  cc.mashroom.squirrel.module.user.manager.ContactManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
 import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-import  cc.mashroom.squirrel.server.storage.DefaultMessageStorageEngine;
+import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 import  cc.mashroom.xcache.CacheFactoryStrategy;
 
 @Configuration
@@ -46,9 +47,9 @@ public  class  StrategyConfigurer
 	}
 	@Bean( name="NETTY_ACCEPTOR",destroyMethod="stop" )
 	@DependsOn( value={"PLUGIN_MANAGER"} )
-	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port )
+	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port,@Identifier  MessageStorageEngine  messageStorageEngine )
 	{
-		return  new  NettyAcceptor().initialize( host , port, new  DefaultMessageStorageEngine() );
+		return  new  NettyAcceptor().initialize( host , port, messageStorageEngine );
 	}
 	@Bean( name="PLUGIN_MANAGER",destroyMethod="stop",initMethod="initialize" )
 	public  PluginManager  pluginManager( @Value("${squirrel.cluster.enabled:false}")  boolean isCacheClusterEnabled,@Value("${squirrel.memory.policy:/memory-policy.ddl}")  String  cacheMemoryPolicyScriptFileResourcePath )

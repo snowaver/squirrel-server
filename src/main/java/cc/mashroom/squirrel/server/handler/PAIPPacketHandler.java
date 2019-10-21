@@ -41,13 +41,14 @@ import  cc.mashroom.squirrel.paip.message.chat.ChatRecallPacket;
 import  cc.mashroom.squirrel.paip.message.chat.ChatGroupEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
+import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.StringUtils;
 import  cc.mashroom.util.collection.map.HashMap;
+import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.RemoteCallable;
 import  cc.mashroom.squirrel.server.ServerInfo;
@@ -110,9 +111,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		
 		if( !( packet instanceof ConnectPacket ) && !  context.channel().hasAttr( ConnectPacket.USER_ID ) )
 		{
-			context.channel().write(  new  DisconnectAckPacket(DisconnectAckPacket.REASON_CLIENT_LOGOUT) );
-			
-			context.channel().close();//  requires  a  connect  packet  first  but  a  non-connect  packet.
+			context.channel().close(/**/);
 			
 			throw  new  IllegalStateException("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  channel  is  not  authenticated,  close  the  channel." );
 		}
@@ -136,7 +135,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		{
 			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() ==  0 )
 			{
-				String  clusterNodeId = ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments().getString( "CLUSTER_NODE_ID" );
+				String  clusterNodeId = JsonUtils.fromJson(ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments(),Map.class).getString( "CLUSTER_NODE_ID" );
 				
 				if( !     clusterNodeId.equals(ServerInfo.INSTANCE.getLocalNodeId()) )
 				{
@@ -165,12 +164,12 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof GroupChatPacket  )
 		{
-			this.processor.groupChat( context.channel() , ObjectUtils.cast(packet,GroupChatPacket.class) );
+			this.processor.groupChat( context.channel(),context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,GroupChatPacket.class) );
 		}
 		else
 		if( packet instanceof ChatRecallPacket )
 		{
-			processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
+			processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId()  , ObjectUtils.cast(packet,ChatRecallPacket.class) );
 		}
 		else
 		{

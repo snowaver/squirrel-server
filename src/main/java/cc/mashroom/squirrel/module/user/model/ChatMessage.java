@@ -39,6 +39,9 @@ public  class ChatMessage
 	@JsonProperty( value="CREATE_TIME" )
 	@Column( name="CREATE_TIME")
 	private  Timestamp  createTime;
+	@JsonProperty( value="SYNC_ID")
+	@Column( name="SYNC_ID" )
+	private  Long  syncId;
 	@JsonProperty( value="CONTACT_ID"  )
 	@Column( name="CONTACT_ID" )
 	private  Long  contactId;
@@ -55,5 +58,6 @@ public  class ChatMessage
 	@Column( name="CONTENT" )
 	private  String  content;
 	@JsonProperty( value="TRANSPORT_STATE" )
+	@Column( name="TRANSPORT_STATE"    )
 	private  Integer     transportState;
 }

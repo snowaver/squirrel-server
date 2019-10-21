@@ -17,8 +17,8 @@ package cc.mashroom.squirrel.module.user.service;
 
 import  java.sql.Timestamp;
 import  java.util.List;
-import  java.util.stream.Collectors;
 
+import  org.springframework.beans.factory.annotation.Autowired;
 import  org.springframework.http.ResponseEntity;
 import  org.springframework.stereotype.Service;
 
@@ -33,27 +33,26 @@ import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
 import  cc.mashroom.squirrel.module.user.model.Contact;
-import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
-import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.model.OoIData;
 import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
 import  cc.mashroom.squirrel.module.user.repository.ContactRepository;
-import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
-import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
-import  cc.mashroom.squirrel.paip.message.TransportState;
+import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 
 @Service
 public  class  OfflineServiceImpl  implements  OfflineService
 {
+	@Autowired
+	private  MessageStorageEngine  messageStorageEngine;
+	
 	@Connection( dataSource = @DataSource(type="db", name="squirrel") )
 	
-	public  ResponseEntity<OoIData>  lookup( int  action,long  userId,OoiDataSyncCheckpoint  checkpoints )
+	public  ResponseEntity<OoIData>  lookup( int  action,long  userId,OoiDataSyncCheckpoint  checkpoint )
 	{
-		OoIData  ooiData = new  OoIData().setContacts( checkpoints.getContactCheckpoint() == null ? Lists.newArrayList() : ContactRepository.DAO.lookup(Contact.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoints.getContactCheckpoint())}) );
+		OoIData  ooiData = new  OoIData().setContacts( checkpoint.getContactCheckpoint() == null ? Lists.newArrayList() : ContactRepository.DAO.lookup(Contact.class,"SELECT  CONTACT_ID  AS  ID,CONTACT_USERNAME  AS  USERNAME,CREATE_TIME,LAST_MODIFY_TIME,SUBSCRIBE_STATUS,REMARK,GROUP_NAME,IS_DELETED  FROM  "+ContactRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  LAST_MODIFY_TIME > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoint.getContactCheckpoint())}) );
 		
-		if(     checkpoints.getChatGroupCheckpoint() !=null )
+		if(     checkpoint.getChatGroupCheckpoint() != null )
 		{
-			if( checkpoints.getChatGroupCheckpoint() ==   0 )
+			if( checkpoint.getChatGroupCheckpoint() ==    0 )
 			{
 				ooiData.setChatGroups( ChatGroupRepository.DAO.lookup(ChatGroup.class,"SELECT  ID,IS_DELETED,CREATE_TIME,CREATE_BY,LAST_MODIFY_TIME,LAST_MODIFY_BY,NAME  FROM  "+ChatGroupRepository.DAO.getDataSourceBind().table()+"  WHERE  ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?)  ORDER  BY  ID  ASC",new  Object[]{userId}) );
 				
@@ -62,15 +61,15 @@ public  class  OfflineServiceImpl  implements  OfflineService
 				ooiData.setChatGroupSyncId(0L);
 			}
 			else
-			if( checkpoints.getChatGroupCheckpoint() >    0 )
+			if( checkpoint.getChatGroupCheckpoint() >     0 )
 			{
-				ooiData.setChatGroups( Lists.newArrayList() ).setChatGroupUsers(Lists.newArrayList() );
+				ooiData.setChatGroups( Lists.newArrayList() ).setChatGroupUsers(  Lists.newArrayList() );
 				
-				List<ChatGroupSync>   chatGroupSyncs = ChatGroupSyncRepository.DAO.lookup( ChatGroupSync.class,"SELECT  *  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?  ORDER  BY  SYNC_ID  DESC",new  Object[]{userId,checkpoints.getChatGroupCheckpoint()} );
+				List<ChatGroupSync>  chatGroupSyncs = ChatGroupSyncRepository.DAO.lookup( ChatGroupSync.class,"SELECT  *  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?  ORDER  BY  SYNC_ID  DESC",new  Object[]{userId,checkpoint.getChatGroupCheckpoint()} );
 				
 				ooiData.setChatGroupSyncId(0L);
 				
-				if( !     chatGroupSyncs.isEmpty() )
+				if( !    chatGroupSyncs.isEmpty() )
 				{
 					for(ChatGroupSync  chatGroupSync : chatGroupSyncs )
 					{
@@ -84,8 +83,8 @@ public  class  OfflineServiceImpl  implements  OfflineService
 			}
 		}
 		
-		ooiData.setOfflineChatMessages( checkpoints.getChatMessageCheckpoint() == null ? Lists.newArrayList() : ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,new  Timestamp(checkpoints.getChatMessageCheckpoint())}).stream().map((offlineChatMessage) -> offlineChatMessage.setCreateTime(new  Timestamp(offlineChatMessage.getId())).setTransportState(TransportState.RECEIVED.getValue())).collect(Collectors.toList()) );
+		ooiData.setOfflineChatMessages( checkpoint.getChatMessageCheckpoint() == null ? Lists.newArrayList() : messageStorageEngine.lookupChatMessage(userId,checkpoint.getChatMessageCheckpoint()) );
 		
-		ooiData.setOfflineGroupChatMessages( checkpoints.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,USER_ID  AS  CONTACT_ID,MD5,CONTENT_TYPE,CONTENT  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  GROUP_ID  IN  (SELECT  CHAT_GROUP_ID  FROM  "+ChatGroupUserRepository.DAO.getDataSourceBind().table()+"  WHERE  CONTACT_ID = ?  AND  IS_DELETED = FALSE)  AND  ID > ?  ORDER  BY  ID  ASC",new  Object[]{userId,checkpoints.getGroupChatMessageCheckpoint()}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setCreateTime(new  Timestamp(offlineGroupChatMessage.getId())).setTransportState(TransportState.RECEIVED.getValue())).collect(Collectors.toList()) );  return  ResponseEntity.ok( ooiData );
+		ooiData.setOfflineGroupChatMessages( checkpoint.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : messageStorageEngine.lookupChatGroupMessage(userId,checkpoint.getGroupChatMessageCheckpoint()));  return  ResponseEntity.ok( ooiData );
 	}
 }

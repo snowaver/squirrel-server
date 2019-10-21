@@ -16,6 +16,7 @@
 package cc.mashroom.squirrel.server.storage;
 
 import  java.util.List;
+import  java.util.Map;
 
 import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
@@ -24,11 +25,11 @@ import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 
 public  interface  MessageStorageEngine
 {
-	public  boolean  insert( long  userId,ChatPacket  chatPacket );
+	public  Map<Long,Long>  insert( long  userId,ChatPacket  chatPacket );
 	
 	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId );
+
+	public  Map<Long,Long>  insert( long  userId,GroupChatPacket  groupChatPacket );
 	
-	public  boolean  insert( long  userId,GroupChatPacket  groupChatPacket );
-	
-	public  List<ChatGroupMessage>  lookupChatGroupMessage( long  userId,long  syncOffsetId );
+	public  List<ChatGroupMessage>  lookupChatGroupMessage( long  userId ,long  syncOffsetId );
 }

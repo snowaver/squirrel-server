@@ -29,13 +29,13 @@ import  cc.mashroom.xcache.CacheFactory;
 @Service
 public  class  CallRoomStatusServiceImpl  implements  CallRoomStatusService
 {
-	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId,int  contentType )
+	public  ResponseEntity<String>  add( Long  roomId,long  callerId,long  calleeId  ,int  contentType )
 	{
 		Timestamp  now = new  Timestamp( DateTime.now(DateTimeZone.UTC).getMillis() );
 		
 		String  id = Math.min( callerId,calleeId )+":"+ Math.max( callerId,calleeId );
 		
-		long  newRoomId = CacheFactory.atomicLong("SQUIRREL.CALL.ROOM_ID").incrementAndGet();
+		long  newRoomId = CacheFactory.atomicLong("SQUIRREL.CALL.ROOM_ID",true).incrementAndGet();
 		
 		if( CacheFactory.getOrCreateMemTableCache("CALL_ROOM_STATUS_CACHE").update("INSERT  INTO  CALL_ROOM_STATUS  (ID,CREATE_TIME,CALLER_ID,CALLEE_ID,STATE,CALL_ROOM_ID,CONTENT_TYPE,CLOSE_REASON)  SELECT  ?,?,?,?,?,?,?,?  FROM  DUAL  WHERE  NOT  EXISTS  (SELECT  ID  FROM  CALL_ROOM_STATUS  WHERE  CALLER_ID  IN  (?,?)  OR  CALLEE_ID  IN  (?,?))",new  Object[]{id,now,callerId,calleeId,0,newRoomId,contentType,-1,callerId,calleeId,callerId,calleeId}) )
 		{

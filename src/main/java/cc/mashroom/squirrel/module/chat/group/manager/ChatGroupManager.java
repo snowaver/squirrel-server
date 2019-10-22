@@ -47,7 +47,7 @@ public  class          ChatGroupManager  implements  Plugin
 	
 	public  XAtomicLong  getChatGroupSyncId( long  userId )
 	{
-		return  SafeCacher.compareAndSetQuietly( CacheFactory.atomicLong("SQUIRREL.CHAT_GROUP.SYNC_ID("+userId+")"),0,() -> ChatGroupSyncRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+		return  SafeCacher.createAndSetIfAbsent( "SQUIRREL.CHAT_GROUP.SYNC_ID("+userId+")",() -> ChatGroupSyncRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupSyncRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
 	}
 	
 	public  Set<Long>  getChatGroupUserIds( final  long  chatGroupId )

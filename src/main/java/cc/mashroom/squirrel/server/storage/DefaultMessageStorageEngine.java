@@ -34,7 +34,6 @@ import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
 import  cc.mashroom.squirrel.paip.message.TransportState;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
 
@@ -52,12 +51,12 @@ public  class  DefaultMessageStorageEngine  implements MessageStorageEngine
 	
 	protected  XAtomicLong  getChatMessageSyncId(      long  userId )
 	{
-		return  SafeCacher.compareAndSetQuietly( CacheFactory.atomicLong("SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")"),0,() -> ChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+		return  SafeCacher.createAndSetIfAbsent( "SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")",() -> ChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
 	}
 	
 	protected  XAtomicLong  getGroupChatMessageSyncId( long  userId )
 	{
-		return  SafeCacher.compareAndSetQuietly( CacheFactory.atomicLong("SQUIRREL.GROUP_CHAT_MESSAGE.SYNC_ID("+userId+")"),0,() -> ChatGroupMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+		return  SafeCacher.createAndSetIfAbsent( "SQUIRREL.CHAT_GROUP_MESSAGE.SYNC_ID("+userId+")",() -> ChatGroupMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
 	}
 	
 	public  Map<Long,Long>  insert( long  userId ,GroupChatPacket  packet )

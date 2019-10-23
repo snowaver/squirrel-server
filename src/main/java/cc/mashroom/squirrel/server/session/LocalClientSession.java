@@ -15,18 +15,18 @@
  */
 package cc.mashroom.squirrel.server.session;
 
-import  java.io.IOException;
-
 import  io.netty.channel.Channel;
 import  lombok.AllArgsConstructor;
 import  lombok.Getter;
 import  lombok.NoArgsConstructor;
 import  lombok.extern.slf4j.Slf4j;
+
 import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.call.CallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallReason;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
+
 
 @Slf4j
 @NoArgsConstructor
@@ -34,7 +34,7 @@ import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 public  class  LocalClientSession  implements      ClientSession
 {
 	@Getter
-	private  long   userId;
+	private  long  userId;
 	@Getter
 	private  Channel     channel;
 	
@@ -43,7 +43,7 @@ public  class  LocalClientSession  implements      ClientSession
 		this.channel.writeAndFlush(  packet);
 	}
 	
-	public  void  close(   int  closeReason )throws  IOException
+	public  void  close(   int  closeReason )
 	{
 		try
 		{
@@ -51,7 +51,11 @@ public  class  LocalClientSession  implements      ClientSession
 			
 			if( closeReason>= 0 )  this.channel.writeAndFlush( new  DisconnectAckPacket(closeReason) );
 			
-			this.channel.close();
+			this.channel.close().await(2000);
+		}
+		catch( InterruptedException  itptex )
+		{
+			
 		}
 		finally
 		{

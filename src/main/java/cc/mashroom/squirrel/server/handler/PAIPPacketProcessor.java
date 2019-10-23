@@ -24,11 +24,9 @@ import  cc.mashroom.squirrel.paip.message.chat.ChatGroupEventPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.squirrel.server.session.LocalClientSession;
 import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
@@ -36,7 +34,7 @@ import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 @AllArgsConstructor
 public  class  PAIPPacketProcessor
 {
-	public  void  connect(        Channel  channel, ConnectPacket  packet   )
+	public  void  connect(        Channel  channel,  ConnectPacket  packet  )
 	{
         if( packet.getProtocolVersion() != 1 )
         {
@@ -45,30 +43,14 @@ public  class  PAIPPacketProcessor
             return;
         }
 
-        long  userId = Long.parseUnsignedLong(      packet.getAccessKey()  );
+        long  userId = Long.parseUnsignedLong(       packet.getAccessKey() );
         
-        Map<String,Object>  clientSessionLocation = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );
+        Map<String,Object>  clientSessionLocation  = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?  AND  IS_ONLINE = TRUE",new  Object[]{userId} );
         
         if( clientSessionLocation==null || !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
         	channel.writeAndFlush(new  ConnectAckPacket(ConnectAckPacket.BAD_USERNAME_OR_PASSWORD,false)).channel().close();
         	
-        	return;
-        }
-        //  the  old  session  should  be  removed  to  avoid  delayed  session  inactive  event  from  closing  the  new  created  session  managed  by  session  manager.
-        ClientSession  oldSession     = ClientSessionManager.INSTANCE.remove( userId );
-        //  close  the  old  session  if  the  secret  key  is  different  from  the  old  one.  (NOTE:  a  client  holds  a  unique  secret  key,  so  should  not  close  the  session  with  the  same  secret  key)
-        if( oldSession != null && clientSessionLocation != null && !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
-        {
-        	try
-        	{
-				oldSession.close( DisconnectAckPacket.REASON_REMOTE_SIGNIN );
-			}
-        	catch( Exception  e )
-        	{
-				
-			}
-        
         	return;
         }
         

@@ -17,7 +17,7 @@ package cc.mashroom.squirrel.module.user.model;
 
 import  java.sql.Timestamp;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import  com.fasterxml.jackson.annotation.JsonFormat;
 import  com.fasterxml.jackson.annotation.JsonProperty;
 
 import  cc.mashroom.db.annotation.Column;
@@ -27,10 +27,10 @@ import  lombok.NoArgsConstructor;
 import  lombok.experimental.Accessors;
 
 @Data
-@Accessors( chain=  true )
+@Accessors( chain = true )
 @NoArgsConstructor
 @AllArgsConstructor
-public  class ChatMessage
+public  class  ChatMessage
 {
 	@JsonProperty( value="ID"  )
 	@Column( name="ID"   )
@@ -60,4 +60,6 @@ public  class ChatMessage
 	@JsonProperty( value="TRANSPORT_STATE" )
 	@Column( name="TRANSPORT_STATE"    )
 	private  Integer     transportState;
+	@JsonProperty( value="IS_LOCAL"    )
+	private  Boolean isLocal;
 }

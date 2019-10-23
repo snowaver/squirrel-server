@@ -19,10 +19,8 @@ import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
-import  java.io.IOException;
-
 import  cc.mashroom.squirrel.paip.message.Packet;
-import cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
+import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.util.ObjectUtils;
 
@@ -36,19 +34,9 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventP
 			{
 				ClientSession  clientSession = ClientSessionManager.INSTANCE.get( parameters.getLong("USER_ID") );
 				
-				if( clientSession != null )
-				{
-					try
-					{
-						clientSession.close( parameters.getInteger( "CLOSE_REASON" ) );
-					}
-					catch( IOException  e )
-					{
-						return  (T)  Boolean.FALSE;
-					}
-				}
+				if( clientSession != null)  clientSession.close(parameters.getInteger("CLOSE_REASON") );
 				
-				return  (T)  Boolean.FALSE;
+				return  (T)  Boolean.TRUE;
 			}
 			case   1:
 			{

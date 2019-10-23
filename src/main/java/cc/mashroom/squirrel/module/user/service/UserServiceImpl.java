@@ -33,6 +33,9 @@ import  cc.mashroom.squirrel.common.IPLocator;
 import  cc.mashroom.squirrel.module.logs.repository.LoginLogsRepository;
 import  cc.mashroom.squirrel.module.user.model.User;
 import  cc.mashroom.squirrel.module.user.repository.UserRepository;
+import cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
+import cc.mashroom.squirrel.server.session.ClientSession;
+import cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.xcache.CacheFactory;
 import  lombok.SneakyThrows;
 import  cc.mashroom.util.DigestUtils;
@@ -75,12 +78,17 @@ public  class  UserServiceImpl     implements  UserService
 	
 	public  ResponseEntity<String>  signin(   String  username,String  password,Integer  roletype,String  ip,Double  longitude,Double  latitude,String  mac )
 	{
-		User  user = UserRepository.DAO.lookupOne( User.class,"SELECT  ID,USERNAME,NAME,NICKNAME,ROLETYPE  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  USERNAME = ?  AND  PASSWORD = ?  AND  ROLETYPE = ?",new  Object[]{username,password,roletype} );
+		User   user = UserRepository.DAO.lookupOne( User.class,"SELECT  ID,USERNAME,NAME,NICKNAME,ROLETYPE  FROM  "+UserRepository.DAO.getDataSourceBind().table()+"  WHERE  USERNAME = ?  AND  PASSWORD = ?  AND  ROLETYPE = ?",new  Object[]{username,password,roletype} );
 		
 		String  secretKey= UUID.randomUUID().toString().toUpperCase();
 		
 		if( user != null )
 		{
+	        //  the  old  session  should  be  removed  to  avoid  delayed  session  inactive  event  from  closing  the  new  created  session  managed  by  the  session  manager
+	        ClientSession  oldSession       =  ClientSessionManager.INSTANCE.remove( user.getId() );
+	        //  close  the  old  session  if  the  secret  key  is  different  from  the  old  one.  (NOTE:  a  client  holds  a  unique  secret  key,  so  should  not  close  the  session  with  the  same  secret  key)
+	        if( oldSession !=  null )  oldSession.close( DisconnectAckPacket.REASON_REMOTE_SIGNIN );
+			
 			CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").update( "MERGE  INTO  SESSION_LOCATION  (USER_ID,CREATE_TIME,CLUSTER_NODE_ID,SECRET_KEY)  VALUES  (?,?,?,?)",new  Object[]{user.getId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),null,secretKey} );
 		}
 		

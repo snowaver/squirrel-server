@@ -70,11 +70,11 @@ public  class  DefaultMessageStorageEngine  implements MessageStorageEngine
 	
 	public  List<ChatGroupMessage>  lookupChatGroupMessage(  long  userId,long  chatGroupMessageSyncOffsetId )
 	{
-		return  ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatGroupMessageSyncOffsetId}).stream().map((offlineChatMessage) -> offlineChatMessage.setCreateTime(new  Timestamp(offlineChatMessage.getId()))).collect( Collectors.toList() );
+		return  ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatGroupMessageSyncOffsetId}).stream().map((offlineChatMessage) -> offlineChatMessage.setIsLocal(false).setCreateTime(new  Timestamp(offlineChatMessage.getId()))).collect( Collectors.toList() );
 	}
 	
 	public  List<ChatMessage>  lookupChatMessage( long  userId,long  chatMessageSyncOffsetId )
 	{
-		return  ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatMessageSyncOffsetId}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setCreateTime(new  Timestamp(offlineGroupChatMessage.getId()))).collect(Collectors.toList());
+		return  ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatMessageSyncOffsetId}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setIsLocal(false).setCreateTime(new  Timestamp(offlineGroupChatMessage.getId()))).collect(Collectors.toList());
 	}
 }

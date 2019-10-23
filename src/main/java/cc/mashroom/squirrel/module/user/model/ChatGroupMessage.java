@@ -65,4 +65,6 @@ public  class    ChatGroupMessage
 	@JsonProperty( value=   "GROUP_ID" )
 	@Column( name="GROUP_ID")
 	private  Long    groupId;
+	@JsonProperty( value="IS_LOCAL"    )
+	private  Boolean isLocal;
 }

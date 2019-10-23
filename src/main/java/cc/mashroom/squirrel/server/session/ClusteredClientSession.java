@@ -15,7 +15,6 @@
  */
 package cc.mashroom.squirrel.server.session;
 
-import  java.io.IOException;
 import  java.util.Arrays;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
@@ -43,7 +42,7 @@ public  class  ClusteredClientSession  implements  ClientSession
 		}
 	}
 	
-	public  void  close( int  closeReason )  throws  IOException
+	public  void  close( int  closeReason )//throws  IOException
 	{
 		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(ServerInfo.INSTANCE.getLocalNodeId()) )
 		{

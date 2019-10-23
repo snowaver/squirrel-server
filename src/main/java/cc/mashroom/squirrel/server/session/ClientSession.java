@@ -15,15 +15,13 @@
  */
 package cc.mashroom.squirrel.server.session;
 
-import  java.io.IOException;
-
 import  cc.mashroom.squirrel.paip.message.Packet;
 
 public  interface  ClientSession
 {
 	public  long  getUserId();
 	
-	public  void  close( int  reason )  throws  IOException;
+	public  void  close( int  closeReason );  //  throws  IOException;
 	
 	public  void  deliver( Packet  packet );
 }

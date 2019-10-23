@@ -15,7 +15,6 @@
  */
 package cc.mashroom.squirrel.server.session;
 
-import  java.io.IOException;
 import  java.sql.Timestamp;
 
 import  org.joda.time.DateTime;
@@ -60,11 +59,11 @@ public  class  ClientSessionManager  implements  Plugin
 	
 	public  ClientSession  get( long  userId )
 	{
-		return  this.localClientSessionCache.computeIfAbsent( userId,(key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
+		return  localClientSessionCache.computeIfAbsent( userId  , (key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
 	}
 	
 	public  void  stop()
 	{
-		this.localClientSessionCache.entrySet().forEach( (entry) -> { try{ entry.getValue().close(DisconnectAckPacket.REASON_UNKNOWN_ERROR ); }catch( IOException  e ){} } );
+		this.localClientSessionCache.entrySet().forEach( (entry)-> entry.getValue().close(    DisconnectAckPacket.REASON_UNKNOWN_ERROR ) );
 	}
 }

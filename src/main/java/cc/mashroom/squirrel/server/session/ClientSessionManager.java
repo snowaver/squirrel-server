@@ -27,13 +27,14 @@ import  cc.mashroom.util.collection.map.ConcurrentHashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XMemTableCache;
+import  lombok.Getter;
 import  lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 public  class  ClientSessionManager  implements  Plugin
 {
 	private  Map<Long,ClientSession>  localClientSessionCache  = new  ConcurrentHashMap<Long,ClientSession>();
-
+	@Getter
 	private  XMemTableCache       sessionLocationCache;
 	
 	public  final  static  ClientSessionManager  INSTANCE = new  ClientSessionManager();
@@ -46,8 +47,8 @@ public  class  ClientSessionManager  implements  Plugin
 	public  ClientSession  remove(       long  userId )
 	{
 		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{false,userId} );		
-		//  leave  the  secret  key  available  for  reconnecting.
-		return  this.localClientSessionCache.remove(     userId );
+		
+		return  localClientSessionCache.remove(userId);
 	}
 	
 	public  void  put( long  userId, LocalClientSession  session )

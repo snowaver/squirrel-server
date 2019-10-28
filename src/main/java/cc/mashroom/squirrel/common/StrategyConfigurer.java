@@ -32,7 +32,6 @@ import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.user.manager.ContactManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
-import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 import  cc.mashroom.xcache.CacheFactoryStrategy;
@@ -41,6 +40,7 @@ import  cc.mashroom.xcache.CacheFactoryStrategy;
 public  class  StrategyConfigurer
 {
 	@Bean( name="COOKIE_LOCALE_RESOLVER" )
+	
 	public  LocaleResolver getLocaleResolver()
 	{
 		return    new  CookieLocaleResolver();
@@ -56,8 +56,6 @@ public  class  StrategyConfigurer
 	{
 		CacheFactoryStrategy  cacheFactoryStrategy= isCacheClusterEnabled ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 		
-		PluginManager  pluginManager = PluginManager.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy,cacheMemoryPolicyScriptFileResourcePath).register(ClientSessionManager.INSTANCE).register(ChatGroupManager.INSTANCE).register(CallManager.INSTANCE).register( ContactManager.INSTANCE );
-		
-		ServerInfo.INSTANCE.setLocalNodeId(  cacheFactoryStrategy.getLocalNodeId() );  return  pluginManager;
+		return  PluginManager.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy,cacheMemoryPolicyScriptFileResourcePath).register(ClientSessionManager.INSTANCE).register(ChatGroupManager.INSTANCE).register(CallManager.INSTANCE).register( ContactManager.INSTANCE );
 	}
 }

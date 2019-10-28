@@ -15,14 +15,7 @@
  */
 package cc.mashroom.squirrel.server;
 
-import  lombok.Getter;
-import  lombok.Setter;
-
 public  class  ServerInfo
 {
-	@Getter
-	@Setter
-	private  String  localNodeId;
-
 	public  final  static  ServerInfo  INSTANCE = new  ServerInfo();
 }

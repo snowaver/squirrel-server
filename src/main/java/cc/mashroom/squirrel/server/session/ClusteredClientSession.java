@@ -19,7 +19,6 @@ import  java.util.Arrays;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.util.collection.map.HashMap;
-import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.RemoteCallable;
 import  lombok.AllArgsConstructor;
@@ -36,7 +35,7 @@ public  class  ClusteredClientSession  implements  ClientSession
 	
 	public  void  deliver( Packet  packet )
 	{
-		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(ServerInfo.INSTANCE.getLocalNodeId()) )
+		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(CacheFactory.getLocalNodeId()) )
 		{
 			CacheFactory.call( new  RemoteCallable<Boolean>(1,new  HashMap<String,Object>().addEntry("USER_ID",userId).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
 		}
@@ -44,7 +43,7 @@ public  class  ClusteredClientSession  implements  ClientSession
 	
 	public  void  close( int  closeReason )//throws  IOException
 	{
-		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(ServerInfo.INSTANCE.getLocalNodeId()) )
+		if( clusterNodeId != null && !clusterNodeId.equalsIgnoreCase(CacheFactory.getLocalNodeId()) )
 		{
 			CacheFactory.call( new  RemoteCallable<Boolean>(0,new  HashMap<String,Object>().addEntry("USER_ID",userId).addEntry("CLOSE_REASON",closeReason)),Arrays.asList(clusterNodeId) );
 		}

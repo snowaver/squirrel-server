@@ -31,10 +31,10 @@ import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupSync;
 import  cc.mashroom.squirrel.module.chat.group.model.OoIData;
 import  cc.mashroom.squirrel.module.chat.group.service.ChatGroupService;
 import  cc.mashroom.squirrel.paip.message.chat.ChatGroupEventPacket;
-import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.handler.PacketRoute;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
+import  cc.mashroom.xcache.CacheFactory;
 
 @RequestMapping("/chat/group" )
 @RestController
@@ -56,7 +56,7 @@ public  class  ChatGroupController  extends  AbstractController
 		
 		java.util.Map<Long,Long>  chatGroupSyncIds = responseEntity.getBody().getChatGroupSyncs().stream().collect(  Collectors.toMap(ChatGroupSync::getUserId,ChatGroupSync::getSyncId) );
 		
-		ChatGroupManager.INSTANCE.getChatGroupUserIds(chatGroupId).parallelStream().filter((contactId) -> contactId != sessionProfile.getLong("USER_ID")).forEach( (contactId) -> PacketRoute.INSTANCE.route(contactId,new  ChatGroupEventPacket(chatGroupId,ChatGroupEventPacket.EVENT_GROUP_UPDATED,ServerInfo.INSTANCE.getLocalNodeId(),JsonUtils.toJson(new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers()).setChatGroupSyncId(chatGroupSyncIds.get(contactId))))) );
+		ChatGroupManager.INSTANCE.getChatGroupUserIds(chatGroupId).parallelStream().filter((contactId) -> contactId != sessionProfile.getLong("USER_ID")).forEach( (contactId) -> PacketRoute.INSTANCE.route(contactId,new  ChatGroupEventPacket(chatGroupId,ChatGroupEventPacket.EVENT_GROUP_UPDATED,CacheFactory.getLocalNodeId(),JsonUtils.toJson(new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers()).setChatGroupSyncId(chatGroupSyncIds.get(contactId))))) );
 		
 		return  ResponseEntity.ok( new  OoIData(responseEntity.getBody().getChatGroups(),responseEntity.getBody().getChatGroupUsers()).setChatGroupSyncId( chatGroupSyncIds.get(sessionProfile.getLong("USER_ID"))) );
 	}

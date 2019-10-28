@@ -20,7 +20,6 @@ import  java.sql.Timestamp;
 import  org.joda.time.DateTime;
 import  org.joda.time.DateTimeZone;
 
-import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.paip.message.connect.DisconnectAckPacket;
 import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.util.collection.map.ConcurrentHashMap;
@@ -53,14 +52,14 @@ public  class  ClientSessionManager  implements  Plugin
 	
 	public  void  put( long  userId, LocalClientSession  session )
 	{
-		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{ServerInfo.INSTANCE.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,userId} );
+		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{CacheFactory.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,userId} );
 
 		localClientSessionCache.put( userId, session );
 	}
 	
 	public  ClientSession  get( long  userId )
 	{
-		return  localClientSessionCache.computeIfAbsent( userId  , (key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || ServerInfo.INSTANCE.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
+		return  localClientSessionCache.computeIfAbsent( userId  , (key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || CacheFactory.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
 	}
 	
 	public  void  stop()

@@ -51,7 +51,6 @@ import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.RemoteCallable;
-import  cc.mashroom.squirrel.server.ServerInfo;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
@@ -118,7 +117,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		
 		if( packet instanceof ConnectPacket    )
 		{
-			this.processor.connect(    context.channel(),ObjectUtils.cast(packet,   ConnectPacket.class) );
+			this.processor.connect( context.channel(),ObjectUtils.cast(packet,    ConnectPacket.class   ));
 		}
 		else
 		if( packet instanceof PingPacket )
@@ -137,7 +136,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 			{
 				String  clusterNodeId = JsonUtils.fromJson(ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments(),Map.class).getString( "CLUSTER_NODE_ID" );
 				
-				if( !     clusterNodeId.equals(ServerInfo.INSTANCE.getLocalNodeId()) )
+				if( !   clusterNodeId.equals(CacheFactory.getLocalNodeId() ) )
 				{
 					CacheFactory.call( new  RemoteCallable<Boolean>(2,new  HashMap<String,Object>().addEntry("USER_ID",context.channel().attr(ConnectPacket.USER_ID).get()).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
 				}
@@ -173,7 +172,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		}
 		else
 		{
-			if( !this.externalProcessors.stream().anyMatch( (externalProcessor) -> externalProcessor.process(ObjectUtils.cast(packet))) )
+			if( !this.externalProcessors.stream().anyMatch((externalProcessor)  -> externalProcessor.process(ObjectUtils.cast(packet))) )
 			{
 				throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );
 			}

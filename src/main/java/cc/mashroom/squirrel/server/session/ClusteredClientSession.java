@@ -20,7 +20,7 @@ import  java.util.Arrays;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.RemoteCallable;
+import  cc.mashroom.xcache.remote.RemoteCallable;
 import  lombok.AllArgsConstructor;
 import  lombok.Getter;
 

@@ -24,7 +24,7 @@ import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.util.ObjectUtils;
 
-public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.RemoteEventProcessor
+public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.remote.RemoteEventProcessor
 {
 	public  <T>  T  process( int  eventType,Map<String,Object>  parameters )
 	{

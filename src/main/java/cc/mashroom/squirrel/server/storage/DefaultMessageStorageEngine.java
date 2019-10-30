@@ -18,14 +18,20 @@ package cc.mashroom.squirrel.server.storage;
 import  java.sql.Timestamp;
 import  java.util.List;
 import  java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import  java.util.stream.Collectors;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+
+import org.springframework.context.annotation.DependsOn;
 import  org.springframework.stereotype.Service;
 import  org.springframework.util.Assert;
 
 import  com.google.common.collect.Lists;
 
 import  cc.mashroom.db.util.ConnectionUtils;
+import cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
@@ -34,12 +40,16 @@ import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
 import  cc.mashroom.squirrel.paip.message.TransportState;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
+import cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.atomic.XAtomicLong;
 import  cc.mashroom.xcache.util.SafeCacher;
 
 @Service
-public  class  DefaultMessageStorageEngine  implements MessageStorageEngine
+@DependsOn( value={"PLUGIN_MANAGER"} )
+public  class  DefaultMessageStorageEngine  implements  MessageStorageEngine
 {
+	
+	
 	public  Map<Long,Long>  insert( long  userId,ChatPacket  packet )
 	{
 		Map<Long,Long>  syncIds = Lists.newArrayList(userId,packet.getContactId()).stream().collect( Collectors.toMap((id) -> id,(id) -> getChatMessageSyncId(id).incrementAndGet()) );
@@ -76,5 +86,22 @@ public  class  DefaultMessageStorageEngine  implements MessageStorageEngine
 	public  List<ChatMessage>  lookupChatMessage( long  userId,long  chatMessageSyncOffsetId )
 	{
 		return  ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatMessageSyncOffsetId}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setIsLocal(false).setCreateTime(new  Timestamp(offlineGroupChatMessage.getId()))).collect(Collectors.toList());
+	}
+
+	protected  BlockingQueue<Object[]>  chatMessageBatchParametersQueue;
+	
+	protected  BlockingQueue<Object[]>  chatGroupMessageBatchParametersQueue;
+	
+	@PostConstruct
+	public  void  initialize( Object...  parameters )
+	{
+		this.chatMessageBatchParametersQueue =  CacheFactory.queue( "CHAT_MESSAGE_BATCH_PARAMETERS_QUEUE" );
+		
+		this.chatGroupMessageBatchParametersQueue = CacheFactory.queue( "CHAT_GROUP_MESSAGE_BATCH_PARAMETERS_QUEUE" );
+	}
+	@PreDestroy
+	public  void  stop()
+	{
+		
 	}
 }

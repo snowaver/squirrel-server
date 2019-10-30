@@ -50,7 +50,7 @@ import  cc.mashroom.util.StringUtils;
 import  cc.mashroom.util.collection.map.HashMap;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.RemoteCallable;
+import  cc.mashroom.xcache.remote.RemoteCallable;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 

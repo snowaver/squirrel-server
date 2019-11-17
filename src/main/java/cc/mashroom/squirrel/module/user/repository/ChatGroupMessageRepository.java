@@ -15,14 +15,33 @@
  */
 package cc.mashroom.squirrel.module.user.repository;
 
+import  java.util.List;
+import  java.util.concurrent.atomic.AtomicInteger;
+
+import  org.apache.commons.lang.StringUtils;
+
 import  cc.mashroom.db.GenericRepository;
 import  cc.mashroom.db.annotation.DataSourceBind;
+import  cc.mashroom.squirrel.paip.message.TransportState;
+import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
+import  cc.mashroom.squirrel.server.handler.Route;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@DataSourceBind( name="squirrel",table="chat_group_message" )
+@DataSourceBind(  name="squirrel" , table="chat_group_message" )
 @NoArgsConstructor( access=AccessLevel.PRIVATE )
 public  class  ChatGroupMessageRepository  extends  GenericRepository
 {
-	public  final  static  ChatGroupMessageRepository  DAO = new  ChatGroupMessageRepository();
+	public  final   static  ChatGroupMessageRepository  DAO= new  ChatGroupMessageRepository();
+	
+	public  void  insert( List<Route<GroupChatPacket>>  routes )
+	{
+		AtomicInteger  i = new  AtomicInteger();
+		
+		Object[]  params = new  Object[ routes.size()*  8 ];
+		
+		routes.forEach( (route) -> { params[i.getAndIncrement()] = route.getPacket().getId();  params[i.getAndIncrement()] = route.getPacket().getSyncId();  params[i.getAndIncrement()] = route.getPacket().getGroupId();  params[i.getAndIncrement()] = route.getPacket().getContactId();  params[i.getAndIncrement()] = route.getUserId();  params[i.getAndIncrement()] = route.getPacket().getMd5();  params[i.getAndIncrement()] = new  String(route.getPacket().getContent());  params[i.getAndIncrement()] = route.getPacket().getContentType().getValue();  params[i.getAndIncrement()] = route.getPacket().getContactId() == route.getUserId() ? TransportState.SENT.getValue() : TransportState.RECEIVED.getValue(); } );
+		
+		super.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE,TRANSPORT_STATE)  VALUES  "+StringUtils.rightPad("(?,?,?,?,?,?,?,?,?)",routes.size()*",(?,?,?,?,?,?,?,?,?)".length()-1,",(?,?,?,?,?,?,?,?,?)"),params );
+	}
 }

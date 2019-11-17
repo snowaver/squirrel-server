@@ -16,20 +16,13 @@
 package cc.mashroom.squirrel.server.storage;
 
 import  java.util.List;
-import  java.util.Map;
 
-import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
-import  cc.mashroom.squirrel.module.user.model.ChatMessage;
-import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
-import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
+import  cc.mashroom.squirrel.paip.message.Packet;
+import  cc.mashroom.squirrel.server.handler.Route;
 
-public  interface  MessageStorageEngine
+public  interface  MessageStorageEngine<P extends Packet<P>>
 {
-	public  Map<Long,Long>  insert( long  userId,ChatPacket  chatPacket );
+	public  Route<P>  presave( Route<P>  route );
 	
-	public  List<ChatMessage>  lookupChatMessage( long  userId,long  syncOffsetId );
-
-	public  Map<Long,Long>  insert( long  userId,GroupChatPacket  groupChatPacket );
-	
-	public  List<ChatGroupMessage>  lookupChatGroupMessage( long  userId ,long  syncOffsetId );
+	public  <T>  List<T>  lookup( Class  <T>  clazz,long  userId,long  messageOffsetSyncId );
 }

@@ -28,7 +28,7 @@ import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
 import  cc.mashroom.squirrel.paip.message.call.CloseCallReason;
 import  cc.mashroom.squirrel.paip.message.call.SDPPacket;
 import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.server.handler.PacketRoute;
+import  cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
 import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.xcache.CacheFactory;
 import  cc.mashroom.xcache.XMemTableCache;
@@ -49,7 +49,7 @@ public  class      CallManager  implements  Plugin
 		if( packet instanceof SDPPacket || packet instanceof CandidatePacket  /* both  peers  are  exchanging  sdp  and  candidate  informations  after  the  call  is  connected. */ )
 		{
 			{
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+				PAIPPacketRouter.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 		}
 		
@@ -67,21 +67,21 @@ public  class      CallManager  implements  Plugin
 			{
 				channel.attr( CallPacket.CALL_ROOM_ID ).set( roomId );
 				
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+				PAIPPacketRouter.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 		}
 		if( packet instanceof    CallAckPacket   )
 		{
 			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode() == CallAckPacket.ACK_AGREE && callRoomStatusCache.update("UPDATE  CALL_ROOM_STATUS  SET  STATE = ?  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{2,callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+				PAIPPacketRouter.INSTANCE.route( contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 			}
 			else
 			if( callRoomStatus.getState() == 1 && ObjectUtils.cast(packet,CallAckPacket.class).getResponseCode()   == CallAckPacket.ACK_AGREE )
 			{
 				this.callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId} );
 			
-				PacketRoute.INSTANCE.route(contactId,new  CloseCallPacket(channel.attr(ConnectPacket.USER_ID).get(),roomId,CloseCallReason.DECLINE) );
+				PAIPPacketRouter.INSTANCE.route(contactId,new  CloseCallPacket(channel.attr(ConnectPacket.USER_ID).get(),roomId,CloseCallReason.DECLINE) );
 			}
 		}
 		else
@@ -89,12 +89,12 @@ public  class      CallManager  implements  Plugin
 		{
 			if( callRoomStatus.getState() == 1 && this.callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.CANCEL ) );
+				PAIPPacketRouter.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.CANCEL ) );
 			}
 			else
 			if( callRoomStatus.getState() == 2 && this.callRoomStatusCache.update("DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{callRoomStatus.getId(),roomId}) )
 			{
-				PacketRoute.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.BY_USER) );
+				PAIPPacketRouter.INSTANCE.route( contactId,ObjectUtils.cast(packet,CloseCallPacket.class).setContactId(channel.attr(ConnectPacket.USER_ID).get()).setReason(CloseCallReason.BY_USER) );
 			}
 		}
 	}
@@ -131,7 +131,7 @@ public  class      CallManager  implements  Plugin
 		{
 			this.callRoomStatusCache.update( "DELETE  FROM  CALL_ROOM_STATUS  WHERE  ID = ?  AND  CALL_ROOM_ID = ?",new  Object[]{roomId} );
 			
-			PacketRoute.INSTANCE.route( callRoomStatus.getCallerId(),new  CloseCallPacket(callRoomStatus.getCalleeId(),callRoomStatus.getCallRoomId(),closeCallReason) );  PacketRoute.INSTANCE.route(  callRoomStatus.getCalleeId(),new  CloseCallPacket(callRoomStatus.getCallerId(),callRoomStatus.getCallRoomId(),closeCallReason) );
+			PAIPPacketRouter.INSTANCE.route( callRoomStatus.getCallerId(),new  CloseCallPacket(callRoomStatus.getCalleeId(),callRoomStatus.getCallRoomId(),closeCallReason) );  PAIPPacketRouter.INSTANCE.route(  callRoomStatus.getCalleeId(),new  CloseCallPacket(callRoomStatus.getCallerId(),callRoomStatus.getCallRoomId(),closeCallReason) );
 		}
 	}
 }

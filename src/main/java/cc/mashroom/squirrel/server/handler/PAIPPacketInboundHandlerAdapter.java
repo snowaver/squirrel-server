@@ -54,9 +54,9 @@ import  cc.mashroom.xcache.remote.RemoteCallable;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
-public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
+public  class    PAIPPacketInboundHandlerAdapter       extends  ChannelInboundHandlerAdapter
 {
-	public  PAIPPacketHandler(      PAIPPacketProcessor  processor )  //  throws  InstantiationException,IllegalAccessException,ClassNotFoundException
+	public  PAIPPacketInboundHandlerAdapter(      PAIPPacketProcessor  processor )  //  throws  InstantiationException,IllegalAccessException,ClassNotFoundException
 	{
 		this.processor= processor;
 		
@@ -93,7 +93,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 			{
 				session.close(-1);
 				/*
-				System.err.println( String.format("the  connection  channel  is  inactive  now  so  close  the  session  (user  id:  %d)",userId) );
+				System.err.println( String.format("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  connection  channel  is  inactive  now  so  close  the  session  ( user  id:  %d ).",userId) );
 				*/
 			}
 		}
@@ -122,7 +122,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof PingPacket )
 		{
-			context.channel().writeAndFlush( new  PingAckPacket() );
+			context.channel().writeAndFlush( new  PingAckPacket(context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,PingPacket.class).getId()) );
 		}
 		else
 		if( packet instanceof ChatPacket )
@@ -134,7 +134,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		{
 			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() ==  0 )
 			{
-				String  clusterNodeId = JsonUtils.fromJson(ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments(),Map.class).getString( "CLUSTER_NODE_ID" );
+				String  clusterNodeId = JsonUtils.fromJson(ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments(),Map.class).getString(   "CLUSTER_NODE_ID" );
 				
 				if( !   clusterNodeId.equals(CacheFactory.getLocalNodeId() ) )
 				{
@@ -142,7 +142,7 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 				}
 				else
 				{
-					PacketRoute.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.USER_ID).get() , ObjectUtils.cast(packet) );
+					PAIPPacketRouter.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.USER_ID).get() , ObjectUtils.cast(packet) );
 				}
 				
 				return;
@@ -163,12 +163,12 @@ public  class    PAIPPacketHandler       extends  ChannelInboundHandlerAdapter
 		else
 		if( packet instanceof GroupChatPacket  )
 		{
-			this.processor.groupChat( context.channel(),context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,GroupChatPacket.class) );
+			processor.groupChat( context.channel(),context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,GroupChatPacket.class) );
 		}
 		else
 		if( packet instanceof ChatRecallPacket )
 		{
-			processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId()  , ObjectUtils.cast(packet,ChatRecallPacket.class) );
+			this.processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
 		}
 		else
 		{

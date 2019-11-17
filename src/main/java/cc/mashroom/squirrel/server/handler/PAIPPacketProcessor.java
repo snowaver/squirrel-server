@@ -38,20 +38,20 @@ public  class  PAIPPacketProcessor
 {
 	public  void  connect(        Channel  channel,  ConnectPacket  packet  )
 	{
+		long userId = Long.parseUnsignedLong(        packet.getAccessKey() );
+		
         if( packet.getProtocolVersion() != 1 )
         {
-            channel.writeAndFlush( new  ConnectAckPacket(ConnectAckPacket.UNNACEPTABLE_PROTOCOL_VERSION,false)).channel().close();
+            channel.writeAndFlush(new  ConnectAckPacket(userId,packet.getId(),ConnectAckPacket.UNNACEPTABLE_PROTOCOL_VERSION,false)).channel().close();
             
             return;
         }
 
-        long userId = Long.parseUnsignedLong(        packet.getAccessKey() );
-        
         Map<String,Object>  clientSessionLocation  = CacheFactory.getOrCreateMemTableCache("SESSION_LOCATION_CACHE").lookupOne( Map.class,"SELECT  SECRET_KEY  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );
         
         if( clientSessionLocation==null || !(new  String(packet.getSecretKey())).equals(clientSessionLocation.get("SECRET_KEY")) )
         {
-        	channel.writeAndFlush(new  ConnectAckPacket(ConnectAckPacket.BAD_USERNAME_OR_PASSWORD,false)).channel().close();
+        	channel.writeAndFlush(new  ConnectAckPacket(userId,packet.getId(),ConnectAckPacket.BAD_USERNAME_OR_PASSWORD     ,false)).channel().close();
         	
         	return;
         }
@@ -71,12 +71,12 @@ public  class  PAIPPacketProcessor
 
         channel.pipeline().addFirst(  "handler.idle.state",new  IdleStateHandler((int ) (packet.getKeepalive()*1.5f),0,0) );
         
-        channel.writeAndFlush(   new  ConnectAckPacket(ConnectAckPacket.CONNECTION_ACCEPTED,false) );
+        channel.writeAndFlush(   new  ConnectAckPacket(userId,packet.getId(),ConnectAckPacket.CONNECTION_ACCEPTED, false) );
 	}
 	
 	public  void  chatRecall( Channel  channel ,long  userId,ChatRecallPacket  packet )
 	{
-		PacketRoute.INSTANCE.route( userId , packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+		PAIPPacketRouter.INSTANCE.route( userId , packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 	}
 	
 	public  void  groupChat(  Channel  channel ,long  userId, GroupChatPacket  packet )
@@ -88,27 +88,27 @@ public  class  PAIPPacketProcessor
 				channel.writeAndFlush( new  PendingAckPacket(packet.getContactId(),packet.getId()).setAttatchments(String.format("{\"SYNC_ID\":%d}",chatGroupUserSyncIds.get(channel.attr(ConnectPacket.USER_ID).get()))) );
 			}
 			
-			chatGroupUserSyncIds.entrySet().parallelStream().filter((entry)->  entry.getKey() != packet.getContactId()).forEach(    (entry) -> PacketRoute.INSTANCE.route(entry.getKey(),packet.clone().setSyncId(entry.getValue())) );
+			chatGroupUserSyncIds.entrySet().parallelStream().filter((entry)->  entry.getKey() != packet.getContactId()).forEach(    (entry) -> PAIPPacketRouter.INSTANCE.route(entry.getKey(),packet.clone().setSyncId(entry.getValue())) );
 		}
 	}
 	
 	public  void  qosReceipt( PendingAckPacket  packet )
 	{
-		PacketRoute.INSTANCE.route(packet.getContactId()  ,packet );
+		PAIPPacketRouter.INSTANCE.route(packet.getContactId()  ,packet );
 	}
 	
 	private  MessageStorageEngine  messageStorageEngine;
 	
 	public  void  groupChatInvited( Channel  channel   , ChatGroupEventPacket  packet )
 	{
-		PacketRoute.INSTANCE.route(packet.getContactId()  ,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
+		PAIPPacketRouter.INSTANCE.route(packet.getContactId()  ,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()) );
 	}
 	
 	public  void  chat( Channel  channel,long  contactId,ChatPacket  packet )
 	{
 		java.util.Map<Long,Long>  syncIds = this.messageStorageEngine.insert(  channel.attr(ConnectPacket.USER_ID).get(),packet );
 		
-		if( !PacketRoute.INSTANCE.route(contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()).setSyncId(syncIds.get(contactId)).setContactSyncId(syncIds.get(channel.attr(ConnectPacket.USER_ID).get()))) )
+		if( !PAIPPacketRouter.INSTANCE.route(contactId,packet.setContactId(channel.attr(ConnectPacket.USER_ID).get()).setSyncId(syncIds.get(contactId)).setContactSyncId(syncIds.get(channel.attr(ConnectPacket.USER_ID).get()))) )
 		{
 			if( packet.getHeader().getAckLevel() ==  1 )
 			{

@@ -15,93 +15,104 @@
  */
 package cc.mashroom.squirrel.server.storage;
 
+import  java.io.FileNotFoundException;
 import  java.sql.Timestamp;
 import  java.util.List;
-import  java.util.Map;
-import java.util.concurrent.BlockingQueue;
+import  java.util.concurrent.LinkedBlockingQueue;
+import  java.util.concurrent.ThreadPoolExecutor;
+import  java.util.concurrent.TimeUnit;
 import  java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
-import org.springframework.context.annotation.DependsOn;
+import  org.apache.curator.shaded.com.google.common.collect.LinkedListMultimap;
+import  org.springframework.context.annotation.DependsOn;
 import  org.springframework.stereotype.Service;
-import  org.springframework.util.Assert;
 
-import  com.google.common.collect.Lists;
+import  com.fasterxml.jackson.core.type.TypeReference;
 
-import  cc.mashroom.db.util.ConnectionUtils;
-import cc.mashroom.plugin.Plugin;
-import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
+import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
 import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
-import  cc.mashroom.squirrel.paip.message.TransportState;
+import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.atomic.XAtomicLong;
-import  cc.mashroom.xcache.util.SafeCacher;
+import  cc.mashroom.squirrel.server.handler.Route;
+import  cc.mashroom.util.ObjectUtils;
+import  io.netty.buffer.ByteBuf;
+import  io.netty.buffer.Unpooled;
+import  io.netty.util.concurrent.DefaultThreadFactory;
+import  lombok.SneakyThrows;
 
 @Service
-@DependsOn( value={"PLUGIN_MANAGER"} )
-public  class  DefaultMessageStorageEngine  implements  MessageStorageEngine
+@DependsOn( value="PLUGIN_MANAGER" )
+public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plugin,MessageStorageEngine<P>,Runnable
 {
-	
-	
-	public  Map<Long,Long>  insert( long  userId,ChatPacket  packet )
-	{
-		Map<Long,Long>  syncIds = Lists.newArrayList(userId,packet.getContactId()).stream().collect( Collectors.toMap((id) -> id,(id) -> getChatMessageSyncId(id).incrementAndGet()) );
+	private  ThreadPoolExecutor  persistenceThreadPool= new  ThreadPoolExecutor( 8,8,2,TimeUnit.SECONDS,new  LinkedBlockingQueue<Runnable>(),new  DefaultThreadFactory("MESSAGE_STORAGE_PERSISTENCE_THREAD_POOL") );
 		
-		Assert.isTrue( ConnectionUtils.batchUpdatedCount(ChatMessageRepository.DAO.update("INSERT  INTO  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE,TRANSPORT_STATE)  VALUES  (?,?,?,?,?,?,?,?)",new  Object[][]{{packet.getId(),syncIds.get(userId),packet.getContactId(),userId,packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),TransportState.SENT.getValue()},{packet.getId(),syncIds.get(packet.getContactId()),userId,packet.getContactId(),packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),TransportState.RECEIVED.getValue()}})) == syncIds.size(),"SQUIRREL-SERVER:  ** DEFAULT  MESSAGE  STORAGE  ENGINE **  error  while  storing  chat  messages." );
-		
-		return  syncIds;
-	}
+	private  Thread  rolloverLooper = new  Thread(this, "MESSAGE_STORAGE_ROLLOVER_LOOPER" );
 	
-	protected  XAtomicLong  getChatMessageSyncId(      long  userId )
+	private  MessageRollingFile  rollingFile = new  MessageRollingFile();
+	
+	private  LinkedListMultimap<String,Route<P>>  filePackets = LinkedListMultimap.create();
+	@Override
+	public  Route<P>  presave( Route  <P>      route  )
 	{
-		return  SafeCacher.createAndSetIfAbsent( "SQUIRREL.CHAT_MESSAGE.SYNC_ID("+userId+")",() -> ChatMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+		try
+		{
+			ByteBuf  byteBuf = route.getPacket().write( Unpooled.buffer(8).writeLongLE(route.getUserId()) );this.rollingFile.append( byteBuf.array() );  byteBuf.release();  this.filePackets.put( this.rollingFile.getFile().getName()+"."+route.getPacket().getClass().getName().toUpperCase(),route );  return  route;
+		}
+		catch( Exception  unknowne )
+		{
+			throw  new  RuntimeException(   unknowne );
+		}
 	}
-	
-	protected  XAtomicLong  getGroupChatMessageSyncId( long  userId )
+	@SneakyThrows( value={InterruptedException.class} )
+	@Override
+	public  void  run ()
 	{
-		return  SafeCacher.createAndSetIfAbsent( "SQUIRREL.CHAT_GROUP_MESSAGE.SYNC_ID("+userId+")",() -> ChatGroupMessageRepository.DAO.lookupOne(Long.class,"SELECT  MAX(SYNC_ID)  AS  MAX_SYNC_ID  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?",new  Object[]{userId}) );
+		for( ;;Thread.sleep( 1000) )
+		try
+		{
+		save(   this.rollingFile.getFile().getName() );
+			
+		this.rollingFile.rollover();
+		}
+		catch( FileNotFoundException  fnfex )
+		{
+			fnfex.printStackTrace();
+		}
 	}
-	
-	public  Map<Long,Long>  insert( long  userId ,GroupChatPacket  packet )
+	@Override
+	public  void  initialize( Object  ...  parameters )
 	{
-		Map<Long,Long>  chatGroupUserSyncIds = ChatGroupManager.INSTANCE.getChatGroupUserIds(packet.getGroupId()).parallelStream().collect( Collectors.toMap((chatGroupUserId) -> chatGroupUserId,(chatGroupUserId) -> getGroupChatMessageSyncId(chatGroupUserId).incrementAndGet()) );
-		
-		Assert.isTrue( ConnectionUtils.batchUpdatedCount(ChatGroupMessageRepository.DAO.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE,TRANSPORT_STATE)  VALUES  (?,?,?,?,?,?,?,?,?)",(Object[][])  chatGroupUserSyncIds.entrySet().parallelStream().map((entry) -> new  Object[]{packet.getId(),entry.getValue(),packet.getGroupId(),packet.getContactId(),entry.getKey(),packet.getMd5(),new  String(packet.getContent()),packet.getContentType().getValue(),(entry.getKey() == packet.getContactId() ? TransportState.SENT : TransportState.RECEIVED).getValue()}).collect(Collectors.toList()).toArray(new  Object[chatGroupUserSyncIds.size()][]))) == chatGroupUserSyncIds.size(),"SQUIRREL-SERVER:  ** DEFAULT  MESSAGE  STORAGE  ENGINE **  error  while  storing  chat  group  messages." );
-
-		return  chatGroupUserSyncIds;
+		this.rolloverLooper.start();
 	}
-	
-	public  List<ChatGroupMessage>  lookupChatGroupMessage(  long  userId,long  chatGroupMessageSyncOffsetId )
+	@Override
+	public  <T>  List<T>  lookup( Class   <T>clazz,long  userId ,long  messageOffsetSyncId )
 	{
-		return  ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatGroupMessageSyncOffsetId}).stream().map((offlineChatMessage) -> offlineChatMessage.setIsLocal(false).setCreateTime(new  Timestamp(offlineChatMessage.getId()))).collect( Collectors.toList() );
+		if( clazz == ChatGroupMessage.class )
+		{
+			return  ObjectUtils.cast( ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,messageOffsetSyncId}).stream().map((message) -> message.setIsLocal(false).setCreateTime(new  Timestamp(message.getId()))).collect(Collectors.toList()),new  TypeReference<List<T>>(){} );
+		}
+		else
+		{
+			return  ObjectUtils.cast( ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,messageOffsetSyncId}).stream().map((message) -> message.setIsLocal(false).setCreateTime(new  Timestamp(message.getId()))).collect(Collectors.toList()),new  TypeReference<List<T>>(){} );
+		}
 	}
-	
-	public  List<ChatMessage>  lookupChatMessage( long  userId,long  chatMessageSyncOffsetId )
-	{
-		return  ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatMessageSyncOffsetId}).stream().map((offlineGroupChatMessage) -> offlineGroupChatMessage.setIsLocal(false).setCreateTime(new  Timestamp(offlineGroupChatMessage.getId()))).collect(Collectors.toList());
-	}
-
-	protected  BlockingQueue<Object[]>  chatMessageBatchParametersQueue;
-	
-	protected  BlockingQueue<Object[]>  chatGroupMessageBatchParametersQueue;
-	
-	@PostConstruct
-	public  void  initialize( Object...  parameters )
-	{
-		this.chatMessageBatchParametersQueue =  CacheFactory.queue( "CHAT_MESSAGE_BATCH_PARAMETERS_QUEUE" );
-		
-		this.chatGroupMessageBatchParametersQueue = CacheFactory.queue( "CHAT_GROUP_MESSAGE_BATCH_PARAMETERS_QUEUE" );
-	}
-	@PreDestroy
+	@Override
 	public  void  stop()
 	{
+	this.rolloverLooper.interrupt();
+	}
+	public  void  save(String  nm  )
+	{
+		ChatMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(nm+"."+ChatPacket.class.getClass().getName().toUpperCase()),new  TypeReference<List<Route<ChatPacket>>>(){}) );
 		
+		filePackets.removeAll( nm+"."+ChatPacket.class.getClass().getName().toUpperCase() );
+		
+		ChatGroupMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(nm+"."+GroupChatPacket.class.getClass().getName().toUpperCase()),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
+	
+		filePackets.get( nm+"."+ GroupChatPacket.class.getClass().getName().toUpperCase() );
 	}
 }

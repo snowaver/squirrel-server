@@ -27,7 +27,7 @@ import  cc.mashroom.squirrel.common.AbstractController;
 import  cc.mashroom.squirrel.module.user.service.ContactService;
 import  cc.mashroom.squirrel.paip.message.subscribes.SubscribeAckPacket;
 import  cc.mashroom.squirrel.paip.message.subscribes.SubscribePacket;
-import  cc.mashroom.squirrel.server.handler.PacketRoute;
+import  cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
 import  cc.mashroom.util.JsonUtils;
 import  cc.mashroom.util.collection.map.Map;
 
@@ -43,7 +43,7 @@ public  class  ContactController  extends  AbstractController
 	{
 		ResponseEntity<Map<String,Object>>  responseEntity = service.subscribe( sessionProfile.getLong("USER_ID"),subscribeeId,remark,group );
 		
-		PacketRoute.INSTANCE.route( subscribeeId,new  SubscribePacket(sessionProfile.getLong("USER_ID")     ,(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBER_PROFILE")) );
+		PAIPPacketRouter.INSTANCE.route( subscribeeId,new  SubscribePacket(sessionProfile.getLong("USER_ID")     ,(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBER_PROFILE")) );
 		
 		return  ResponseEntity.status(200).body( JsonUtils.toJson( responseEntity.getBody()  ) );
 	}
@@ -55,7 +55,7 @@ public  class  ContactController  extends  AbstractController
 	{
 		ResponseEntity<Map<String,Object>>  responseEntity = service.changeSubscribeStatus( status,subscriberId,sessionProfile.getLong("USER_ID"),remark,group );
 		
-		PacketRoute.INSTANCE.route( subscriberId,new  SubscribeAckPacket(sessionProfile.getLong("USER_ID"),7,(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBEE_PROFILE")) );
+		PAIPPacketRouter.INSTANCE.route( subscriberId,new  SubscribeAckPacket(sessionProfile.getLong("USER_ID"),7,(Map<String,Object>)  responseEntity.getBody().remove("SUBSCRIBEE_PROFILE")) );
 		
 		return  ResponseEntity.status(200).body( JsonUtils.toJson( responseEntity.getBody()  ) );
 	}

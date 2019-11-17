@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.server.remotetask;
 
-import  cc.mashroom.squirrel.server.handler.PacketRoute;
+import  cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
@@ -40,11 +40,11 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.remote.Remot
 			}
 			case   1:
 			{
-				return  (T)  Boolean.valueOf( PacketRoute.INSTANCE.route(parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
+				return  (T)  Boolean.valueOf( PAIPPacketRouter.INSTANCE.route(parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
 			}
 			case   2:
 			{
-				PacketRoute.INSTANCE.completeRoute( parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
+				PAIPPacketRouter.INSTANCE.completeRoute( parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
 			}
 		}
 		

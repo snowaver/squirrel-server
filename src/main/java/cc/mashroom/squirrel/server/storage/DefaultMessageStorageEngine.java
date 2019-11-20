@@ -34,6 +34,7 @@ import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.repository.ChatMessageRepository;
 import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
+import  cc.mashroom.squirrel.paip.message.PAIPPacketType;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
@@ -56,11 +57,11 @@ public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plu
 	
 	private  LinkedListMultimap<String,Route<P>>  filePackets = LinkedListMultimap.create();
 	@Override
-	public  Route<P>  presave( Route  <P>      route  )
+	public  Route  <P>  prepersist( Route  <P>  route )
 	{
 		try
 		{
-			ByteBuf  byteBuf = route.getPacket().write( Unpooled.buffer(8).writeLongLE(route.getUserId()) );this.rollingFile.append( byteBuf.array() );  byteBuf.release();  this.filePackets.put( this.rollingFile.getFile().getName()+"."+route.getPacket().getClass().getName().toUpperCase(),route );  return  route;
+			ByteBuf  byteBuf = route.getPacket().write( Unpooled.buffer(8).writeLongLE(route.getUserId()) );this.rollingFile.append( byteBuf.array() );  byteBuf.release();  this.filePackets.put( this.rollingFile.getFile().getName()+":"+route.getPacket().getPacketType().getValue(),route );  return  route;
 		}
 		catch( Exception  unknowne )
 		{
@@ -74,7 +75,7 @@ public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plu
 		for( ;;Thread.sleep( 1000) )
 		try
 		{
-		save(   this.rollingFile.getFile().getName() );
+			persist( rollingFile.getFile().getName() );
 			
 		this.rollingFile.rollover();
 		}
@@ -82,11 +83,6 @@ public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plu
 		{
 			fnfex.printStackTrace();
 		}
-	}
-	@Override
-	public  void  initialize( Object  ...  parameters )
-	{
-		this.rolloverLooper.start();
 	}
 	@Override
 	public  <T>  List<T>  lookup( Class   <T>clazz,long  userId ,long  messageOffsetSyncId )
@@ -101,18 +97,24 @@ public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plu
 		}
 	}
 	@Override
+	public  void  initialize( Object  ...  parameters )
+	{
+		this.rolloverLooper.start();
+	}
+	@Override
 	public  void  stop()
 	{
 	this.rolloverLooper.interrupt();
 	}
-	public  void  save(String  nm  )
-	{
-		ChatMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(nm+"."+ChatPacket.class.getClass().getName().toUpperCase()),new  TypeReference<List<Route<ChatPacket>>>(){}) );
-		
-		filePackets.removeAll( nm+"."+ChatPacket.class.getClass().getName().toUpperCase() );
-		
-		ChatGroupMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(nm+"."+GroupChatPacket.class.getClass().getName().toUpperCase()),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
 	
-		filePackets.get( nm+"."+ GroupChatPacket.class.getClass().getName().toUpperCase() );
+	public  void  persist(    String  rollingFileName )
+	{
+		ChatMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(rollingFileName+":"+PAIPPacketType.CHAT.getValue()),new  TypeReference<List<Route<ChatPacket>>>(){}) );
+		
+		this.filePackets.removeAll( rollingFileName+":"  + PAIPPacketType.CHAT.getValue() );
+		
+		ChatGroupMessageRepository.DAO.insert( ObjectUtils.cast(this.filePackets.get(rollingFileName+":"+PAIPPacketType.GROUP_CHAT.getValue()),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
+	
+		filePackets.removeAll( rollingFileName+":" + PAIPPacketType.GROUP_CHAT.getValue() );
 	}
 }

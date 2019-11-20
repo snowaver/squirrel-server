@@ -32,6 +32,8 @@ import  cc.mashroom.squirrel.module.chat.group.model.ChatGroupUser;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupSyncRepository;
 import  cc.mashroom.squirrel.module.chat.group.repository.ChatGroupUserRepository;
+import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
+import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.model.Contact;
 import  cc.mashroom.squirrel.module.user.model.OoIData;
 import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
@@ -82,8 +84,8 @@ public  class  OfflineServiceImpl  implements  OfflineService
 			}
 		}
 		
-		ooiData.setOfflineChatMessages( checkpoint.getChatMessageCheckpoint()== null ? Lists.newArrayList() : messageStorageEngine.lookupChatMessage(userId,checkpoint.getChatMessageCheckpoint()) );
+		ooiData.setOfflineChatMessages( checkpoint.getChatMessageCheckpoint()== null ? Lists.newArrayList() : messageStorageEngine.lookup(ChatMessage.class,userId,checkpoint.getChatMessageCheckpoint()) );
 		
-		ooiData.setOfflineGroupChatMessages( checkpoint.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : messageStorageEngine.lookupChatGroupMessage(userId,checkpoint.getGroupChatMessageCheckpoint()));  return  ResponseEntity.ok( ooiData );
+		ooiData.setOfflineGroupChatMessages( checkpoint.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : messageStorageEngine.lookup(ChatGroupMessage.class,userId,checkpoint.getGroupChatMessageCheckpoint()));  return  ResponseEntity.ok(ooiData );
 	}
 }

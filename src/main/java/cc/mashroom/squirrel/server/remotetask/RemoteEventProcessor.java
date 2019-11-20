@@ -26,25 +26,21 @@ import  cc.mashroom.util.ObjectUtils;
 
 public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.remote.RemoteEventProcessor
 {
-	public  <T>  T  process( int  eventType,Map<String,Object>  parameters )
+	public  <T>  T  process(int  eventType,Map<String,Object>  parameters )
 	{
 		switch( eventType )
 		{
-			case  0:
+			case   0:
 			{
-				ClientSession  clientSession = ClientSessionManager.INSTANCE.get( parameters.getLong("USER_ID") );
+				ClientSession  clientSession= ClientSessionManager.INSTANCE.get( parameters.getLong("USER_ID") );
 				
-				if( clientSession != null)  clientSession.close(parameters.getInteger("CLOSE_REASON") );
+				if( clientSession != null)  clientSession.close( parameters.getInteger("CLOSE_REASON") );
 				
 				return  (T)  Boolean.TRUE;
 			}
 			case   1:
 			{
 				return  (T)  Boolean.valueOf( PAIPPacketRouter.INSTANCE.route(parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),Packet.class)) );
-			}
-			case   2:
-			{
-				PAIPPacketRouter.INSTANCE.completeRoute( parameters.getLong("USER_ID"),ObjectUtils.cast(parameters.get("PACKET"),PendingAckPacket.class) );
 			}
 		}
 		

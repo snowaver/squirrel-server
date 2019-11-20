@@ -79,26 +79,6 @@ public  class    PAIPPacketInboundHandlerAdapter       extends  ChannelInboundHa
 		}
 	}
 	
-	public  void  channelInactive( ChannelHandlerContext   context ) throws  Exception
-	{
-		Long  userId  =   context.channel().attr(ConnectPacket.USER_ID).get();
-		
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS") +"  CHANNEL.LEFT:\tUSER.ID="  +userId );
-		
-		if( userId != null )
-		{
-			ClientSession  session   = ClientSessionManager.INSTANCE.remove( userId );
-			
-			if( session  != null )
-			{
-				session.close(-1);
-				/*
-				System.err.println( String.format("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  connection  channel  is  inactive  now  so  close  the  session  ( user  id:  %d ).",userId) );
-				*/
-			}
-		}
-	}
-	
 	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  ukerror )    throws  Exception
 	{
 		ukerror.printStackTrace();
@@ -108,67 +88,14 @@ public  class    PAIPPacketInboundHandlerAdapter       extends  ChannelInboundHa
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
 		
-		if( !( packet instanceof ConnectPacket ) && !  context.channel().hasAttr( ConnectPacket.USER_ID ) )
+		if( packet instanceof Route )
 		{
-			context.channel().close(/**/);
-			
-			throw  new  IllegalStateException("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  channel  is  not  authenticated,  close  the  channel." );
-		}
-		
-		if( packet instanceof ConnectPacket    )
-		{
-			this.processor.connect( context.channel(),ObjectUtils.cast(packet,    ConnectPacket.class   ));
-		}
-		else
-		if( packet instanceof PingPacket )
-		{
-			context.channel().writeAndFlush( new  PingAckPacket(context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,PingPacket.class).getId()) );
-		}
-		else
-		if( packet instanceof ChatPacket )
-		{
-			this.processor.chat( context.channel(),ObjectUtils.cast(packet,ChatPacket.class).getContactId(),ObjectUtils.cast(packet,ChatPacket.class) );
-		}
-		else
-		if( packet instanceof PendingAckPacket )
-		{
-			if( ObjectUtils.cast(packet,PendingAckPacket.class).getContactId() ==  0 )
-			{
-				String  clusterNodeId = JsonUtils.fromJson(ObjectUtils.cast(packet,PendingAckPacket.class).getAttatchments(),Map.class).getString(   "CLUSTER_NODE_ID" );
-				
-				if( !   clusterNodeId.equals(CacheFactory.getLocalNodeId() ) )
-				{
-					CacheFactory.call( new  RemoteCallable<Boolean>(2,new  HashMap<String,Object>().addEntry("USER_ID",context.channel().attr(ConnectPacket.USER_ID).get()).addEntry("PACKET",packet)),Arrays.asList(clusterNodeId) );
-				}
-				else
-				{
-					PAIPPacketRouter.INSTANCE.completeRoute( context.channel().attr(ConnectPacket.USER_ID).get() , ObjectUtils.cast(packet) );
-				}
-				
-				return;
-			}
-			
-			processor.qosReceipt( ObjectUtils.cast(packet , PendingAckPacket.class) );
+			PAIPPacketRouter.INSTANCE.route( ObjectUtils.cast(packet,Route.class).getUserId(),ObjectUtils.cast(packet,Route.class).getPacket() );
 		}
 		else
 		if( packet instanceof CallPacket || packet instanceof CallAckPacket ||  packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )
 		{
 			CallManager.INSTANCE.process( ObjectUtils.cast(packet,RoomPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,RoomPacket.class).getContactId(),ObjectUtils.cast(packet,RoomPacket.class) );
-		}
-		else
-		if( packet instanceof ChatGroupEventPacket    )
-		{
-			this.processor.groupChatInvited( context.channel() , ObjectUtils.cast(packet,ChatGroupEventPacket.class) );
-		}
-		else
-		if( packet instanceof GroupChatPacket  )
-		{
-			processor.groupChat( context.channel(),context.channel().attr(ConnectPacket.USER_ID).get(),ObjectUtils.cast(packet,GroupChatPacket.class) );
-		}
-		else
-		if( packet instanceof ChatRecallPacket )
-		{
-			this.processor.chatRecall(context.channel(),ObjectUtils.cast(packet,ChatRecallPacket.class).getContactId(),ObjectUtils.cast(packet,ChatRecallPacket.class) );
 		}
 		else
 		{

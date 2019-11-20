@@ -22,7 +22,7 @@ import  cc.mashroom.squirrel.server.handler.Route;
 
 public  interface  MessageStorageEngine<P extends Packet<P>>
 {
-	public  Route<P>  presave( Route<P>  route );
+	public  Route<P>  prepersist( Route<P>  route );
 	
-	public  <T>  List<T>  lookup( Class  <T>  clazz,long  userId,long  messageOffsetSyncId );
+	public  <T>  List<T>  lookup( Class<T>  clazz,long  userId,long  messageOffsetSyncId );
 }

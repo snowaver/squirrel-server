@@ -22,7 +22,7 @@ import  lombok.NoArgsConstructor;
 
 @NoArgsConstructor( access  =AccessLevel.PRIVATE )
 
-public  class  PAIPCallManagerProcessor  implements  PAIPObjectProcessor<RoomPacket<?>>
+public  class  PAIPDirectRouteProcessor  implements  PAIPObjectProcessor<RoomPacket<?>>
 {
 	@Override
 	public  boolean  process( Channel  channel,RoomPacket<?>  object )

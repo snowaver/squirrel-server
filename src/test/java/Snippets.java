@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 import  java.io.File;
+import java.io.FileOutputStream;
 import  java.io.IOException;
 import  java.io.InputStream;
+import java.io.PrintStream;
 import  java.nio.file.FileVisitResult;
 import  java.nio.file.FileVisitor;
 import  java.nio.file.Files;
@@ -83,12 +85,18 @@ import  cc.mashroom.util.IOUtils;
 import cc.mashroom.util.collection.map.Map;
 import cc.mashroom.xcache.CacheFactory;
 import cc.mashroom.xcache.XMemTableCache;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 public  class  Snippets
 {
+	public  void  print() throws ClassNotFoundException
+	{
+		try {
+			Class.forName("cn.com.abc.A");
+		} catch (Exception e) {
+			throw new RuntimeException(DateTime.now().toString(),e);
+		}
+	}
+	
 	public  static  void  main( String  []  args )  throws  Exception
 	{
 /*//		new  IgniteCacheFactoryStrategy().initialize( "/memory-policy.ddl" );
@@ -227,14 +235,42 @@ public  class  Snippets
         Thread.sleep(60*10*1000);
         pool.shutDown();*/
 		
-		JedisPoolConfig config = new JedisPoolConfig(); 
-        config.setMaxIdle(5); 
-        config.setTestOnBorrow(false); 
-        
-        JedisPool jedisPool = new JedisPool(config,"127.0.0.1",8014);
-        Jedis jedis = jedisPool.getResource();
-        System.err.println(jedis.set("name", "{\"name\":\"join\"}"));
-        jedisPool.close();
+//		JedisPoolConfig config = new JedisPoolConfig(); 
+//        config.setMaxIdle(5); 
+//        config.setTestOnBorrow(false); 
+//        
+//        JedisPool jedisPool = new JedisPool(config,"127.0.0.1",8014);
+//        Jedis jedis = jedisPool.getResource();
+//        System.err.println(jedis.set("name", "{\"name\":\"join\"}"));
+//        jedisPool.close();
+		
+//		throw new IllegalStateException();
+		try
+		{
+			new  Snippets().print();
+		}
+		catch( Exception  e )
+		{
+			try( FileOutputStream  os = new  FileOutputStream("d:/program/apache-tomcat-8.5.2902/logs/catalina.2019-11-18.log",true) )
+			{
+				e.printStackTrace( new  PrintStream(os) );
+			}
+		}
+		
+		String  s = "java.lang.RuntimeException: java.lang.ClassNotFoundException: cn.com.abc.A\r\n" + 
+				"	at Snippets.print(Snippets.java:96)\r\n" + 
+				"	at Snippets.main(Snippets.java:250)\r\n" + 
+				"Caused by: java.lang.ClassNotFoundException: cn.com.abc.A\r\n" + 
+				"	at java.net.URLClassLoader.findClass(URLClassLoader.java:381)\r\n" + 
+				"	at java.lang.ClassLoader.loadClass(ClassLoader.java:424)\r\n" + 
+				"	at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:338)\r\n" + 
+				"	at java.lang.ClassLoader.loadClass(ClassLoader.java:357)\r\n" + 
+				"	at java.lang.Class.forName0(Native Method)\r\n" + 
+				"	at java.lang.Class.forName(Class.java:264)\r\n" + 
+				"	at Snippets.print(Snippets.java:94)\r\n" + 
+				"	... 1 more\r\n";
+		System.err.println("	...".matches("^(\\s+(at|\\.{3}))|^(Caused by:)"));
+		System.err.println("	...".matches("^\\s\\.{3}\\b"));
 	}
 	
 	public  static  void  addCopyrightHeader(  String  sourcefolder ) throws  IOException

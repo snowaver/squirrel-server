@@ -16,8 +16,26 @@
 package cc.mashroom.squirrel.server.handler;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
+import  cc.mashroom.squirrel.server.session.ClientSession;
+import  cc.mashroom.squirrel.server.session.ClientSessionManager;
+import  lombok.AccessLevel;
+import  lombok.NoArgsConstructor;
 
-public  interface  PAIPPacketExternalProcessor
+@NoArgsConstructor( access  =AccessLevel.PRIVATE )
+
+public  class        PAIPCallManagerProcessor  implements  P
 {
-	public  boolean  process(Packet  packet );
+	public  boolean  route( Long  userId,Packet<?>  packet )
+	{
+		ClientSession   clientSession = userId ==null ?null: ClientSessionManager.INSTANCE.get( userId );
+		
+		if( null !=  clientSession  )
+		{
+			clientSession.deliver( packet );   return  true;
+		}
+		
+		return  false;
+	}
+	
+	public  final    static  PAIPCallManagerProcessor  INSTANCE = new  PAIPCallManagerProcessor();
 }

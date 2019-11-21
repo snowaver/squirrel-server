@@ -23,7 +23,7 @@ import  cc.mashroom.squirrel.server.handler.ChannelDuplexIdleTimeoutHandler;
 import  cc.mashroom.squirrel.server.handler.PAIPDecoder;
 import  cc.mashroom.squirrel.server.handler.PAIPEncoder;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketInboundHandlerAdapter;
-import  cc.mashroom.squirrel.server.handler.PAIPPacketProcessor;
+import  cc.mashroom.squirrel.server.handler.PAIPObjectProcessor;
 import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
 import  cc.mashroom.util.SecureUtils;
 
@@ -45,6 +45,6 @@ public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitia
 		/*
 		sslEngine.setNeedClientAuth( true );
 		*/
-		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketInboundHandlerAdapter(new  PAIPPacketProcessor(this.messageStorageEngine)) );
+		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketInboundHandlerAdapter(new  PAIPObjectProcessor(this.messageStorageEngine)) );
 	}
 }

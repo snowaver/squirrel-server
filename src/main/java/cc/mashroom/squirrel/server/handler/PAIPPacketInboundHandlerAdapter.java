@@ -54,37 +54,21 @@ import  cc.mashroom.xcache.remote.RemoteCallable;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 
-public  class    PAIPPacketInboundHandlerAdapter       extends  ChannelInboundHandlerAdapter
+public  class    PAIPPacketInboundHandlerAdapter          extends  ChannelInboundHandlerAdapter
 {
-	public  PAIPPacketInboundHandlerAdapter(      PAIPPacketProcessor  processor )  //  throws  InstantiationException,IllegalAccessException,ClassNotFoundException
+	public  PAIPPacketInboundHandlerAdapter(  PAIPObjectProcessor  ...  processors )
 	{
-		this.processor= processor;
-		
-		Lists.newArrayList(System.getProperty("squirrel.acceptor.externalProcessorClasses","").split(",")).stream().filter((processorClassName) -> StringUtils.isNotBlank(processorClassName)).forEach( (processorClassName) -> addExternalPacketProcessor(processorClassName) );
+		this.processors.addAll( Lists.newArrayList(processors) );
 	}
 	
-	protected  List<PAIPPacketExternalProcessor>  externalProcessors =  new  ArrayList <PAIPPacketExternalProcessor>();
-	@Setter
-	protected  PAIPPacketProcessor    processor;
+	protected  List<PAIPObjectProcessor>  processors  =   new ArrayList<PAIPObjectProcessor>();
 	
-	protected  void  addExternalPacketProcessor(  String  processorClassName )
+	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  cause )  throws  Exception
 	{
-		try
-		{
-			this.externalProcessors.add( ObjectUtils.cast(Class.forName(processorClassName),new  TypeReference<Class<? extends PAIPPacketExternalProcessor>>(){}).newInstance() );
-		}
-		catch(Throwable  e )
-		{
-			throw  new  IllegalStateException( String.format("SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  can  not  create  packet  external  processor  instance  for  class  %s.",processorClassName),e );
-		}
+		cause.printStackTrace();
 	}
 	
-	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  ukerror )    throws  Exception
-	{
-		ukerror.printStackTrace();
-	}
-	
-	public  void  channelRead( ChannelHandlerContext  context,Object  packet )  throws Exception
+	public  void  channelRead( ChannelHandlerContext  context,Object  packet )throws  Exception
 	{
 		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
 		

@@ -23,14 +23,14 @@ import  io.netty.channel.ChannelHandlerContext;
 import  lombok.AllArgsConstructor;
 
 @AllArgsConstructor
-public  class  PAIPDecoderAndMessageStorageHandlerAdapter  extends  PAIPDecoderHandlerAdapter
+public  class  PAIPDecoderAndMessageRoutePrepersistHandlerAdapter      extends  PAIPDecoderHandlerAdapter
 {
 	protected  MessageStorageEngine  storageEng;
 	
 	@Override
-	protected  void  decode(   ChannelHandlerContext  context,ByteBuf  byteBuf,List  <Object>  objectList )
+	protected  void  decode(   ChannelHandlerContext  context,ByteBuf  byteBuf,List<Object>  objectList )
 	{
-		Packet<?>  packet = super.chain.decode( context.channel() ,byteBuf.markReaderIndex().resetReaderIndex() );
+		Packet<?>  packet = super.chain.decode( context.channel(),byteBuf.markReaderIndex().resetReaderIndex() );
 		
 		if( packet instanceof GroupChatPacket  )
 		{
@@ -39,7 +39,7 @@ public  class  PAIPDecoderAndMessageStorageHandlerAdapter  extends  PAIPDecoderH
 		else
 		if( packet instanceof PingPacket )
 		{
-			context.channel().writeAndFlush( new  PingAckPacket( packet.getId()) );
+			context.channel().writeAndFlush( new  PingAckPacket(packet.getId()) );
 		}
 		else
 		if( packet instanceof ChatRecallPacket )

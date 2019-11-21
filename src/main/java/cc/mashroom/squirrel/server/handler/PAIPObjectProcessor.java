@@ -15,11 +15,9 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-import  lombok.AllArgsConstructor;
-import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
+import  io.netty.channel.Channel;
 
-@AllArgsConstructor
-public  class  PAIPPacketProcessor
+public  interface  PAIPObjectProcessor<T>
 {
-	private  MessageStorageEngine  messageStorageEngine;
+	public  boolean  process( Channel  channel,T  object );
 }

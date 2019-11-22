@@ -19,5 +19,7 @@ import  io.netty.channel.Channel;
 
 public  interface  PAIPObjectProcessor<T>
 {
+	public  boolean  isProcessable( Object  object );
+	
 	public  boolean  process( Channel  channel,T  object );
 }

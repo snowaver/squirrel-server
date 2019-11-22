@@ -20,7 +20,7 @@ import  java.util.List;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.server.handler.Route;
 
-public  interface  MessageStorageEngine<P extends Packet<P>>
+public  interface  RoamingMessagePersistEngine<P extends Packet<P>>
 {
 	public  Route<P>  prepersist( Route<P>  route );
 	

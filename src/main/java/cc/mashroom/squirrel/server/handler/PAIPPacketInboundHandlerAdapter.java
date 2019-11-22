@@ -17,76 +17,30 @@ package cc.mashroom.squirrel.server.handler;
 
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
-import  io.netty.handler.codec.CorruptedFrameException;
-import  lombok.Setter;
 
-import  java.util.ArrayList;
-import  java.util.Arrays;
 import  java.util.List;
 
 import  org.joda.time.DateTime;
 
-import  com.fasterxml.jackson.core.type.TypeReference;
 import  com.google.common.collect.Lists;
 
-import  cc.mashroom.squirrel.module.call.manager.CallManager;
-import  cc.mashroom.squirrel.paip.message.call.RoomPacket;
-import  cc.mashroom.squirrel.paip.message.call.CallAckPacket;
-import  cc.mashroom.squirrel.paip.message.call.CallPacket;
-import  cc.mashroom.squirrel.paip.message.call.CandidatePacket;
-import  cc.mashroom.squirrel.paip.message.call.CloseCallPacket;
-import  cc.mashroom.squirrel.paip.message.call.SDPPacket;
-import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
-import  cc.mashroom.squirrel.paip.message.chat.ChatRecallPacket;
-import  cc.mashroom.squirrel.paip.message.chat.ChatGroupEventPacket;
-import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import  cc.mashroom.squirrel.paip.message.connect.ConnectPacket;
-import  cc.mashroom.squirrel.paip.message.connect.PingAckPacket;
-import  cc.mashroom.squirrel.paip.message.connect.PingPacket;
-import  cc.mashroom.squirrel.paip.message.connect.PendingAckPacket;
-import  cc.mashroom.util.JsonUtils;
-import  cc.mashroom.util.ObjectUtils;
-import  cc.mashroom.util.StringUtils;
-import  cc.mashroom.util.collection.map.HashMap;
-import  cc.mashroom.util.collection.map.Map;
-import  cc.mashroom.xcache.CacheFactory;
-import  cc.mashroom.xcache.remote.RemoteCallable;
-import  cc.mashroom.squirrel.server.session.ClientSession;
-import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-
-public  class    PAIPPacketInboundHandlerAdapter          extends  ChannelInboundHandlerAdapter
+public  class      PAIPPacketInboundHandlerAdapter  extends  ChannelInboundHandlerAdapter
 {
-	public  PAIPPacketInboundHandlerAdapter(  PAIPObjectProcessor  ...  processors )
+	public  PAIPPacketInboundHandlerAdapter( PAIPObjectProcessor...   processors )
 	{
-		this.processors.addAll( Lists.newArrayList(processors) );
+		this.processors = Lists.newArrayList( processors );
 	}
-	
-	protected  List<PAIPObjectProcessor>  processors  =   new ArrayList<PAIPObjectProcessor>();
-	
-	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  cause )  throws  Exception
+	protected  List<PAIPObjectProcessor>  processors;
+	@Override
+	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  err )
 	{
-		cause.printStackTrace();
+		err.printStackTrace();
 	}
-	
-	public  void  channelRead( ChannelHandlerContext  context,Object  packet )throws  Exception
+	@Override
+	public  void  channelRead(     ChannelHandlerContext  context,Object  object )
 	{
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+packet.toString() );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+object.toString() );
 		
-		if( packet instanceof Route )
-		{
-			PAIPPacketRouter.INSTANCE.route( ObjectUtils.cast(packet,Route.class).getUserId(),ObjectUtils.cast(packet,Route.class).getPacket() );
-		}
-		else
-		if( packet instanceof CallPacket || packet instanceof CallAckPacket ||  packet instanceof SDPPacket || packet instanceof CandidatePacket || packet instanceof CloseCallPacket )
-		{
-			CallManager.INSTANCE.process( ObjectUtils.cast(packet,RoomPacket.class).getRoomId(),context.channel(),ObjectUtils.cast(packet,RoomPacket.class).getContactId(),ObjectUtils.cast(packet,RoomPacket.class) );
-		}
-		else
-		{
-			if( !this.externalProcessors.stream().anyMatch((externalProcessor)  -> externalProcessor.process(ObjectUtils.cast(packet))) )
-			{
-				throw  new  CorruptedFrameException( "SQUIRREL-SERVER:  ** PAIP  PACKET  HANDLER **  the  packet  can  not  be  processed,  so  an  external  processor  is  required  for  the  packet." );
-			}
-		}
+		this.processors.stream().filter((processor) -> processor.isProcessable(object)).forEach( (processor) -> processor.process(context.channel(),object) );
 	}
 }

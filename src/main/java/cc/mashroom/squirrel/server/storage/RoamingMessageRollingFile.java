@@ -16,7 +16,7 @@ import  lombok.Getter;
 import  lombok.Setter;
 import  lombok.experimental.Accessors;
 
-public  class  MessageRollingFile  implements     AutoCloseable
+public  class  RoamingMessageRollingFile  implements       AutoCloseable
 {
 	private  ReentrantLock  relocker   =  new  ReentrantLock();
 	@Accessors( chain=true )

@@ -15,43 +15,32 @@
  */
 package cc.mashroom.squirrel.server;
 
-import cc.mashroom.squirrel.server.storage.MessageStorageEngine;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
 import  io.netty.bootstrap.ServerBootstrap;
 import  io.netty.channel.ChannelOption;
-import  io.netty.channel.EventLoopGroup;
+import  io.netty.channel.MultithreadEventLoopGroup;
 import  io.netty.channel.epoll.EpollEventLoopGroup;
 import  io.netty.channel.epoll.EpollServerSocketChannel;
 import  io.netty.channel.nio.NioEventLoopGroup;
 import  io.netty.channel.socket.nio.NioServerSocketChannel;
+import  lombok.SneakyThrows;
 
 public  class  NettyAcceptor
 {
 	public  void  stop()
 	{
-		acceptEventGroup.shutdownGracefully();
-		
-		handleEventGroup.shutdownGracefully();
+		acceptEventGroup.shutdownGracefully();  handleEventGroup.shutdownGracefully();
 	}
 	
-	private  EventLoopGroup  acceptEventGroup;
+	private  MultithreadEventLoopGroup  acceptEventGroup;
 	
-	private  EventLoopGroup  handleEventGroup;
+	private  MultithreadEventLoopGroup  handleEventGroup;
 	
-	public  NettyAcceptor  initialize( String  host,int  port,MessageStorageEngine  messageStorageEngine )
+	@SneakyThrows( value=  {InterruptedException.class} )
+	public  NettyAcceptor  initialize( String  host,int  port,RoamingMessagePersistEngine  persistEngine )
 	{
-		boolean  isLinuxSystem = System.getProperty("os.name" ).toLowerCase().contains( "linux" );
+		boolean  isLinuxSystem = System.getProperty("os.name").toLowerCase().contains( "linux" );
 		
-		try
-		{
-			ServerBootstrap  bootstrap = new  ServerBootstrap().group(acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler( new  ServerChannelInitializer(messageStorageEngine) );
-			
-			bootstrap.bind(host, port).sync();
-		}
-		catch(Throwable  e )
-		{
-			throw  new  IllegalStateException( e );
-		}
-		
-		return  this;
+		new  ServerBootstrap().group( this.acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),this.handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler(new  ServerChannelInitializer(persistEngine)).bind(host,port).sync();  return  this;
 	}
 }

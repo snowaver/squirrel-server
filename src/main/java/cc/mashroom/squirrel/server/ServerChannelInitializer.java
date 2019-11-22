@@ -19,12 +19,15 @@ import  io.netty.channel.socket.SocketChannel;
 import  io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import  io.netty.handler.ssl.SslHandler;
 import  lombok.AllArgsConstructor;
+import  cc.mashroom.squirrel.paip.codec.PAIPDecoderHandlerAdapter;
+import  cc.mashroom.squirrel.paip.codec.PAIPEncoderHandlerAdapter;
 import  cc.mashroom.squirrel.server.handler.ChannelDuplexIdleTimeoutHandler;
-import  cc.mashroom.squirrel.server.handler.PAIPDecoder;
-import  cc.mashroom.squirrel.server.handler.PAIPEncoder;
+import  cc.mashroom.squirrel.server.handler.PAIPAuthorityHandlerAdapter;
+import  cc.mashroom.squirrel.server.handler.PAIPCallManagerProcessor;
+import  cc.mashroom.squirrel.server.handler.PAIPDirectRouteProcessor;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketInboundHandlerAdapter;
-import  cc.mashroom.squirrel.server.handler.PAIPObjectProcessor;
-import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
+import  cc.mashroom.squirrel.server.handler.PAIPRoamingMessagePrepersistHandlerAdapter;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
 import  cc.mashroom.util.SecureUtils;
 
 import  javax.net.ssl.SSLEngine;
@@ -35,16 +38,16 @@ import  cc.mashroom.config.Config;
 
 public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitializer<SocketChannel>
 {
-	protected  MessageStorageEngine  messageStorageEngine;
+	protected  RoamingMessagePersistEngine  persistEngine;
 	
 	protected  void  initChannel( SocketChannel  channel )  throws  Exception
 	{
 		SSLEngine  sslEngine = SecureUtils.getSSLContext(Config.server.getProperty("server.ssl.key-store-password"),Config.server.getProperty("server.ssl.key-store").replace("classpath:","/")).createSSLEngine();
 		
-		sslEngine.setUseClientMode( false );
+		sslEngine.setUseClientMode(false);
 		/*
-		sslEngine.setNeedClientAuth( true );
+		sslEngine.setNeedClientAuth(true);
 		*/
-		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoder()).addLast("encoder",new  PAIPEncoder()).addLast( "handler",new  PAIPPacketInboundHandlerAdapter(new  PAIPObjectProcessor(this.messageStorageEngine)) );
+		channel.pipeline().addLast("handler.ssl",new  SslHandler(sslEngine)).addLast("handler.idle.timeout",new  ChannelDuplexIdleTimeoutHandler()).addLast("length.based.decoder",new  LengthFieldBasedFrameDecoder(2*1024*1024,0,4,0,4)).addLast("decoder",new  PAIPDecoderHandlerAdapter()).addLast("roamingmessage.prepersist",new  PAIPRoamingMessagePrepersistHandlerAdapter(this.persistEngine)).addLast("encoder",new  PAIPEncoderHandlerAdapter()).addLast("authority",new  PAIPAuthorityHandlerAdapter()).addLast( "handler",new  PAIPPacketInboundHandlerAdapter(new  PAIPCallManagerProcessor(),new  PAIPDirectRouteProcessor()) );
 	}
 }

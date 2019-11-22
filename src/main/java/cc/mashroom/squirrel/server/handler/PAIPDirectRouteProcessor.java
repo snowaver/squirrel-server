@@ -15,18 +15,23 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
-import  cc.mashroom.squirrel.paip.message.call.RoomPacket;
+import  cc.mashroom.squirrel.paip.message.Packet;
 import  io.netty.channel.Channel;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@NoArgsConstructor( access  =AccessLevel.PRIVATE )
+@NoArgsConstructor(  access   = AccessLevel.PUBLIC )
 
-public  class  PAIPDirectRouteProcessor  implements  PAIPObjectProcessor<RoomPacket<?>>
+public  class  PAIPDirectRouteProcessor<P extends Packet<P>>  implements  PAIPObjectProcessor<Route<P>>
 {
 	@Override
-	public  boolean  process( Channel  channel,RoomPacket<?>  object )
+	public  boolean  process( Channel  channel,Route<P>  route )
 	{
-		return  false;
-	}	
+		PAIPPacketRouter.INSTANCE.route( route.getUserId(),route.getPacket() );  return  true;
+	}
+	@Override
+	public  boolean  isProcessable( Object  object )
+	{
+		return  object instanceof Route;
+	}
 }

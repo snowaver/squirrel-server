@@ -32,11 +32,12 @@ import  lombok.NoArgsConstructor;
 @NoArgsConstructor
 public  class  ClientSessionManager  implements  Plugin
 {
-	private  Map<Long,ClientSession>  localClientSessionCache  = new  ConcurrentHashMap<Long,ClientSession>();
 	@Getter
 	private  XMemTableCache       sessionLocationCache;
 	
-	public  final  static  ClientSessionManager  INSTANCE = new  ClientSessionManager();
+	private  Map<Long,ClientSession>  localClientSessionCache=  new  ConcurrentHashMap<Long,ClientSession>();
+	
+	public  final  static  ClientSessionManager  INSTANCE= new  ClientSessionManager();
 	
 	public  void  initialize( Object  ...  parameters )
 	{
@@ -47,19 +48,19 @@ public  class  ClientSessionManager  implements  Plugin
 	{
 		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{false,userId} );		
 		
-		return  localClientSessionCache.remove(userId);
+		return  this.localClientSessionCache.remove( userId );
 	}
 	
-	public  void  put( long  userId, LocalClientSession  session )
+	public  void  put( LocalClientSession    session  )
 	{
-		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{CacheFactory.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,userId} );
+		this.sessionLocationCache.update( "UPDATE  SESSION_LOCATION  SET  CLUSTER_NODE_ID = ?,ACCESS_TIME = ?,IS_ONLINE = ?  WHERE  USER_ID = ?",new  Object[]{CacheFactory.getLocalNodeId(),new  Timestamp(DateTime.now(DateTimeZone.UTC).getMillis()),true,session.getUserId()} );
 
-		localClientSessionCache.put( userId, session );
+		this.localClientSessionCache.put( session.getUserId(),session );
 	}
 	
 	public  ClientSession  get( long  userId )
 	{
-		return  localClientSessionCache.computeIfAbsent( userId  , (key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || CacheFactory.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
+		return  this.localClientSessionCache.computeIfAbsent( userId,(key) -> {SessionLocation  sessionLocation = sessionLocationCache.lookupOne( SessionLocation.class,"SELECT  CLUSTER_NODE_ID  FROM  SESSION_LOCATION  WHERE  USER_ID = ?",new  Object[]{userId} );  return  sessionLocation == null || sessionLocation.getClusterNodeId() == null || CacheFactory.getLocalNodeId().equals(sessionLocation.getClusterNodeId()) ? null : new  ClusteredClientSession( userId,sessionLocation.getClusterNodeId() );} );
 	}
 	
 	public  void  stop()

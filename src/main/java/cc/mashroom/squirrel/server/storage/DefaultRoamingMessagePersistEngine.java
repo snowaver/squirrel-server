@@ -47,13 +47,13 @@ import  lombok.SneakyThrows;
 
 @Service
 @DependsOn( value="PLUGIN_MANAGER" )
-public  class  DefaultMessageStorageEngine<P extends Packet<P>>  implements  Plugin,MessageStorageEngine<P>,Runnable
+public  class  DefaultRoamingMessagePersistEngine<P extends Packet<P>>  implements  Plugin,RoamingMessagePersistEngine<P>,Runnable
 {
 	private  ThreadPoolExecutor  persistenceThreadPool= new  ThreadPoolExecutor( 8,8,2,TimeUnit.SECONDS,new  LinkedBlockingQueue<Runnable>(),new  DefaultThreadFactory("MESSAGE_STORAGE_PERSISTENCE_THREAD_POOL") );
 		
-	private  Thread  rolloverLooper = new  Thread(this, "MESSAGE_STORAGE_ROLLOVER_LOOPER" );
+	private  Thread  rolloverLooper= new  Thread( this, "MESSAGE_STORAGE_ROLLOVER_LOOPER" );
 	
-	private  MessageRollingFile  rollingFile = new  MessageRollingFile();
+	private  RoamingMessageRollingFile     rollingFile= new  RoamingMessageRollingFile(   );
 	
 	private  LinkedListMultimap<String,Route<P>>  filePackets = LinkedListMultimap.create();
 	@Override

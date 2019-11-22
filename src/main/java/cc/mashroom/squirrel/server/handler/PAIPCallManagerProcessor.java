@@ -15,18 +15,24 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
+import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.paip.message.call.RoomPacket;
 import  io.netty.channel.Channel;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@NoArgsConstructor( access  =AccessLevel.PRIVATE )
+@NoArgsConstructor(  access  =  AccessLevel.PUBLIC )
 
-public  class  PAIPCallManagerProcessor  implements  PAIPObjectProcessor<RoomPacket<?>>
+public  class   PAIPCallManagerProcessor  implements  PAIPObjectProcessor<RoomPacket<?>>
 {
 	@Override
-	public  boolean  process( Channel  channel,RoomPacket<?>  object )
+	public  boolean  isProcessable( Object  object )
 	{
-		return  false;
-	}	
+		return  object instanceof RoomPacket;
+	}
+	@Override
+	public  boolean  process( Channel  channel,RoomPacket<?>  callRoomPacket )
+	{
+		CallManager.INSTANCE.process( callRoomPacket.getRoomId(),channel,callRoomPacket.getContactId(),callRoomPacket );  return  true;
+	}
 }

@@ -38,14 +38,14 @@ import  cc.mashroom.squirrel.module.user.model.Contact;
 import  cc.mashroom.squirrel.module.user.model.OoIData;
 import  cc.mashroom.squirrel.module.user.model.OoiDataSyncCheckpoint;
 import  cc.mashroom.squirrel.module.user.repository.ContactRepository;
-import  cc.mashroom.squirrel.server.storage.MessageStorageEngine;
+import cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
 import  cc.mashroom.util.ObjectUtils;
 
 @Service
 public  class  OfflineServiceImpl  implements  OfflineService
 {
 	@Autowired
-	private  MessageStorageEngine       messageStorageEngine;
+	private  RoamingMessagePersistEngine       persistEngine;
 	
 	@Connection( dataSource= @DataSource(type="db", name="squirrel") )
 	
@@ -84,8 +84,8 @@ public  class  OfflineServiceImpl  implements  OfflineService
 			}
 		}
 		
-		ooiData.setOfflineChatMessages( checkpoint.getChatMessageCheckpoint()== null ? Lists.newArrayList() : messageStorageEngine.lookup(ChatMessage.class,userId,checkpoint.getChatMessageCheckpoint()) );
+		ooiData.setOfflineChatMessages( checkpoint.getChatMessageCheckpoint()== null ? Lists.newArrayList() : persistEngine.lookup(ChatMessage.class,userId,checkpoint.getChatMessageCheckpoint()) );
 		
-		ooiData.setOfflineGroupChatMessages( checkpoint.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : messageStorageEngine.lookup(ChatGroupMessage.class,userId,checkpoint.getGroupChatMessageCheckpoint()));  return  ResponseEntity.ok(ooiData );
+		ooiData.setOfflineGroupChatMessages( checkpoint.getGroupChatMessageCheckpoint() == null ? Lists.newArrayList() : persistEngine.lookup(ChatGroupMessage.class,userId,checkpoint.getGroupChatMessageCheckpoint()));  return  ResponseEntity.ok(ooiData );
 	}
 }

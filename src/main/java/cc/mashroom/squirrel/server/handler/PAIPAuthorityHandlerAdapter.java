@@ -31,17 +31,17 @@ import  io.netty.handler.timeout.IdleStateHandler;
 import  lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public  class  PAIPAuthorityAndSessionHandlerAdapter  extends  ChannelInboundHandlerAdapter
+public  class      PAIPAuthorityHandlerAdapter  extends  ChannelInboundHandlerAdapter
 {
 	@Override
-	public  void  channelRead( ChannelHandlerContext  context,Object  packet )
+	public  void   channelRead(ChannelHandlerContext  context,Object  packet )
 	{
 		if( packet instanceof  ConnectPacket )
 		{
 			authenticate( context.channel(),ObjectUtils.cast(packet) );
 		}
 		else
-		if( !context.channel().hasAttr(ConnectPacket.USER_ID) )
+		if( !context.channel().hasAttr( ConnectPacket.USER_ID ) )
 		{
 			context.close();
 		}
@@ -80,7 +80,7 @@ public  class  PAIPAuthorityAndSessionHandlerAdapter  extends  ChannelInboundHan
         	session.close(  DisconnectAckPacket.REASON_REMOTE_SIGNIN );
         }
         
-        ClientSessionManager.INSTANCE.put(userId,new  LocalClientSession(userId,channel) );
+        ClientSessionManager.INSTANCE.put( new  LocalClientSession(userId,channel) );
         
         channel.attr(ConnectPacket.USER_ID).set( userId );
 

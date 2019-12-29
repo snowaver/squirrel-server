@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.server;
 
-import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
 import  io.netty.bootstrap.ServerBootstrap;
 import  io.netty.channel.ChannelOption;
 import  io.netty.channel.MultithreadEventLoopGroup;
@@ -37,7 +37,7 @@ public  class  NettyAcceptor
 	private  MultithreadEventLoopGroup  handleEventGroup;
 	
 	@SneakyThrows( value=  {InterruptedException.class} )
-	public  NettyAcceptor  initialize( String  host,int  port,RoamingMessagePersistEngine  persistEngine )
+	public  NettyAcceptor  initialize( String  host,int  port,RoamingMessagePersistAndRouteEngine  persistEngine )
 	{
 		boolean  isLinuxSystem = System.getProperty("os.name").toLowerCase().contains( "linux" );
 		

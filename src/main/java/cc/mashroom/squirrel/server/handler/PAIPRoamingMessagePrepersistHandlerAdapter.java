@@ -2,7 +2,7 @@ package cc.mashroom.squirrel.server.handler;
 
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
 import  cc.mashroom.util.ObjectUtils;
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
@@ -25,5 +25,5 @@ public  class  PAIPRoamingMessagePrepersistHandlerAdapter   extends  ChannelInbo
 		}
 	}
 	
-	private RoamingMessagePersistEngine    persistEngine;
+	private RoamingMessagePersistAndRouteEngine    persistEngine;
 }

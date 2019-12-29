@@ -33,7 +33,7 @@ import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.user.manager.ContactManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
-import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
 import  cc.mashroom.xcache.CacheFactoryStrategy;
 
 @Configuration
@@ -47,7 +47,7 @@ public  class  StrategyConfigurer
 	}
 	@Bean( name="NETTY_ACCEPTOR",destroyMethod="stop" )
 	@DependsOn( value={"PLUGIN_MANAGER"} )
-	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port,@Identifier  RoamingMessagePersistEngine  persistEngine )
+	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port,@Identifier  RoamingMessagePersistAndRouteEngine  persistEngine )
 	{
 		return  new  NettyAcceptor().initialize( host , port , persistEngine );
 	}

@@ -15,14 +15,13 @@
  */
 package cc.mashroom.squirrel.server.storage;
 
-import  java.util.List;
-
+import  cc.mashroom.squirrel.module.user.model.OoIData;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.server.handler.Route;
 
-public  interface  RoamingMessagePersistEngine<P extends Packet<P>>
+public  interface  RoamingMessagePersistAndRouteEngine<P extends Packet<P>>
 {
 	public  Route<P>  prepersist( Route<P>  route );
 	
-	public  <T>  List<T>  lookup( Class<T>  clazz,long  userId,long  messageOffsetSyncId );
+	public  OoIData   lookup( long  userId,long  chatMessageOffsetSyncId,long  groupChatMessageOffsetSyncId );
 }

@@ -27,7 +27,7 @@ import  cc.mashroom.squirrel.server.handler.PAIPCallManagerProcessor;
 import  cc.mashroom.squirrel.server.handler.PAIPDirectRouteProcessor;
 import  cc.mashroom.squirrel.server.handler.PAIPPacketInboundHandlerAdapter;
 import  cc.mashroom.squirrel.server.handler.PAIPRoamingMessagePrepersistHandlerAdapter;
-import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistEngine;
+import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
 import  cc.mashroom.util.SecureUtils;
 
 import  javax.net.ssl.SSLEngine;
@@ -38,7 +38,7 @@ import  cc.mashroom.config.Config;
 
 public  class  ServerChannelInitializer  extends  io.netty.channel.ChannelInitializer<SocketChannel>
 {
-	protected  RoamingMessagePersistEngine  persistEngine;
+	protected  RoamingMessagePersistAndRouteEngine  persistEngine;
 	
 	protected  void  initChannel( SocketChannel  channel )  throws  Exception
 	{

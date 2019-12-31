@@ -25,9 +25,9 @@ import  lombok.NoArgsConstructor;
 public  class  PAIPDirectRouteProcessor<P extends Packet<P>>  implements  PAIPObjectProcessor<Route<P>>
 {
 	@Override
-	public  boolean  process( Channel  channel,Route<P>  route )
+	public  boolean  process( Channel  channel,Route<P>   route )
 	{
-		PAIPPacketRouter.INSTANCE.route( route.getUserId(),route.getPacket() );  return  true;
+		PAIPPacketRouter.INSTANCE.route(    route );return  true;
 	}
 	@Override
 	public  boolean  isProcessable( Object  object )

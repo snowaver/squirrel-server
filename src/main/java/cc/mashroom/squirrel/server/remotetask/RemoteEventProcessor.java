@@ -16,8 +16,9 @@
 package cc.mashroom.squirrel.server.remotetask;
 
 import  cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
-import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
+
+import  java.util.Optional;
 
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.util.collection.map.Map;
@@ -31,10 +32,8 @@ public  class  RemoteEventProcessor  implements  cc.mashroom.xcache.remote.Remot
 		{
 			case   0:
 			{
-				ClientSession  clientSession= ClientSessionManager.INSTANCE.get( parameters.getLong("USER_ID") );
-				
-				if( clientSession != null)  clientSession.close( parameters.getInteger("CLOSE_REASON") );
-				
+				Optional.ofNullable(ClientSessionManager.INSTANCE.get(parameters.getLong("USER_ID"))).ifPresent( (session) -> session.close(parameters.getInteger("CLOSE_REASON")) );
+
 				return  (T)  Boolean.TRUE;
 			}
 			case   1:

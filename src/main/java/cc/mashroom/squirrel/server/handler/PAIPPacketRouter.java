@@ -15,27 +15,31 @@
  */
 package cc.mashroom.squirrel.server.handler;
 
+import  java.util.Optional;
+
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.server.session.ClientSession;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@NoArgsConstructor( access  =AccessLevel.PRIVATE )
+@NoArgsConstructor(access=AccessLevel.PRIVATE )
 
-public  class        PAIPPacketRouter
+public  class      PAIPPacketRouter
 {
-	public  boolean  route( Long  userId,Packet<?>  packet )
+	public  boolean  route( long  userId,Packet  <?>  packet )
 	{
-		ClientSession   clientSession = userId ==null ?null: ClientSessionManager.INSTANCE.get( userId );
-		
-		if( null !=  clientSession  )
+		if( userId>0 )
 		{
-			clientSession.deliver( packet );   return  true;
+			Optional<ClientSession>  sessionOptional  = Optional.ofNullable( ClientSessionManager.INSTANCE.get(userId) );  sessionOptional.ifPresent( (session) -> session.deliver(packet) );  return  sessionOptional.isPresent();
 		}
-		
 		return  false;
 	}
 	
-	public  final    static  PAIPPacketRouter  INSTANCE = new  PAIPPacketRouter();
+	public  boolean  route(Route<?>     route )
+	{
+		return  !route.isRoutable() ? false : route(route.getUserId(),route.getPacket() );
+	}
+	
+	public  final  static  PAIPPacketRouter  INSTANCE = new  PAIPPacketRouter();
 }

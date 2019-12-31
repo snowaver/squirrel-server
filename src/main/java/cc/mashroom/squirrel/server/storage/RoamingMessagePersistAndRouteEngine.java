@@ -17,11 +17,11 @@ package cc.mashroom.squirrel.server.storage;
 
 import  cc.mashroom.squirrel.module.user.model.OoIData;
 import  cc.mashroom.squirrel.paip.message.Packet;
-import  cc.mashroom.squirrel.server.handler.Route;
+import  cc.mashroom.squirrel.server.handler.RouteGroup;
 
 public  interface  RoamingMessagePersistAndRouteEngine<P extends Packet<P>>
 {
-	public  Route<P>  prepersist( Route<P>  route );
+	public  void  persistAndRoute( RouteGroup<P>  routeGroup );
 	
 	public  OoIData   lookup( long  userId,long  chatMessageOffsetSyncId,long  groupChatMessageOffsetSyncId );
 }

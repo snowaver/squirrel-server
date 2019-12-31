@@ -40,28 +40,28 @@ import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
 import  cc.mashroom.squirrel.server.handler.Route;
+import  cc.mashroom.squirrel.server.handler.RouteGroup;
 import  cc.mashroom.util.ObjectUtils;
 import  io.netty.util.concurrent.DefaultThreadFactory;
 import  lombok.SneakyThrows;
 
 @Service
 @DependsOn( value="PLUGIN_MANAGER" )
-public  class    DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>  implements  Plugin,RoamingMessagePersistAndRouteEngine<P>,Runnable
+public  class   DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>  implements  Plugin,RoamingMessagePersistAndRouteEngine  <P>,  Runnable
 {
 	private  ThreadPoolExecutor  persistenceThreadPool= new  ThreadPoolExecutor( 8,8,2,TimeUnit.SECONDS,new  LinkedBlockingQueue<Runnable>(),new  DefaultThreadFactory("MESSAGE_STORAGE_PERSISTENCE_THREAD_POOL") );
 		
-	private  Thread rolloverLooper = new  Thread( this, "MESSAGE_STORAGE_ROLLOVER_LOOPER" );
+	private  Thread rolloverLooper = new  Thread( this,"MESSAGE_STORAGE_ROLLOVER_LOOPER" );
 	
 	private  AtomicLong  bucketKey = new  AtomicLong();
 	
-	private  LinkedListMultimap<String,Route<P>>  routeBuckets= LinkedListMultimap.create();
+	private  LinkedListMultimap<String,Route<P>>  routeBuckets=LinkedListMultimap.create();
 	@Override
-	public  Route  <P>  prepersist( Route  <P>  route )
+	public  void  persistAndRoute( RouteGroup<P>  routeGroup )
 	{
 		synchronized  (  bucketKey )
 		{
-			routeBuckets.put((route.getPacket() instanceof ChatPacket ? "S" : "G") + "_" + this.bucketKey.get(),route );
-		return    route;
+			routeGroup.getRoutes().forEach(  (route) -> this.routeBuckets.put((routeGroup.getOriginalPacket() instanceof ChatPacket ? "S" : "G")+"_"+this.bucketKey.get(),route) );
 		}
 	}
 	@SneakyThrows( value={InterruptedException.class} )
@@ -71,7 +71,7 @@ public  class    DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>
 		for( ;;Thread.sleep( 100 ) )
 		synchronized  (  bucketKey )
 		{
-			this.persistenceThreadPool.execute( () -> persist( this.bucketKey.getAndSet(DateTime.now().getMillis()) ) );
+			this.persistenceThreadPool.execute( () -> persistAndRoute( this.bucketKey.getAndSet(DateTime.now().getMillis())) );
 		}
 	}
 	@Override
@@ -92,10 +92,10 @@ public  class    DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>
 		this.rolloverLooper.start();
 	}
 	
-	public  void  persist(      long  bucket )
+	public  void  persistAndRoute( long  key )
 	{
-		ChatGroupMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(this.routeBuckets.removeAll("G_"+bucket),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
+		ChatGroupMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(routeBuckets.removeAll("G_"+key),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
 		
-		ChatMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(this.routeBuckets.removeAll("S_"+bucket),new  TypeReference<List<Route<ChatPacket>>>(){}) );
+		ChatMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(routeBuckets.removeAll("S_"+key),new  TypeReference<List<Route<ChatPacket>>>(){}) );
 	}
 }

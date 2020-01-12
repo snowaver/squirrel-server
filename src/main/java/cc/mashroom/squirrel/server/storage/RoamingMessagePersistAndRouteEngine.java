@@ -23,5 +23,5 @@ public  interface  RoamingMessagePersistAndRouteEngine<P extends Packet<P>>
 {
 	public  void  persistAndRoute( RouteGroup<P>  routeGroup );
 	
-	public  OoIData   lookup( long  userId,long  chatMessageOffsetSyncId,long  groupChatMessageOffsetSyncId );
+	public  OoIData    lookup( long  userId,long  chatMessageOffsetSyncId,long  groupChatMessageOffsetSyncId );
 }

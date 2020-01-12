@@ -15,34 +15,42 @@
  */
 package cc.mashroom.squirrel.module.user.repository;
 
+import  java.util.LinkedList;
 import  java.util.List;
-import  java.util.concurrent.atomic.AtomicInteger;
+import  java.util.Optional;
 
 import  org.apache.commons.lang.StringUtils;
+import  org.apache.curator.shaded.com.google.common.collect.Lists;
 
 import  cc.mashroom.db.GenericRepository;
 import  cc.mashroom.db.annotation.DataSourceBind;
 import  cc.mashroom.squirrel.paip.message.TransportState;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
-import  cc.mashroom.squirrel.server.handler.Route;
+import  cc.mashroom.squirrel.server.handler.PAIPPacketRouter;
+import  cc.mashroom.squirrel.server.handler.RouteGroup;
 import  lombok.AccessLevel;
 import  lombok.NoArgsConstructor;
 
-@DataSourceBind(  name="squirrel" , table="chat_group_message" )
-@NoArgsConstructor( access=AccessLevel.PRIVATE )
+@DataSourceBind( name="squirrel" , table="chat_group_message" )
+@NoArgsConstructor(   access=AccessLevel.PRIVATE )
 public  class  ChatGroupMessageRepository  extends  GenericRepository
 {
-	public  final   static  ChatGroupMessageRepository  DAO= new  ChatGroupMessageRepository();
+	public  final static  ChatGroupMessageRepository  DAO = new  ChatGroupMessageRepository();
 	
-	public  void  insertAndRoute( List  <Route<GroupChatPacket>>  routes )
+	public  void  insertAndRoute( List  <RouteGroup<GroupChatPacket>>  routeGroups )
 	{
-		AtomicInteger  i = new  AtomicInteger();
+		if( routeGroups.isEmpty() )
+		{
+			return;
+		}
+		List<Object>  params =  routeGroups.stream().flatMap( (routeGroup) -> routeGroup.getRoutes().stream()).collect( () -> new  LinkedList<Object>(),(p,route) -> p.addAll(Lists.newArrayList(route.getPacket().getId(),route.getPacket().getSyncId(),route.getPacket().getGroupId(),route.getPacket().getContactId(),route.getUserId(),route.getPacket().getMd5(),new  String(route.getPacket().getContent()),route.getPacket().getContentType().getValue(),route.getPacket().getContactId() == route.getUserId() ? TransportState.SENT.getValue() : TransportState.RECEIVED.getValue())),(pf,ps) -> {} );
 		
-		Object[]  params = new  Object[ routes.size()*  9 ];
+		if( super.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE,TRANSPORT_STATE)  VALUES  "+StringUtils.rightPad("(?,?,?,?,?,?,?,?,?)",params.size()/9*",(?,?,?,?,?,?,?,?,?)".length()-1,",(?,?,?,?,?,?,?,?,?)"),params.toArray(new  Object[params.size()])) != params.size()/9 )
+		{
+			throw  new  IllegalStateException( "SQUIRREL-SERVER:  ** CHAT  GROUP  MESSAGE  REPOSITORY **  error  while  persisting  messages." );
+		}
+		routeGroups.parallelStream().forEach((routeGroup) -> Optional.ofNullable(routeGroup.getOnPersistedListener()).ifPresent( (listener) -> listener.onPersisted()) );
 		
-		routes.forEach( (route) -> { params[i.getAndIncrement()] = route.getPacket().getId();  params[i.getAndIncrement()] = route.getPacket().getSyncId();  params[i.getAndIncrement()] = route.getPacket().getGroupId();  params[i.getAndIncrement()] = route.getPacket().getContactId();  params[i.getAndIncrement()] = route.getUserId();  params[i.getAndIncrement()] = route.getPacket().getMd5();  params[i.getAndIncrement()] = new  String(route.getPacket().getContent());  params[i.getAndIncrement()] = route.getPacket().getContentType().getValue();  params[i.getAndIncrement()] = route.getPacket().getContactId() == route.getUserId() ? TransportState.SENT.getValue() : TransportState.RECEIVED.getValue(); } );
-		
-		if( super.update("INSERT  INTO  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  (ID,SYNC_ID,GROUP_ID,CONTACT_ID,USER_ID,MD5,CONTENT,CONTENT_TYPE,TRANSPORT_STATE)  VALUES  "+StringUtils.rightPad("(?,?,?,?,?,?,?,?,?)",routes.size()*",(?,?,?,?,?,?,?,?,?)".length()-1,",(?,?,?,?,?,?,?,?,?)"),params) == routes.size() )  routes.forEach( (route) -> PAIPPacketRouter.INSTANCE.route(route.getUserId(),route.getPacket()) );
+		routeGroups.parallelStream().flatMap((routeGroup) -> routeGroup.getRoutes().stream()).filter((route) -> route.isRoutable()).forEach( (route) -> route.getOnRoutedListener().onRouted(PAIPPacketRouter.INSTANCE.route(route.getUserId(),route.getPacket())) );
 	}
 }

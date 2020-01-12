@@ -26,11 +26,11 @@ import  lombok.AllArgsConstructor;
 @AllArgsConstructor
 public  class  PAIPRoamingMessagePersistAndRouteProcessor  <P extends Packet<P>>  implements  PAIPObjectProcessor<RouteGroup<P>>
 {
-	private RoamingMessagePersistAndRouteEngine  <P>  persistAndRouteEngine;
+	private RoamingMessagePersistAndRouteEngine  <P>    roamingMessagePersistAndRouteEngine;
 	@Override
-	public  boolean  process( Channel  channel,RouteGroup  <P>  routeGroup )
+	public  boolean  process( Channel  channel,RouteGroup  <P>routeGroup )
 	{
-		routeGroup.getRoutes().forEach( (route) -> PAIPPacketRouter.INSTANCE.route(route) );  return  true;
+		roamingMessagePersistAndRouteEngine.persistAndRoute(  routeGroup);     return  true;
 	}
 	@Override
 	public  boolean  isProcessable( Object  object )

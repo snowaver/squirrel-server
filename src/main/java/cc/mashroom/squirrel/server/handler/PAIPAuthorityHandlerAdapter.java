@@ -25,16 +25,18 @@ import  cc.mashroom.util.ObjectUtils;
 import  cc.mashroom.util.collection.map.Map;
 import  cc.mashroom.xcache.CacheFactory;
 import  io.netty.channel.Channel;
+import  io.netty.channel.ChannelHandler.Sharable;
 import  io.netty.channel.ChannelHandlerContext;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 import  io.netty.handler.timeout.IdleStateHandler;
 import  lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public  class      PAIPAuthorityHandlerAdapter  extends  ChannelInboundHandlerAdapter
+@Sharable
+public  class      PAIPAuthorityHandlerAdapter  extends   ChannelInboundHandlerAdapter
 {
 	@Override
-	public  void   channelRead(ChannelHandlerContext  context,Object  packet )
+	public  void   channelRead(ChannelHandlerContext  context,Object  packet )  throws  Exception
 	{
 		if( packet instanceof  ConnectPacket )
 		{
@@ -44,6 +46,10 @@ public  class      PAIPAuthorityHandlerAdapter  extends  ChannelInboundHandlerAd
 		if( !context.channel().hasAttr( ConnectPacket.USER_ID ) )
 		{
 			context.close();
+		}
+		else
+		{
+			super.channelRead(context,packet);
 		}
 	}
 	@Override
@@ -80,7 +86,7 @@ public  class      PAIPAuthorityHandlerAdapter  extends  ChannelInboundHandlerAd
         	session.close(  DisconnectAckPacket.REASON_REMOTE_SIGNIN );
         }
         
-        ClientSessionManager.INSTANCE.put( new  LocalClientSession(userId,channel) );
+        ClientSessionManager.INSTANCE.put( new  LocalClientSession(userId, channel) );
         
         channel.attr(ConnectPacket.USER_ID).set( userId );
 

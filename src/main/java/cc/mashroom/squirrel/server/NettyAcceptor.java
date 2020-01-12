@@ -15,7 +15,7 @@
  */
 package cc.mashroom.squirrel.server;
 
-import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
+import  cc.mashroom.squirrel.server.handler.PAIPRoamingMessagePersistAndRouteProcessor;
 import  io.netty.bootstrap.ServerBootstrap;
 import  io.netty.channel.ChannelOption;
 import  io.netty.channel.MultithreadEventLoopGroup;
@@ -37,10 +37,10 @@ public  class  NettyAcceptor
 	private  MultithreadEventLoopGroup  handleEventGroup;
 	
 	@SneakyThrows( value=  {InterruptedException.class} )
-	public  NettyAcceptor  initialize( String  host,int  port,RoamingMessagePersistAndRouteEngine  persistEngine )
+	public  NettyAcceptor  initialize( String  host,int  port,PAIPRoamingMessagePersistAndRouteProcessor  roamingMessagePersistAndRouteProcessor )
 	{
 		boolean  isLinuxSystem = System.getProperty("os.name").toLowerCase().contains( "linux" );
 		
-		new  ServerBootstrap().group( this.acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),this.handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler(new  ServerChannelInitializer(persistEngine)).bind(host,port).sync();  return  this;
+		new  ServerBootstrap().group( this.acceptEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup(),this.handleEventGroup = isLinuxSystem ? new  EpollEventLoopGroup() : new  NioEventLoopGroup()).channel(isLinuxSystem ? EpollServerSocketChannel.class : NioServerSocketChannel.class)/*.option(ChannelOption.SO_TIMEOUT,120)*/.option(ChannelOption.SO_BACKLOG,1024*1024).option(ChannelOption.SO_REUSEADDR,true).childHandler(new  ServerChannelInitializer(roamingMessagePersistAndRouteProcessor)).bind(host,port).sync();  return  this;
 	}
 }

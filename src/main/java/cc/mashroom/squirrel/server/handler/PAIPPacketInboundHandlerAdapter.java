@@ -16,31 +16,37 @@
 package cc.mashroom.squirrel.server.handler;
 
 import  io.netty.channel.ChannelHandlerContext;
+import  io.netty.channel.ChannelHandler.Sharable;
 import  io.netty.channel.ChannelInboundHandlerAdapter;
 
 import  java.util.List;
 
-import  org.joda.time.DateTime;
+import org.joda.time.DateTime;
 
 import  com.google.common.collect.Lists;
 
-public  class      PAIPPacketInboundHandlerAdapter  extends  ChannelInboundHandlerAdapter
+@Sharable
+
+public  class      PAIPPacketInboundHandlerAdapter  extends   ChannelInboundHandlerAdapter
 {
-	public  PAIPPacketInboundHandlerAdapter( PAIPObjectProcessor...   processors )
+	protected  List<PAIPObjectProcessor>  processors;
+	
+	public   PAIPPacketInboundHandlerAdapter( PAIPObjectProcessor...  processors )
 	{
 		this.processors = Lists.newArrayList( processors );
 	}
-	protected  List<PAIPObjectProcessor>  processors;
 	@Override
 	public  void  exceptionCaught( ChannelHandlerContext  context,Throwable  err )
 	{
 		err.printStackTrace();
 	}
 	@Override
-	public  void  channelRead(     ChannelHandlerContext  context,Object  object )
+	public  void  channelRead(     ChannelHandlerContext  context,Object  object )  throws  Exception
 	{
-		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.READ:\t"+object.toString() );
+		System.out.println( DateTime.now().toString("yyyy-MM-dd HH:mm:ss.SSS")+"  CHANNEL.WRAP:\t"+object.toString() );
 		
-		this.processors.stream().filter((processor) -> processor.isProcessable(object)).forEach( (processor) -> processor.process(context.channel(),object) );
+		super.channelRead(context,object  );
+		
+		this.processors.stream().filter(  (processor) ->  processor.isProcessable(object)).forEach( (processor) -> processor.process(context.channel(),object) );
 	}
 }

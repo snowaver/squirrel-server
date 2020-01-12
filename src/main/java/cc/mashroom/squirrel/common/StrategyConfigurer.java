@@ -32,6 +32,7 @@ import  cc.mashroom.squirrel.module.call.manager.CallManager;
 import  cc.mashroom.squirrel.module.chat.group.manager.ChatGroupManager;
 import  cc.mashroom.squirrel.module.user.manager.ContactManager;
 import  cc.mashroom.squirrel.server.NettyAcceptor;
+import  cc.mashroom.squirrel.server.handler.PAIPRoamingMessagePersistAndRouteProcessor;
 import  cc.mashroom.squirrel.server.session.ClientSessionManager;
 import  cc.mashroom.squirrel.server.storage.RoamingMessagePersistAndRouteEngine;
 import  cc.mashroom.xcache.CacheFactoryStrategy;
@@ -47,14 +48,14 @@ public  class  StrategyConfigurer
 	}
 	@Bean( name="NETTY_ACCEPTOR",destroyMethod="stop" )
 	@DependsOn( value={"PLUGIN_MANAGER"} )
-	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port,@Identifier  RoamingMessagePersistAndRouteEngine  persistEngine )
+	public  NettyAcceptor  nettyAcceptor( @Value("${squirrel.acceptor.host:0.0.0.0}")  String  host  ,@Value("${squirrel.acceptor.port:8012}")  int  port,@Identifier  RoamingMessagePersistAndRouteEngine  roamingMessagePersistAndRouteEngine )
 	{
-		return  new  NettyAcceptor().initialize( host , port , persistEngine );
+		return  new  NettyAcceptor().initialize( host,port,new  PAIPRoamingMessagePersistAndRouteProcessor(roamingMessagePersistAndRouteEngine) );
 	}
 	@Bean( name="PLUGIN_MANAGER",destroyMethod="stop",initMethod="initialize" )
 	public  PluginManager  pluginManager( @Value("${squirrel.cluster.enabled:false}")  boolean isCacheClusterEnabled,@Value("${squirrel.memory.policy:/memory-policy.ddl}")  String  cacheMemoryPolicyScriptFileResourcePath )
 	{
-		CacheFactoryStrategy  cacheFactoryStrategy= isCacheClusterEnabled ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
+		CacheFactoryStrategy   cacheFactoryStrategy  = isCacheClusterEnabled  ? new  IgniteCacheFactoryStrategy() : new  H2CacheFactoryStrategy();
 		
 		return  PluginManager.INSTANCE.register(new  Db()).register((Plugin)  cacheFactoryStrategy,cacheMemoryPolicyScriptFileResourcePath).register(ClientSessionManager.INSTANCE).register(ChatGroupManager.INSTANCE).register(CallManager.INSTANCE).register( ContactManager.INSTANCE );
 	}

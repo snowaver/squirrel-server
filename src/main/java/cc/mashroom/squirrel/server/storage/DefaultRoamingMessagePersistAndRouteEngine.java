@@ -23,14 +23,16 @@ import  java.util.concurrent.TimeUnit;
 import  java.util.concurrent.atomic.AtomicLong;
 import  java.util.stream.Collectors;
 
-import  org.apache.curator.shaded.com.google.common.collect.LinkedListMultimap;
+import  javax.annotation.PostConstruct;
+import  javax.annotation.PreDestroy;
+
 import  org.joda.time.DateTime;
 import  org.springframework.context.annotation.DependsOn;
 import  org.springframework.stereotype.Service;
 
 import  com.fasterxml.jackson.core.type.TypeReference;
+import  com.google.common.collect.LinkedListMultimap;
 
-import  cc.mashroom.plugin.Plugin;
 import  cc.mashroom.squirrel.module.user.model.ChatGroupMessage;
 import  cc.mashroom.squirrel.module.user.model.ChatMessage;
 import  cc.mashroom.squirrel.module.user.model.OoIData;
@@ -39,7 +41,6 @@ import  cc.mashroom.squirrel.module.user.repository.ChatGroupMessageRepository;
 import  cc.mashroom.squirrel.paip.message.Packet;
 import  cc.mashroom.squirrel.paip.message.chat.ChatPacket;
 import  cc.mashroom.squirrel.paip.message.chat.GroupChatPacket;
-import  cc.mashroom.squirrel.server.handler.Route;
 import  cc.mashroom.squirrel.server.handler.RouteGroup;
 import  cc.mashroom.util.ObjectUtils;
 import  io.netty.util.concurrent.DefaultThreadFactory;
@@ -47,7 +48,7 @@ import  lombok.SneakyThrows;
 
 @Service
 @DependsOn( value="PLUGIN_MANAGER" )
-public  class   DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>  implements  Plugin,RoamingMessagePersistAndRouteEngine  <P>,  Runnable
+public  class   DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>>  implements  RoamingMessagePersistAndRouteEngine<P>,Runnable
 {
 	private  ThreadPoolExecutor  persistenceThreadPool= new  ThreadPoolExecutor( 8,8,2,TimeUnit.SECONDS,new  LinkedBlockingQueue<Runnable>(),new  DefaultThreadFactory("MESSAGE_STORAGE_PERSISTENCE_THREAD_POOL") );
 		
@@ -55,13 +56,13 @@ public  class   DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>> 
 	
 	private  AtomicLong  bucketKey = new  AtomicLong();
 	
-	private  LinkedListMultimap<String,Route<P>>  routeBuckets=LinkedListMultimap.create();
+	private  LinkedListMultimap  <String,RouteGroup<P>>  routeGroupBuckets     = LinkedListMultimap.create();
 	@Override
 	public  void  persistAndRoute( RouteGroup<P>  routeGroup )
 	{
 		synchronized  (  bucketKey )
 		{
-			routeGroup.getRoutes().forEach(  (route) -> this.routeBuckets.put((routeGroup.getOriginalPacket() instanceof ChatPacket ? "S" : "G")+"_"+this.bucketKey.get(),route) );
+			this.routeGroupBuckets.put( (routeGroup.getOriginalPacket() instanceof ChatPacket ? "S" : "G")+"_"+bucketKey.get(),routeGroup );
 		}
 	}
 	@SneakyThrows( value={InterruptedException.class} )
@@ -71,31 +72,38 @@ public  class   DefaultRoamingMessagePersistAndRouteEngine<P extends Packet<P>> 
 		for( ;;Thread.sleep( 100 ) )
 		synchronized  (  bucketKey )
 		{
-			this.persistenceThreadPool.execute( () -> persistAndRoute( this.bucketKey.getAndSet(DateTime.now().getMillis())) );
+			try
+			{
+				this.persistenceThreadPool.execute( () -> persistAndRoute( bucketKey.getAndSet(DateTime.now().getMillis())) );
+			}
+			catch( Throwable unkne )
+			{
+			unkne.printStackTrace();
+			}
 		}
 	}
 	@Override
-	public  OoIData  lookup( long  userId,long  chatMessageOffsetSyncId,long  groupChatMessageOffsetSyncId )
+	public  OoIData  lookup( long  userId,long  chatMessageOffsetSyncId, long  groupChatMessageOffsetSyncId )
 	{
 		return  new  OoIData().setOfflineChatMessages(ChatMessageRepository.DAO.lookup(ChatMessage.class,"SELECT  ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,chatMessageOffsetSyncId}).stream().map((message) -> message.setIsLocal(false).setCreateTime(new  Timestamp(message.getId()))).collect(Collectors.toList())).setOfflineGroupChatMessages( ChatGroupMessageRepository.DAO.lookup(ChatGroupMessage.class,"SELECT  ID,GROUP_ID,SYNC_ID,CONTACT_ID,MD5,CONTENT_TYPE,CONTENT,TRANSPORT_STATE  FROM  "+ChatGroupMessageRepository.DAO.getDataSourceBind().table()+"  WHERE  USER_ID = ?  AND  SYNC_ID > ?",new  Object[]{userId,groupChatMessageOffsetSyncId}).stream().map((message) -> message.setIsLocal(false).setCreateTime(new  Timestamp(message.getId()))).collect(Collectors.toList()) );
 	}
-	@Override
+	@PreDestroy
 	public  void  stop()
 	{
 		this.persistenceThreadPool.shutdown();
 		
 	this.rolloverLooper.interrupt();
 	}
-	@Override
-	public  void  initialize( Object  ...  parameters )
+	@PostConstruct
+	public  void  initialize( /*Object...parameters*/ )
 	{
 		this.rolloverLooper.start();
 	}
 	
 	public  void  persistAndRoute( long  key )
 	{
-		ChatGroupMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(routeBuckets.removeAll("G_"+key),new  TypeReference<List<Route<GroupChatPacket>>>(){}) );
+		ChatGroupMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(this.routeGroupBuckets.removeAll("G_"+key),new  TypeReference<List<RouteGroup<GroupChatPacket>>>(){}) );
 		
-		ChatMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(routeBuckets.removeAll("S_"+key),new  TypeReference<List<Route<ChatPacket>>>(){}) );
+		ChatMessageRepository.DAO.insertAndRoute( ObjectUtils.cast(this.routeGroupBuckets.removeAll("S_"+key),new  TypeReference<List<RouteGroup<ChatPacket>>>(){}) );
 	}
 }

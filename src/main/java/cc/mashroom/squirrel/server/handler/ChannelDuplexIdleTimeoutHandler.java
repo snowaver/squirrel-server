@@ -17,6 +17,7 @@ package cc.mashroom.squirrel.server.handler;
 
 import  io.netty.channel.ChannelDuplexHandler;
 import  io.netty.channel.ChannelHandlerContext;
+import  io.netty.channel.ChannelHandler.Sharable;
 import  io.netty.handler.timeout.IdleState;
 import  io.netty.handler.timeout.IdleStateEvent;
 
@@ -24,8 +25,10 @@ import  org.joda.time.DateTime;
 
 import  cc.mashroom.util.ObjectUtils;
 
+@Sharable
 public  class  ChannelDuplexIdleTimeoutHandler  extends  ChannelDuplexHandler
 {
+	@Override
 	public  void  userEventTriggered( ChannelHandlerContext  context,Object  event )  throws  Exception
 	{
 		if( event instanceof IdleStateEvent && ObjectUtils.cast(event,IdleStateEvent.class).state() == IdleState.READER_IDLE )

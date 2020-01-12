@@ -28,12 +28,19 @@ import java.util.ArrayList;
 import  java.util.Deque;
 import  java.util.LinkedList;
 import  java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.math.RandomUtils;
 import  org.apache.commons.lang3.concurrent.BackgroundInitializer;
@@ -70,6 +77,8 @@ import  org.springframework.core.env.SimpleCommandLinePropertySource;
 import  org.springframework.web.servlet.DispatcherServlet;
 import  org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
+import com.google.common.collect.LinkedHashMultimap;
+
 import  org.springframework.core.env.ConfigurableEnvironment;
 import  org.springframework.core.env.MapPropertySource;
 import  org.springframework.core.env.PropertySource.StubPropertySource;
@@ -99,6 +108,25 @@ public  class  Snippets
 	
 	public  static  void  main( String  []  args )  throws  Exception
 	{
+		Lists.newArrayList(1,2,3).stream().flatMap(new Function<Integer, Stream<Integer>>() {
+
+			@Override
+			public Stream<Integer> apply(Integer t) {
+				// TODO Auto-generated method stub
+				return Lists.newArrayList(t+1).stream();
+			}
+		}).forEach((a) -> System.out.println(a));
+		List<Object> l = new LinkedList<>();
+		List<Integer> n = Lists.newArrayList(1,2,3).stream().collect(() -> Lists.newArrayList(0), new BiConsumer<List, Integer>() {
+
+			@Override
+			public void accept(List t, Integer u) {
+				System.err.println(t+"/"+u);
+				t.add(u);
+			}
+		}, null);
+		
+		System.err.println(n);
 /*//		new  IgniteCacheFactoryStrategy().initialize( "/memory-policy.ddl" );
 		ThreadPoolExecutor  pool = new  ThreadPoolExecutor( 4,4,2,TimeUnit.MINUTES,new  LinkedBlockingQueue<Runnable>() );
 		int count = 100000;
@@ -245,6 +273,7 @@ public  class  Snippets
 //        jedisPool.close();
 		
 //		throw new IllegalStateException();
+		/*
 		try
 		{
 			new  Snippets().print();
@@ -271,6 +300,7 @@ public  class  Snippets
 				"	... 1 more\r\n";
 		System.err.println("	...".matches("^(\\s+(at|\\.{3}))|^(Caused by:)"));
 		System.err.println("	...".matches("^\\s\\.{3}\\b"));
+		*/
 	}
 	
 	public  static  void  addCopyrightHeader(  String  sourcefolder ) throws  IOException
